@@ -11,11 +11,14 @@ interface LanguageSwitcherProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export function LanguageSwitcher({ currentLanguage, onLanguageChange, className, ...props }: LanguageSwitcherProps) {
   return (
-    <div className={cn("flex rounded-md border p-1", className)} {...props}>
+    <div className={cn("flex rounded-md border border-gray-700 bg-gray-800 p-1", className)} {...props}>
       <Button
         variant="ghost"
         size="sm"
-        className={cn("px-3", currentLanguage === "en" ? "bg-primary-100 text-primary-700" : "text-gray-600")}
+        className={cn(
+          "px-3 text-sm",
+          currentLanguage === "en" ? "bg-primary-500 text-white" : "text-gray-300 hover:text-white",
+        )}
         onClick={() => onLanguageChange("en")}
       >
         English
@@ -23,7 +26,10 @@ export function LanguageSwitcher({ currentLanguage, onLanguageChange, className,
       <Button
         variant="ghost"
         size="sm"
-        className={cn("px-3", currentLanguage === "he" ? "bg-primary-100 text-primary-700" : "text-gray-600")}
+        className={cn(
+          "px-3 text-sm",
+          currentLanguage === "he" ? "bg-primary-500 text-white" : "text-gray-300 hover:text-white",
+        )}
         onClick={() => onLanguageChange("he")}
       >
         עברית
