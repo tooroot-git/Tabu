@@ -1,20 +1,16 @@
+"use client"
+
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Download, Search, FileText, Clock, CheckCircle } from "lucide-react"
+import { useLanguage } from "@/context/language-context"
+import Link from "next/link"
 
 export default function MyOrdersPage() {
-  // In a real app, this would come from a language context or state
-  const currentLanguage = "en"
-  const isRTL = currentLanguage === "he"
-
-  // Mock function for language change
-  const handleLanguageChange = (language: "en" | "he") => {
-    console.log(`Language changed to ${language}`)
-    // In a real app, this would update the language state/context
-  }
+  const { language, isRTL } = useLanguage()
 
   const orders = [
     {
@@ -48,13 +44,15 @@ export default function MyOrdersPage() {
 
   return (
     <div dir={isRTL ? "rtl" : "ltr"} className={isRTL ? "font-sans-hebrew" : "font-sans"}>
-      <Header currentLanguage={currentLanguage} onLanguageChange={handleLanguageChange} />
+      <Header />
 
       <main className="container mx-auto px-4 py-8 md:py-16">
         <div className="mx-auto max-w-4xl">
           <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
             <h1 className="text-3xl font-bold text-gray-900">{isRTL ? "ההזמנות שלי" : "My Orders"}</h1>
-            <Button className="mt-4 md:mt-0">{isRTL ? "הזמן נסח חדש" : "Order New Extract"}</Button>
+            <Button className="mt-4 md:mt-0" asChild>
+              <Link href="/order">{isRTL ? "הזמן נסח חדש" : "Order New Extract"}</Link>
+            </Button>
           </div>
 
           <Card className="mb-8">
@@ -126,7 +124,7 @@ export default function MyOrdersPage() {
         </div>
       </main>
 
-      <Footer currentLanguage={currentLanguage} />
+      <Footer />
     </div>
   )
 }
