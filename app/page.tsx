@@ -142,7 +142,7 @@ export default function LandingPage() {
             <div className="hidden md:block">
               {/* כאן נשתמש בתמונת נסח הטאבו שהמשתמש סיפק */}
               <img
-                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/%D7%A0%D7%A1%D7%97-%D7%98%D7%90%D7%91%D7%95-%D7%9C%D7%93%D7%95%D7%92%D7%9E%D7%90-%D7%95%D7%94%D7%A1%D7%91%D7%A8%D7%99%D7%9D-1466435373.jpg-zp3WJJJoyR0lvaNLyYlHyD11cM1wEI.jpeg"
+                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/%D7%A0%D7%A1%D7%97-%D7%98%D7%90%D7%91%D7%95-%D7%9C%D7%93%D7%95%D7%92%D7%9E%D7%90-%D7%95%D7%94%D7%A1%D7%91%D7%A8%D7%99%D7%9D-1466435373.jpg-qbksRvPQlu2qsx8xwbZ4Bzg8rKoj8G.jpeg"
                 alt={isRTL ? "דוגמה לנסח טאבו" : "Sample Tabu Extract"}
                 className="mx-auto rounded-lg shadow-lg"
                 width={500}
