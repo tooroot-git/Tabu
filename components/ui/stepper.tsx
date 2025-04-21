@@ -1,5 +1,8 @@
+"use client"
+
 import { cn } from "@/lib/utils"
 import { CheckIcon } from "lucide-react"
+import { useEffect, useState } from "react"
 
 export interface StepProps {
   title: string
@@ -14,7 +17,12 @@ interface StepperProps {
 }
 
 export function Stepper({ steps, currentStep, className }: StepperProps) {
-  const isRTL = document.dir === "rtl"
+  const [isRTL, setIsRTL] = useState(false)
+
+  // בדיקת כיוון הטקסט רק בצד הלקוח
+  useEffect(() => {
+    setIsRTL(document.dir === "rtl")
+  }, [])
 
   return (
     <div className={cn("w-full", className)}>

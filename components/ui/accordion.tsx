@@ -1,7 +1,10 @@
+"use client"
+
 import * as React from "react"
 import * as AccordionPrimitive from "@radix-ui/react-accordion"
 import { ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useEffect, useState } from "react"
 
 const Accordion = AccordionPrimitive.Root
 
@@ -17,7 +20,12 @@ const AccordionTrigger = React.forwardRef<
   React.ElementRef<typeof AccordionPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger>
 >(({ className, children, ...props }, ref) => {
-  const isRTL = document.dir === "rtl"
+  const [isRTL, setIsRTL] = useState(false)
+
+  // בדיקת כיוון הטקסט רק בצד הלקוח
+  useEffect(() => {
+    setIsRTL(document.dir === "rtl")
+  }, [])
 
   return (
     <AccordionPrimitive.Header className="flex">

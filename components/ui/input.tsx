@@ -1,5 +1,8 @@
+"use client"
+
 import * as React from "react"
 import { cn } from "@/lib/utils"
+import { useEffect, useState } from "react"
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: string
@@ -10,8 +13,14 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, error, icon, iconPosition = "left", helperText, ...props }, ref) => {
-    // Determine if we should show the icon on the left or right based on language direction
-    const isRTL = document.dir === "rtl"
+    const [isRTL, setIsRTL] = useState(false)
+
+    // בדיקת כיוון הטקסט רק בצד הלקוח
+    useEffect(() => {
+      setIsRTL(document.dir === "rtl")
+    }, [])
+
+    // קביעת מיקום האייקון בהתאם לכיוון הטקסט
     const effectiveIconPosition = isRTL ? (iconPosition === "left" ? "right" : "left") : iconPosition
 
     return (

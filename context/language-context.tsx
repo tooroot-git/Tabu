@@ -17,17 +17,20 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const isClient = typeof window !== "undefined"
 
   // ננסה לקרוא את השפה מה-localStorage, אחרת נשתמש באנגלית כברירת מחדל
-  const [language, setLanguage] = useState<Language>(() => {
-    if (isClient) {
-      const savedLanguage = localStorage.getItem("language") as Language
-      return savedLanguage === "he" ? "he" : "en"
-    }
-    return "en"
-  })
-
+  const [language, setLanguage] = useState<Language>("en")
   const isRTL = language === "he"
 
-  // עדכון ה-localStorage כאשר השפה משתנה
+  // טעינת השפה מה-localStorage רק בצד הלקוח
+  useEffect(() => {
+    if (isClient) {
+      const savedLanguage = localStorage.getItem("language") as Language
+      if (savedLanguage === "he" || savedLanguage === "en") {
+        setLanguage(savedLanguage)
+      }
+    }
+  }, [isClient])
+
+  // עדכון ה-localStorage וכיוון המסמך כאשר השפה משתנה
   useEffect(() => {
     if (isClient) {
       localStorage.setItem("language", language)
