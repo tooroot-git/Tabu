@@ -8,7 +8,7 @@ import { useUser } from "@/lib/auth-mock"
 
 export function AuthButton() {
   const { isRTL } = useLanguage()
-  const { user, error, isLoading, login, logout } = useUser()
+  const { user, isLoading, login, logout } = useUser()
 
   if (isLoading) {
     return (

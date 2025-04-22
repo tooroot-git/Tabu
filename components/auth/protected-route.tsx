@@ -10,10 +10,10 @@ import { useUser } from "@/lib/auth-mock"
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const { isRTL } = useLanguage()
-  const { user, error, isLoading, login } = useUser()
+  const { user, isLoading, login } = useUser()
 
   useEffect(() => {
-    if (!isLoading && !user && !error) {
+    if (!isLoading && !user) {
       // In production, this would redirect to /api/auth/login
       // For preview, we'll just show a login prompt
       const shouldLogin = window.confirm(
@@ -28,22 +28,13 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
         router.push("/")
       }
     }
-  }, [user, isLoading, error, router, login, isRTL])
+  }, [user, isLoading, router, login, isRTL])
 
   if (isLoading) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary-600" />
         <p className="mt-4 text-lg">{isRTL ? "טוען..." : "Loading..."}</p>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center">
-        <p className="text-lg text-red-600">{isRTL ? "שגיאת אימות" : "Authentication Error"}</p>
-        <p className="mt-2">{error.message}</p>
       </div>
     )
   }
