@@ -1,13 +1,10 @@
-import type React from "react"
-import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { LanguageProvider } from "@/context/language-context"
-import { AuthProvider } from "@/components/auth/auth-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "Tabu.net.il - מסמכי רישום מקרקעין רשמיים",
   description: "הזמן נסחי טאבו רשמיים באופן מקוון, במהירות ובאופן מאובטח.",
     generator: 'v0.dev'
@@ -22,17 +19,11 @@ if (typeof window !== "undefined") {
   }
 }
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export default function RootLayout({ children }) {
   return (
     <html lang="he" dir="rtl" className="dark">
       <body className={`${inter.className} bg-[#0A0E17] text-white font-sans-hebrew`}>
-        <AuthProvider>
-          <LanguageProvider>{children}</LanguageProvider>
-        </AuthProvider>
+        <LanguageProvider>{children}</LanguageProvider>
       </body>
     </html>
   )

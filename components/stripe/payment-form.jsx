@@ -1,32 +1,20 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js"
 import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/context/language-context"
 import { AlertError } from "@/components/ui/alert"
 import { CreditCard, ShieldCheck } from "lucide-react"
-import { useUser } from "@/lib/auth-mock"
 
-interface PaymentFormProps {
-  amount: number
-  description: string
-  orderDetails: any
-  onSuccess: (paymentIntent: any) => void
-  onError: (error: Error) => void
-}
-
-export function PaymentForm({ amount, description, orderDetails, onSuccess, onError }: PaymentFormProps) {
+export function PaymentForm({ amount, description, orderDetails, onSuccess, onError }) {
   const { isRTL } = useLanguage()
-  const { user } = useUser()
   const stripe = useStripe()
   const elements = useElements()
   const [isLoading, setIsLoading] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState(null)
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
 
     if (!stripe || !elements) {
@@ -48,33 +36,12 @@ export function PaymentForm({ amount, description, orderDetails, onSuccess, onEr
           description,
         }
 
-        // Save order to mock database
-        if (user) {
-          try {
-            fetch("/api/orders", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                ...orderDetails,
-                payment_id: mockPaymentIntent.id,
-                amount: amount,
-                type_en: orderDetails.serviceDetails.titleEn,
-                type_he: orderDetails.serviceDetails.titleHe,
-              }),
-            }).catch((err) => console.error("Error saving order:", err))
-          } catch (err) {
-            console.error("Error saving order:", err)
-          }
-        }
-
         onSuccess(mockPaymentIntent)
       }, 2000)
     } catch (error) {
       console.error("Payment error:", error)
-      setErrorMessage((error as Error).message || "An unknown error occurred")
-      onError(error as Error)
+      setErrorMessage(error.message || "An unknown error occurred")
+      onError(error)
     } finally {
       setIsLoading(false)
     }

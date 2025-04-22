@@ -1,7 +1,5 @@
 "use client"
 
-import type React from "react"
-
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
@@ -12,15 +10,14 @@ import { AlertInfo } from "@/components/ui/alert"
 import { User, UserPlus } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
 import { useSearchParams } from "next/navigation"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import Link from "next/link"
 
 export default function OrderPage() {
-  const { language, isRTL } = useLanguage()
+  const { isRTL } = useLanguage()
   const searchParams = useSearchParams()
   const serviceParam = searchParams.get("service")
-  const [user, setUser] = useState<any>(null)
-  const [isLoading, setIsLoading] = useState(true)
 
   const [formData, setFormData] = useState({
     block: "",
@@ -31,41 +28,30 @@ export default function OrderPage() {
     city: "",
   })
 
-  // מוק לבדיקת משתמש בסביבת התצוגה המקדימה
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedUser = localStorage.getItem("mock_user")
-      if (storedUser) {
-        setUser(JSON.parse(storedUser))
-      }
-      setIsLoading(false)
-    }
-  }, [])
-
   const steps = [
     {
       title: isRTL ? "פרטי נכס" : "Property Details",
       description: isRTL ? "הזן את פרטי הנכס" : "Enter property information",
-      status: "current" as const,
+      status: "current",
     },
     {
       title: isRTL ? "בחירת מסמך" : "Document Selection",
       description: isRTL ? "בחר את סוג המסמך" : "Choose document type",
-      status: "upcoming" as const,
+      status: "upcoming",
     },
     {
       title: isRTL ? "תשלום" : "Payment",
       description: isRTL ? "השלם את התשלום" : "Complete payment",
-      status: "upcoming" as const,
+      status: "upcoming",
     },
   ]
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e) => {
     const { id, value } = e.target
     setFormData((prev) => ({ ...prev, [id]: value }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e) => {
     e.preventDefault()
 
     // בדיקה איזה טאב פעיל
@@ -76,21 +62,6 @@ export default function OrderPage() {
     } else {
       window.location.href = `/document-selection?block=${formData.block}&parcel=${formData.parcel}&subparcel=${formData.subparcel}&inputType=blockParcel${serviceParam ? `&service=${serviceParam}` : ""}`
     }
-  }
-
-  // פונקציה להתחברות בסביבת התצוגה המקדימה
-  const handleLogin = () => {
-    // בסביבת התצוגה המקדימה, נשמור משתמש מוק בלוקל סטורג'
-    const mockUser = {
-      name: "משתמש לדוגמה",
-      email: "user@example.com",
-      picture: "/vibrant-street-market.png",
-      sub: "auth0|123456789",
-      updated_at: new Date().toISOString(),
-    }
-    localStorage.setItem("mock_user", JSON.stringify(mockUser))
-    setUser(mockUser)
-    window.location.href = "/dashboard"
   }
 
   return (
@@ -109,42 +80,36 @@ export default function OrderPage() {
           <div className="mx-auto max-w-3xl">
             <Stepper steps={steps} currentStep={0} className="mb-8" />
 
-            {!user && !isLoading && (
-              <Card className="mb-6 border-gray-800 bg-gray-900/80 backdrop-blur-sm">
-                <CardContent className="p-6">
-                  <div className="flex flex-col items-center justify-between md:flex-row">
-                    <div>
-                      <h3 className="text-lg font-medium text-white">
-                        {isRTL ? "התחבר או המשך כאורח" : "Login or Continue as Guest"}
-                      </h3>
-                      <p className="mt-1 text-sm text-gray-400">
-                        {isRTL
-                          ? "התחבר כדי לעקוב אחר ההזמנות שלך ולשמור את פרטיך לרכישות עתידיות"
-                          : "Login to track your orders and save your details for future purchases"}
-                      </p>
-                    </div>
-                    <div className="mt-4 flex gap-2 md:mt-0">
-                      <Button
-                        variant="outline"
-                        className="gap-2 border-gray-700 text-white hover:bg-gray-800"
-                        onClick={handleLogin}
-                      >
+            <Card className="mb-6 border-gray-800 bg-gray-900/80 backdrop-blur-sm">
+              <CardContent className="p-6">
+                <div className="flex flex-col items-center justify-between md:flex-row">
+                  <div>
+                    <h3 className="text-lg font-medium text-white">
+                      {isRTL ? "התחבר או המשך כאורח" : "Login or Continue as Guest"}
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-400">
+                      {isRTL
+                        ? "התחבר כדי לעקוב אחר ההזמנות שלך ולשמור את פרטיך לרכישות עתידיות"
+                        : "Login to track your orders and save your details for future purchases"}
+                    </p>
+                  </div>
+                  <div className="mt-4 flex gap-2 md:mt-0">
+                    <Button variant="outline" className="gap-2 border-gray-700 text-white hover:bg-gray-800" asChild>
+                      <Link href="/login">
                         <User className="h-4 w-4" />
                         {isRTL ? "התחבר" : "Login"}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="gap-2 border-gray-700 text-white hover:bg-gray-800"
-                        onClick={handleLogin}
-                      >
+                      </Link>
+                    </Button>
+                    <Button variant="outline" className="gap-2 border-gray-700 text-white hover:bg-gray-800" asChild>
+                      <Link href="/signup">
                         <UserPlus className="h-4 w-4" />
                         {isRTL ? "הירשם" : "Sign Up"}
-                      </Button>
-                    </div>
+                      </Link>
+                    </Button>
                   </div>
-                </CardContent>
-              </Card>
-            )}
+                </div>
+              </CardContent>
+            </Card>
 
             <Card className="border-gray-800 bg-gray-900/80 backdrop-blur-sm">
               <CardHeader>
