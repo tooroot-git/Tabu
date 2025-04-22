@@ -90,42 +90,59 @@ export default function DocumentSelectionPage() {
     <div className={isRTL ? "font-sans-hebrew" : "font-sans"}>
       <Header />
 
-      <main className="container mx-auto px-4 py-8 md:py-16">
-        <div className="mx-auto max-w-3xl">
-          <Stepper steps={steps} currentStep={1} className="mb-8" />
+      <main className="relative py-24">
+        {/* Background Elements */}
+        <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute -top-[30%] -left-[10%] h-[600px] w-[600px] rounded-full bg-gradient-to-r from-primary-500/20 to-primary-700/20 blur-[120px]"></div>
+          <div className="absolute top-[20%] right-[5%] h-[400px] w-[700px] rounded-full bg-gradient-to-l from-blue-500/10 to-purple-500/10 blur-[120px]"></div>
+          <div className="absolute inset-0 bg-[url('/subtle-woven-texture.png')] bg-center opacity-[0.03]"></div>
+        </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>{isRTL ? "בחר סוג מסמך" : "Select Document Type"}</CardTitle>
-              <CardDescription>
-                {isRTL ? "בחר את סוג הנסח שברצונך להזמין" : "Choose the type of extract you want to order"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2">
-                {documentTypes.map((doc) => (
-                  <DocumentCard
-                    key={doc.type}
-                    type={doc.type as any}
-                    title={isRTL ? doc.titleHe : doc.titleEn}
-                    description={isRTL ? doc.descriptionHe : doc.descriptionEn}
-                    price={isRTL ? doc.priceHe : doc.priceEn}
-                    selected={doc.type === selectedDocument}
-                    onClick={() => setSelectedDocument(doc.type)}
-                  />
-                ))}
-              </div>
+        <div className="container relative z-10 mx-auto px-4">
+          <div className="mx-auto max-w-3xl">
+            <Stepper steps={steps} currentStep={1} className="mb-8" />
 
-              <div className="mt-8 flex justify-between">
-                <Button variant="outline" onClick={handleBack}>
-                  {isRTL ? "חזור" : "Back"}
-                </Button>
-                <Button type="button" onClick={handleContinue}>
-                  {isRTL ? "המשך לתשלום" : "Continue to Payment"}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+            <Card className="border-gray-800 bg-gray-900/80 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-white">{isRTL ? "בחר סוג מסמך" : "Select Document Type"}</CardTitle>
+                <CardDescription className="text-gray-400">
+                  {isRTL ? "בחר את סוג הנסח שברצונך להזמין" : "Choose the type of extract you want to order"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {documentTypes.map((doc) => (
+                    <DocumentCard
+                      key={doc.type}
+                      type={doc.type as any}
+                      title={isRTL ? doc.titleHe : doc.titleEn}
+                      description={isRTL ? doc.descriptionHe : doc.descriptionEn}
+                      price={isRTL ? doc.priceHe : doc.priceEn}
+                      selected={doc.type === selectedDocument}
+                      onClick={() => setSelectedDocument(doc.type)}
+                    />
+                  ))}
+                </div>
+
+                <div className="mt-8 flex justify-between">
+                  <Button
+                    variant="outline"
+                    onClick={handleBack}
+                    className="border-gray-700 text-white hover:bg-gray-800"
+                  >
+                    {isRTL ? "חזור" : "Back"}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleContinue}
+                    className="bg-gradient-to-r from-primary-500 to-primary-600 text-white transition-all duration-300 hover:from-primary-600 hover:to-primary-700 hover:shadow-lg hover:shadow-primary-500/20"
+                  >
+                    {isRTL ? "המשך לתשלום" : "Continue to Payment"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </main>
 

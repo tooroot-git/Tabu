@@ -38,7 +38,7 @@ export default function TermsPage() {
       contentEn:
         "All payments are processed securely through our payment providers. Prices for our services are clearly displayed before purchase. Due to the immediate delivery of digital documents, refunds are generally not provided unless there is a technical issue on our part that prevents document delivery.",
       contentHe:
-        "כל התשלומים מעובדים באופן מאובטח באמצעות ספקי התשלום שלנו. המחירים עבור השירותים שלנו מוצגים בבירור לפני הרכישה. בשל המסירה המיידית של מסמכים דיגיטליים, החזרים בדרך כלל אינם ניתנים אלא אם כן יש בעיה טכנית מצדנו שמונעת את מסירת המסמך.",
+        "כל התשלומים מעובדים באופן מאובטח באמצעות ספקי התשלום שלנו. המחירים עבור השירותים שלנו מוצגים בבירור לפני הרכ��שה. בשל המסירה המיידית של מסמכים דיגיטליים, החזרים בדרך כלל אינם ניתנים אלא אם כן יש בעיה טכנית מצדנו שמונעת את מסירת המסמך.",
     },
     {
       titleEn: "5. Privacy Policy",

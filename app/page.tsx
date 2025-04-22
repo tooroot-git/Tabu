@@ -152,7 +152,7 @@ export default function LandingPage() {
             </div>
 
             <h1 className="mt-6 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-5xl font-bold tracking-tight text-transparent md:text-6xl lg:text-7xl">
-              {isRTL ? "נסחי טאבו רשמיים" : "Official Land Registry"}
+              {isRTL ? "נסח טאבו ומסמכים רשמיים" : "Official Land Registry"}
               <span className="mt-2 block bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent">
                 {isRTL ? "במהירות ובקלות" : "Fast & Secure Access"}
               </span>
@@ -160,7 +160,7 @@ export default function LandingPage() {
 
             <p className="mx-auto mt-6 max-w-2xl text-xl text-gray-400">
               {isRTL
-                ? "קבל נסחי טאבו רשמיים באופן מיידי, ישירות למייל שלך. הפלטפורמה המהירה והמאובטחת ביותר בישראל."
+                ? "קבל נסח טאבו ומסמכים רשמיים באופן מיידי, ישירות למייל שלך. הפלטפורמה המהירה והמאובטחת ביותר בישראל."
                 : "Get official Tabu extracts instantly, delivered directly to your email. The fastest and most secure platform in Israel."}
             </p>
 

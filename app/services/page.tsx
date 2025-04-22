@@ -78,13 +78,20 @@ export default function ServicesPage() {
     <div className={isRTL ? "font-sans-hebrew" : "font-sans"}>
       <Header />
 
-      <main className="py-16 md:py-24">
-        <div className="container mx-auto px-4">
+      <main className="relative py-24">
+        {/* Background Elements */}
+        <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute -top-[30%] -left-[10%] h-[600px] w-[600px] rounded-full bg-gradient-to-r from-primary-500/20 to-primary-700/20 blur-[120px]"></div>
+          <div className="absolute top-[20%] right-[5%] h-[400px] w-[700px] rounded-full bg-gradient-to-l from-blue-500/10 to-purple-500/10 blur-[120px]"></div>
+          <div className="absolute inset-0 bg-[url('/subtle-woven-texture.png')] bg-center opacity-[0.03]"></div>
+        </div>
+
+        <div className="container relative z-10 mx-auto px-4">
           <div className="mx-auto max-w-3xl text-center">
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 md:text-5xl">
+            <h1 className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-4xl font-bold tracking-tight text-transparent md:text-5xl">
               {isRTL ? "השירותים שלנו" : "Our Services"}
             </h1>
-            <p className="mt-6 text-xl text-gray-600">
+            <p className="mt-6 text-xl text-gray-400">
               {isRTL
                 ? "אנו מציעים מגוון שירותים להשגת מסמכי רישום מקרקעין רשמיים"
                 : "We offer a variety of services for obtaining official land registry documents"}
@@ -93,21 +100,24 @@ export default function ServicesPage() {
 
           <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {services.map((service) => (
-              <Card key={service.id} className="flex flex-col">
+              <Card key={service.id} className="flex h-full flex-col border-gray-800 bg-gray-900/80 backdrop-blur-sm">
                 <CardHeader>
-                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-100 text-primary-600">
+                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-lg bg-primary-500/10 text-primary-500">
                     {service.icon}
                   </div>
-                  <CardTitle>{isRTL ? service.titleHe : service.titleEn}</CardTitle>
+                  <CardTitle className="text-white">{isRTL ? service.titleHe : service.titleEn}</CardTitle>
                 </CardHeader>
                 <CardContent className="flex-grow">
-                  <CardDescription className={`text-base ${isRTL ? "text-right" : ""}`}>
+                  <CardDescription className={`text-base text-gray-400 ${isRTL ? "text-right" : ""}`}>
                     {isRTL ? service.descriptionHe : service.descriptionEn}
                   </CardDescription>
                 </CardContent>
                 <CardFooter className="flex flex-col items-start space-y-4">
-                  <div className="text-2xl font-bold text-primary-600">{isRTL ? service.priceHe : service.priceEn}</div>
-                  <Button asChild>
+                  <div className="text-2xl font-bold text-primary-500">{isRTL ? service.priceHe : service.priceEn}</div>
+                  <Button
+                    className="bg-gradient-to-r from-primary-500 to-primary-600 text-white transition-all duration-300 hover:from-primary-600 hover:to-primary-700 hover:shadow-lg hover:shadow-primary-500/20"
+                    asChild
+                  >
                     <Link href={`/order?service=${service.id}`}>{isRTL ? "הזמן עכשיו" : "Order Now"}</Link>
                   </Button>
                 </CardFooter>
@@ -115,17 +125,20 @@ export default function ServicesPage() {
             ))}
           </div>
 
-          <div className="mt-16 rounded-lg bg-primary-50 p-8">
+          <div className="mt-16 rounded-xl border border-primary-500/20 bg-gradient-to-b from-gray-900 to-gray-900/95 p-8 shadow-xl shadow-primary-500/5 backdrop-blur-sm">
             <div className="mx-auto max-w-3xl text-center">
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-2xl font-bold text-white">
                 {isRTL ? "לא בטוח איזה מסמך אתה צריך?" : "Not sure which document you need?"}
               </h2>
-              <p className="mt-4 text-lg text-gray-600">
+              <p className="mt-4 text-lg text-gray-400">
                 {isRTL
                   ? "צוות המומחים שלנו ישמח לעזור לך לבחור את המסמך המתאים לצרכים שלך"
                   : "Our team of experts will be happy to help you choose the right document for your needs"}
               </p>
-              <Button className="mt-6" asChild>
+              <Button
+                className="mt-6 bg-gradient-to-r from-primary-500 to-primary-600 text-white transition-all duration-300 hover:from-primary-600 hover:to-primary-700 hover:shadow-lg hover:shadow-primary-500/20"
+                asChild
+              >
                 <Link href="/contact">{isRTL ? "צור קשר לייעוץ" : "Contact Us for Advice"}</Link>
               </Button>
             </div>

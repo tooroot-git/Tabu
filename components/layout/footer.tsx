@@ -17,11 +17,15 @@ export function Footer() {
   ]
 
   return (
-    <footer className="bg-black text-white border-t border-dark-100">
+    <footer className="bg-[#0A0E17] border-t border-gray-800">
       <div className="container mx-auto px-4 py-12">
         <div className={`grid grid-cols-1 gap-8 md:grid-cols-3 ${isRTL ? "text-right" : "text-left"}`}>
           <div>
-            <h3 className="text-lg font-semibold tech-text">{isRTL ? "טאבו.נט.איל" : "Tabu.net.il"}</h3>
+            <h3 className="text-lg font-semibold text-white">
+              <span className="bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent">
+                {isRTL ? "טאבו.נט.איל" : "Tabu.net.il"}
+              </span>
+            </h3>
             <p className="mt-2 text-sm text-gray-400">
               {isRTL
                 ? "הדרך המהירה והבטוחה להזמין נסחי טאבו רשמיים באופן מקוון"
@@ -34,7 +38,7 @@ export function Footer() {
             <ul className={`mt-2 space-y-2 ${isRTL ? "text-right" : "text-left"}`}>
               {links.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-sm text-gray-400 hover:text-primary-500 transition-colors">
+                  <Link href={link.href} className="text-sm text-gray-400 transition-colors hover:text-primary-400">
                     {isRTL ? link.labelHe : link.labelEn}
                   </Link>
                 </li>
@@ -56,7 +60,9 @@ export function Footer() {
         </div>
 
         <div
-          className={`mt-8 border-t border-dark-100 pt-6 text-center text-sm text-gray-500 ${isRTL ? "text-right" : "text-left"}`}
+          className={`mt-8 border-t border-gray-800 pt-6 text-center text-sm text-gray-500 ${
+            isRTL ? "text-right" : "text-left"
+          }`}
         >
           <p>
             &copy; {currentYear} Tabu.net.il. {isRTL ? "כל הזכויות שמורות" : "All rights reserved"}.

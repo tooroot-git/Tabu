@@ -73,13 +73,20 @@ export default function FAQPage() {
     <div className={isRTL ? "font-sans-hebrew" : "font-sans"}>
       <Header />
 
-      <main className="py-16 md:py-24">
-        <div className="container mx-auto px-4">
+      <main className="relative py-24">
+        {/* Background Elements */}
+        <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute -top-[30%] -left-[10%] h-[600px] w-[600px] rounded-full bg-gradient-to-r from-primary-500/20 to-primary-700/20 blur-[120px]"></div>
+          <div className="absolute top-[20%] right-[5%] h-[400px] w-[700px] rounded-full bg-gradient-to-l from-blue-500/10 to-purple-500/10 blur-[120px]"></div>
+          <div className="absolute inset-0 bg-[url('/subtle-woven-texture.png')] bg-center opacity-[0.03]"></div>
+        </div>
+
+        <div className="container relative z-10 mx-auto px-4">
           <div className="mx-auto max-w-3xl text-center">
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 md:text-5xl">
+            <h1 className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-4xl font-bold tracking-tight text-transparent md:text-5xl">
               {isRTL ? "שאלות נפוצות" : "Frequently Asked Questions"}
             </h1>
-            <p className="mt-6 text-xl text-gray-600">
+            <p className="mt-6 text-xl text-gray-400">
               {isRTL ? "מצא תשובות לשאלות הנפוצות ביותר" : "Find answers to the most common questions"}
             </p>
           </div>
@@ -87,11 +94,17 @@ export default function FAQPage() {
           <div className="mx-auto mt-16 max-w-3xl">
             <Accordion type="single" collapsible className="w-full">
               {faqs.map((faq, index) => (
-                <AccordionItem key={index} value={`item-${index}`}>
-                  <AccordionTrigger className={`text-left ${isRTL ? "text-right" : ""}`}>
+                <AccordionItem
+                  key={index}
+                  value={`item-${index}`}
+                  className="mb-4 overflow-hidden rounded-lg border border-gray-800 bg-gray-900/80 transition-all duration-200 hover:border-primary-500/30"
+                >
+                  <AccordionTrigger
+                    className={`px-6 py-4 text-left text-lg font-medium text-white hover:text-primary-400 ${isRTL ? "text-right" : ""}`}
+                  >
                     {isRTL ? faq.questionHe : faq.questionEn}
                   </AccordionTrigger>
-                  <AccordionContent className={isRTL ? "text-right" : ""}>
+                  <AccordionContent className={`px-6 pb-4 text-gray-400 ${isRTL ? "text-right" : ""}`}>
                     {isRTL ? faq.answerHe : faq.answerEn}
                   </AccordionContent>
                 </AccordionItem>
@@ -100,15 +113,16 @@ export default function FAQPage() {
           </div>
 
           <div className="mx-auto mt-16 max-w-3xl text-center">
-            <h2 className="text-2xl font-bold text-gray-900">
-              {isRTL ? "עדיין יש לך שאלות?" : "Still Have Questions?"}
-            </h2>
-            <p className="mt-4 text-lg text-gray-600">
+            <h2 className="text-2xl font-bold text-white">{isRTL ? "עדיין יש לך שאלות?" : "Still Have Questions?"}</h2>
+            <p className="mt-4 text-lg text-gray-400">
               {isRTL
                 ? "אם לא מצאת את התשובה שחיפשת, אל תהסס לפנות אלינו"
                 : "If you couldn't find the answer you were looking for, don't hesitate to contact us"}
             </p>
-            <Button className="mt-6" asChild>
+            <Button
+              className="mt-6 bg-gradient-to-r from-primary-500 to-primary-600 text-white transition-all duration-300 hover:from-primary-600 hover:to-primary-700 hover:shadow-lg hover:shadow-primary-500/20"
+              asChild
+            >
               <Link href="/contact">{isRTL ? "צור קשר" : "Contact Us"}</Link>
             </Button>
           </div>
