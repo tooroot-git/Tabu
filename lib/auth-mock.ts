@@ -41,9 +41,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
   // Check for stored user on mount
   useEffect(() => {
     try {
-      const storedUser = localStorage.getItem("mock_user")
-      if (storedUser) {
-        setUser(JSON.parse(storedUser))
+      if (typeof window !== "undefined") {
+        const storedUser = localStorage.getItem("mock_user")
+        if (storedUser) {
+          setUser(JSON.parse(storedUser))
+        }
       }
     } catch (err) {
       setError(err as Error)
@@ -61,17 +63,22 @@ export function UserProvider({ children }: { children: ReactNode }) {
       picture: "/vibrant-street-market.png",
       updated_at: new Date().toISOString(),
     }
-    localStorage.setItem("mock_user", JSON.stringify(mockUser))
+    if (typeof window !== "undefined") {
+      localStorage.setItem("mock_user", JSON.stringify(mockUser))
+    }
     setUser(mockUser)
   }
 
   // Logout function
   const logout = () => {
-    localStorage.removeItem("mock_user")
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("mock_user")
+    }
     setUser(null)
   }
 
-  return <AuthContext.Provider value={{ user, error, isLoading, login, logout }}>{children}</AuthContext.Provider>
+  const value = { user, error, isLoading, login, logout }
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 // Mock API handlers

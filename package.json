@@ -61,7 +61,6 @@
     "@stripe/stripe-js": "latest",
     "@stripe/react-stripe-js": "latest",
     "stripe": "latest",
-    "@auth0/nextjs-auth0": "latest",
     "@supabase/supabase-js": "latest"
   },
   "devDependencies": {

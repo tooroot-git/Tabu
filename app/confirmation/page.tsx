@@ -10,8 +10,7 @@ import { useLanguage } from "@/context/language-context"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { supabase } from "@/lib/supabase"
-import { useUser } from "@auth0/nextjs-auth0/client"
+import { useUser } from "@/lib/auth-mock"
 
 export default function ConfirmationPage() {
   const { language, isRTL } = useLanguage()
@@ -31,32 +30,8 @@ export default function ConfirmationPage() {
   const paymentId = searchParams.get("paymentId") || ""
 
   useEffect(() => {
-    async function fetchOrderDetails() {
-      if (paymentId && user?.sub) {
-        try {
-          const { data, error } = await supabase
-            .from("orders")
-            .select("*")
-            .eq("payment_id", paymentId)
-            .eq("user_id", user.sub)
-            .single()
-
-          if (error) {
-            console.error("Error fetching order:", error)
-          } else if (data) {
-            setOrderDetails(data)
-          }
-        } catch (err) {
-          console.error("Error fetching order details:", err)
-        } finally {
-          setIsLoading(false)
-        }
-      } else {
-        setIsLoading(false)
-      }
-    }
-
-    fetchOrderDetails()
+    // For preview, we'll just set isLoading to false
+    setIsLoading(false)
   }, [paymentId, user])
 
   const getServiceDetails = () => {
