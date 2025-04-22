@@ -16,8 +16,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   // בדיקה אם אנחנו בצד הלקוח כדי לגשת ל-localStorage
   const isClient = typeof window !== "undefined"
 
-  // ננסה לקרוא את השפה מה-localStorage, אחרת נשתמש באנגלית כברירת מחדל
-  const [language, setLanguage] = useState<Language>("en")
+  // ננסה לקרוא את השפה מה-localStorage, אחרת נשתמש בעברית כברירת מחדל
+  const [language, setLanguage] = useState<Language>("he")
   const isRTL = language === "he"
 
   // טעינת השפה מה-localStorage רק בצד הלקוח

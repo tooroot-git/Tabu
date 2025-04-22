@@ -17,6 +17,10 @@ export default function DocumentSelectionPage() {
   const block = searchParams.get("block") || ""
   const parcel = searchParams.get("parcel") || ""
   const subparcel = searchParams.get("subparcel") || ""
+  const street = searchParams.get("street") || ""
+  const houseNumber = searchParams.get("houseNumber") || ""
+  const city = searchParams.get("city") || ""
+  const inputType = searchParams.get("inputType") || "blockParcel"
   const serviceParam = searchParams.get("service")
 
   const [selectedDocument, setSelectedDocument] = useState<string>(serviceParam || "regular")
@@ -79,11 +83,19 @@ export default function DocumentSelectionPage() {
   ]
 
   const handleContinue = () => {
-    window.location.href = `/payment?block=${block}&parcel=${parcel}&subparcel=${subparcel}&service=${selectedDocument}`
+    if (inputType === "address") {
+      window.location.href = `/payment?street=${encodeURIComponent(street)}&houseNumber=${encodeURIComponent(houseNumber)}&city=${encodeURIComponent(city)}&inputType=address&service=${selectedDocument}`
+    } else {
+      window.location.href = `/payment?block=${block}&parcel=${parcel}&subparcel=${subparcel}&inputType=blockParcel&service=${selectedDocument}`
+    }
   }
 
   const handleBack = () => {
-    window.location.href = `/order?block=${block}&parcel=${parcel}&subparcel=${subparcel}`
+    if (inputType === "address") {
+      window.location.href = `/order?street=${encodeURIComponent(street)}&houseNumber=${encodeURIComponent(houseNumber)}&city=${encodeURIComponent(city)}&inputType=address`
+    } else {
+      window.location.href = `/order?block=${block}&parcel=${parcel}&subparcel=${subparcel}&inputType=blockParcel`
+    }
   }
 
   return (

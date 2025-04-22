@@ -33,60 +33,55 @@ export function Stepper({ steps, currentStep, className }: StepperProps) {
           return (
             <li
               key={step.title}
-              className={cn(
-                "relative flex items-center",
-                index !== steps.length - 1 ? "flex-1" : "",
-                isRTL ? "flex-row-reverse" : "",
-              )}
+              className={cn("relative flex flex-col items-center", index !== steps.length - 1 ? "flex-1" : "")}
             >
-              <div className="flex items-center justify-center">
-                <div
-                  className={cn(
-                    "flex h-8 w-8 items-center justify-center rounded-full border-2",
-                    status === "completed"
-                      ? "border-primary-600 bg-primary-600"
-                      : status === "current"
-                        ? "border-primary-600 bg-white"
-                        : "border-gray-300 bg-white",
-                  )}
-                >
-                  {status === "completed" ? (
-                    <CheckIcon className="h-5 w-5 text-white" />
-                  ) : (
-                    <span
-                      className={cn("text-sm font-medium", status === "current" ? "text-primary-600" : "text-gray-500")}
-                    >
-                      {index + 1}
-                    </span>
-                  )}
-                </div>
+              {/* Step Indicator */}
+              <div
+                className="flex h-10 w-10 items-center justify-center rounded-full border-2 z-10
+                  bg-gray-900
+                  border-primary-600
+                  shadow-[0_0_10px_rgba(232,93,4,0.3)]"
+              >
+                {status === "completed" ? (
+                  <CheckIcon className="h-5 w-5 text-primary-500" />
+                ) : (
+                  <span
+                    className={cn("text-sm font-medium", status === "current" ? "text-primary-500" : "text-gray-500")}
+                  >
+                    {index + 1}
+                  </span>
+                )}
               </div>
-              <div className="ml-4 rtl:ml-0 rtl:mr-4">
-                <p
+
+              {/* Step Content */}
+              <div className="mt-3 text-center">
+                <h3
                   className={cn(
                     "text-sm font-medium",
-                    status === "completed" || status === "current" ? "text-gray-900" : "text-gray-500",
+                    status === "completed" || status === "current" ? "text-white" : "text-gray-500",
                   )}
                 >
                   {step.title}
-                </p>
+                </h3>
                 {step.description && (
                   <p
                     className={cn(
-                      "text-sm",
-                      status === "completed" || status === "current" ? "text-gray-600" : "text-gray-400",
+                      "mt-1 text-xs",
+                      status === "completed" || status === "current" ? "text-gray-400" : "text-gray-600",
                     )}
                   >
                     {step.description}
                   </p>
                 )}
               </div>
+
+              {/* Connector Line */}
               {index !== steps.length - 1 && (
                 <div
                   className={cn(
-                    "absolute top-4 h-0.5 w-full",
-                    isRTL ? "right-8" : "left-8",
-                    status === "completed" ? "bg-primary-600" : "bg-gray-300",
+                    "absolute top-5 h-0.5 w-full",
+                    isRTL ? "right-1/2" : "left-1/2",
+                    status === "completed" ? "bg-primary-600" : "bg-gray-700",
                   )}
                 />
               )}

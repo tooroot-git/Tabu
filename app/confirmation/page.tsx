@@ -5,7 +5,7 @@ import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { AlertSuccess } from "@/components/ui/alert"
-import { Download, Mail, FileText } from "lucide-react"
+import { Download, Mail, FileText, Receipt } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
@@ -17,7 +17,12 @@ export default function ConfirmationPage() {
   const block = searchParams.get("block") || ""
   const parcel = searchParams.get("parcel") || ""
   const subparcel = searchParams.get("subparcel") || ""
+  const street = searchParams.get("street") || ""
+  const houseNumber = searchParams.get("houseNumber") || ""
+  const city = searchParams.get("city") || ""
+  const inputType = searchParams.get("inputType") || "blockParcel"
   const service = searchParams.get("service") || "regular"
+  const paymentId = searchParams.get("paymentId") || ""
 
   const getServiceDetails = () => {
     switch (service) {
@@ -55,7 +60,7 @@ export default function ConfirmationPage() {
   }
 
   const serviceDetails = getServiceDetails()
-  const orderNumber = Math.floor(10000 + Math.random() * 90000)
+  const orderNumber = paymentId ? paymentId.slice(-5) : Math.floor(10000 + Math.random() * 90000).toString()
 
   return (
     <div className={isRTL ? "font-sans-hebrew" : "font-sans"}>
@@ -111,8 +116,16 @@ export default function ConfirmationPage() {
                     <div>
                       <h3 className="font-medium">
                         {isRTL
-                          ? `${serviceDetails.titleHe} - גוש ${block} חלקה ${parcel}${subparcel ? ` תת-חלקה ${subparcel}` : ""}`
-                          : `${serviceDetails.titleEn} - Block ${block} Parcel ${parcel}${subparcel ? ` Sub-parcel ${subparcel}` : ""}`}
+                          ? `${serviceDetails.titleHe} - ${
+                              inputType === "blockParcel"
+                                ? `גוש ${block} חלקה ${parcel}${subparcel ? ` תת-חלקה ${subparcel}` : ""}`
+                                : `${street} ${houseNumber}, ${city}`
+                            }`
+                          : `${serviceDetails.titleEn} - ${
+                              inputType === "blockParcel"
+                                ? `Block ${block} Parcel ${parcel}${subparcel ? ` Sub-parcel ${subparcel}` : ""}`
+                                : `${street} ${houseNumber}, ${city}`
+                            }`}
                       </h3>
                       <p className="text-sm text-gray-500">PDF, 2.4 MB</p>
                     </div>
@@ -127,7 +140,7 @@ export default function ConfirmationPage() {
               <div className="mt-6 rounded-lg border bg-gray-50 p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3 rtl:space-x-reverse">
-                    <FileText className="h-8 w-8 text-primary-600" />
+                    <Receipt className="h-8 w-8 text-primary-600" />
                     <div>
                       <h3 className="font-medium">{isRTL ? "חשבונית מס" : "Tax Invoice"}</h3>
                       <p className="text-sm text-gray-500">PDF, 0.8 MB</p>

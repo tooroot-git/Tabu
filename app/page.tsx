@@ -7,10 +7,11 @@ import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { FileText, Shield, Clock, CheckCircle, ArrowRight, HelpCircle, Info } from "lucide-react"
+import { FileText, Shield, Clock, CheckCircle, ArrowRight } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
 import Link from "next/link"
 import { useState } from "react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function LandingPage() {
   const { language, isRTL } = useLanguage()
@@ -18,6 +19,9 @@ export default function LandingPage() {
     block: "",
     parcel: "",
     subparcel: "",
+    street: "",
+    houseNumber: "",
+    city: "",
   })
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,7 +31,15 @@ export default function LandingPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    window.location.href = `/document-selection?block=${formData.block}&parcel=${formData.parcel}&subparcel=${formData.subparcel}`
+
+    // בדיקה איזה טאב פעיל
+    const activeTab = document.querySelector('[data-state="active"]')?.getAttribute("value")
+
+    if (activeTab === "address") {
+      window.location.href = `/document-selection?street=${encodeURIComponent(formData.street)}&houseNumber=${encodeURIComponent(formData.houseNumber)}&city=${encodeURIComponent(formData.city)}&inputType=address`
+    } else {
+      window.location.href = `/document-selection?block=${formData.block}&parcel=${formData.parcel}&subparcel=${formData.subparcel}&inputType=blockParcel`
+    }
   }
 
   const benefits = [
@@ -66,8 +78,9 @@ export default function LandingPage() {
       icon: <FileText className="h-8 w-8" />,
       titleEn: "Enter Property Details",
       titleHe: "הזן פרטי נכס",
-      descriptionEn: "Provide the Block (Gush), Parcel (Helka), and Sub-parcel (Tat-Helka) numbers.",
-      descriptionHe: "הזן את מספרי הגוש, החלקה ותת-החלקה של הנכס.",
+      descriptionEn:
+        "Provide the Block (Gush), Parcel (Helka), and Sub-parcel (Tat-Helka) numbers or property address.",
+      descriptionHe: "הזן את מספרי הגוש, החלקה ותת-החלקה של הנכס או את כתובת הנכס.",
     },
     {
       icon: <Shield className="h-8 w-8" />,
@@ -168,58 +181,112 @@ export default function LandingPage() {
             <div className="mx-auto mt-10 max-w-3xl">
               <div className="rounded-xl border border-gray-800 bg-gray-900/80 p-8 backdrop-blur-sm">
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid gap-6 md:grid-cols-3">
-                    <div>
-                      <label htmlFor="block" className="block text-sm font-medium text-gray-300">
-                        {isRTL ? "גוש" : "Block (Gush)"}
-                      </label>
-                      <Input
-                        id="block"
-                        type="text"
-                        placeholder={isRTL ? "הזן מספר גוש" : "Enter Block number"}
-                        icon={<HelpCircle className="h-4 w-4 text-gray-400" />}
-                        iconPosition="right"
-                        helperText={isRTL ? "לדוגמה: 6941" : "Example: 6941"}
-                        className="mt-1 border-gray-700 bg-gray-800/70 text-white placeholder:text-gray-500 focus:border-primary-500"
-                        value={formData.block}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="parcel" className="block text-sm font-medium text-gray-300">
-                        {isRTL ? "חלקה" : "Parcel (Helka)"}
-                      </label>
-                      <Input
-                        id="parcel"
-                        type="text"
-                        placeholder={isRTL ? "הזן מספר חלקה" : "Enter Parcel number"}
-                        icon={<HelpCircle className="h-4 w-4 text-gray-400" />}
-                        iconPosition="right"
-                        helperText={isRTL ? "לדוגמה: 198" : "Example: 198"}
-                        className="mt-1 border-gray-700 bg-gray-800/70 text-white placeholder:text-gray-500 focus:border-primary-500"
-                        value={formData.parcel}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="subparcel" className="block text-sm font-medium text-gray-300">
-                        {isRTL ? "תת-חלקה (אופציונלי)" : "Sub-parcel (Optional)"}
-                      </label>
-                      <Input
-                        id="subparcel"
-                        type="text"
-                        placeholder={isRTL ? "הזן מספר תת-חלקה" : "Enter Sub-parcel"}
-                        icon={<Info className="h-4 w-4 text-gray-400" />}
-                        iconPosition="right"
-                        helperText={isRTL ? "השאר ריק אם אין" : "Leave empty if none"}
-                        className="mt-1 border-gray-700 bg-gray-800/70 text-white placeholder:text-gray-500 focus:border-primary-500"
-                        value={formData.subparcel}
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                  </div>
+                  <Tabs defaultValue="blockParcel" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2 mb-6">
+                      <TabsTrigger value="blockParcel" className="text-sm">
+                        {isRTL ? "גוש וחלקה" : "Block & Parcel"}
+                      </TabsTrigger>
+                      <TabsTrigger value="address" className="text-sm">
+                        {isRTL ? "כתובת נכס" : "Property Address"}
+                      </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="blockParcel">
+                      <div className="grid gap-6 md:grid-cols-3">
+                        <div>
+                          <label htmlFor="block" className="block text-sm font-medium text-gray-300">
+                            {isRTL ? "גוש" : "Block (Gush)"}*
+                          </label>
+                          <Input
+                            id="block"
+                            type="text"
+                            placeholder={isRTL ? "הזן מספר גוש" : "Enter Block number"}
+                            helperText={isRTL ? "לדוגמה: 6941" : "Example: 6941"}
+                            className="mt-1 border-gray-700 bg-gray-800/70 text-white placeholder:text-gray-500 focus:border-primary-500"
+                            value={formData.block}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="parcel" className="block text-sm font-medium text-gray-300">
+                            {isRTL ? "חלקה" : "Parcel (Helka)"}*
+                          </label>
+                          <Input
+                            id="parcel"
+                            type="text"
+                            placeholder={isRTL ? "הזן מספר חלקה" : "Enter Parcel number"}
+                            helperText={isRTL ? "לדוגמה: 198" : "Example: 198"}
+                            className="mt-1 border-gray-700 bg-gray-800/70 text-white placeholder:text-gray-500 focus:border-primary-500"
+                            value={formData.parcel}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="subparcel" className="block text-sm font-medium text-gray-300">
+                            {isRTL ? "תת-חלקה (אופציונלי)" : "Sub-parcel (Optional)"}
+                          </label>
+                          <Input
+                            id="subparcel"
+                            type="text"
+                            placeholder={isRTL ? "הזן מספר תת-חלקה" : "Enter Sub-parcel"}
+                            helperText={isRTL ? "השאר ריק אם אין" : "Leave empty if none"}
+                            className="mt-1 border-gray-700 bg-gray-800/70 text-white placeholder:text-gray-500 focus:border-primary-500"
+                            value={formData.subparcel}
+                            onChange={handleInputChange}
+                          />
+                        </div>
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="address">
+                      <div className="grid gap-6 md:grid-cols-3">
+                        <div className="md:col-span-1">
+                          <label htmlFor="street" className="block text-sm font-medium text-gray-300">
+                            {isRTL ? "רחוב" : "Street"}*
+                          </label>
+                          <Input
+                            id="street"
+                            type="text"
+                            placeholder={isRTL ? "הזן את שם הרחוב" : "Enter street name"}
+                            className="mt-1 border-gray-700 bg-gray-800/70 text-white placeholder:text-gray-500 focus:border-primary-500"
+                            value={formData.street}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
+                        <div className="md:col-span-1">
+                          <label htmlFor="houseNumber" className="block text-sm font-medium text-gray-300">
+                            {isRTL ? "מספר בית" : "House Number"}*
+                          </label>
+                          <Input
+                            id="houseNumber"
+                            type="text"
+                            placeholder={isRTL ? "הזן מספר בית" : "Enter house number"}
+                            className="mt-1 border-gray-700 bg-gray-800/70 text-white placeholder:text-gray-500 focus:border-primary-500"
+                            value={formData.houseNumber}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
+                        <div className="md:col-span-1">
+                          <label htmlFor="city" className="block text-sm font-medium text-gray-300">
+                            {isRTL ? "יישוב" : "City"}*
+                          </label>
+                          <Input
+                            id="city"
+                            type="text"
+                            placeholder={isRTL ? "הזן את שם היישוב" : "Enter city name"}
+                            className="mt-1 border-gray-700 bg-gray-800/70 text-white placeholder:text-gray-500 focus:border-primary-500"
+                            value={formData.city}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
 
                   <Button
                     type="submit"
@@ -260,6 +327,7 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Rest of the page content... */}
       {/* Document Preview Section */}
       <section className="relative py-20">
         <div className="container relative z-10 mx-auto px-4">

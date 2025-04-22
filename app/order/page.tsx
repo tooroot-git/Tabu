@@ -9,10 +9,11 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Stepper } from "@/components/ui/stepper"
 import { AlertInfo } from "@/components/ui/alert"
-import { HelpCircle, Info, User, UserPlus } from "lucide-react"
+import { User, UserPlus } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
 import { useSearchParams } from "next/navigation"
 import { useState, useEffect } from "react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function OrderPage() {
   const { language, isRTL } = useLanguage()
@@ -25,6 +26,9 @@ export default function OrderPage() {
     block: "",
     parcel: "",
     subparcel: "",
+    street: "",
+    houseNumber: "",
+    city: "",
   })
 
   // מוק לבדיקת משתמש בסביבת התצוגה המקדימה
@@ -63,7 +67,15 @@ export default function OrderPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    window.location.href = `/document-selection?block=${formData.block}&parcel=${formData.parcel}&subparcel=${formData.subparcel}${serviceParam ? `&service=${serviceParam}` : ""}`
+
+    // בדיקה איזה טאב פעיל
+    const activeTab = document.querySelector('[data-state="active"]')?.getAttribute("value")
+
+    if (activeTab === "address") {
+      window.location.href = `/document-selection?street=${encodeURIComponent(formData.street)}&houseNumber=${encodeURIComponent(formData.houseNumber)}&city=${encodeURIComponent(formData.city)}&inputType=address${serviceParam ? `&service=${serviceParam}` : ""}`
+    } else {
+      window.location.href = `/document-selection?block=${formData.block}&parcel=${formData.parcel}&subparcel=${formData.subparcel}&inputType=blockParcel${serviceParam ? `&service=${serviceParam}` : ""}`
+    }
   }
 
   // פונקציה להתחברות בסביבת התצוגה המקדימה
@@ -139,8 +151,8 @@ export default function OrderPage() {
                 <CardTitle className="text-white">{isRTL ? "פרטי הנכס" : "Property Details"}</CardTitle>
                 <CardDescription className="text-gray-400">
                   {isRTL
-                    ? "הזן את מספרי הגוש, החלקה ותת-החלקה של הנכס"
-                    : "Enter the Block (Gush), Parcel (Helka), and Sub-parcel (Tat-Helka) numbers"}
+                    ? "הזן את מספרי הגוש, החלקה ותת-החלקה של הנכס או את כתובת הנכס"
+                    : "Enter the Block, Parcel, and Sub-parcel numbers or the property address"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -154,74 +166,140 @@ export default function OrderPage() {
                   className="mb-6"
                 />
 
-                <form className="space-y-6" onSubmit={handleSubmit}>
-                  <div className="grid gap-6 md:grid-cols-2">
-                    <div>
-                      <label htmlFor="block" className="block text-sm font-medium text-gray-300">
-                        {isRTL ? "גוש" : "Block (Gush)"}
-                      </label>
-                      <Input
-                        id="block"
-                        type="text"
-                        placeholder={isRTL ? "הזן מספר גוש" : "Enter Block number"}
-                        icon={<HelpCircle className="h-4 w-4 text-gray-400" />}
-                        iconPosition="right"
-                        helperText={isRTL ? "לדוגמה: 6941" : "Example: 6941"}
-                        className="mt-1 border-gray-700 bg-gray-800/70 text-white placeholder:text-gray-500 focus:border-primary-500"
-                        value={formData.block}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="parcel" className="block text-sm font-medium text-gray-300">
-                        {isRTL ? "חלקה" : "Parcel (Helka)"}
-                      </label>
-                      <Input
-                        id="parcel"
-                        type="text"
-                        placeholder={isRTL ? "הזן מספר חלקה" : "Enter Parcel number"}
-                        icon={<HelpCircle className="h-4 w-4 text-gray-400" />}
-                        iconPosition="right"
-                        helperText={isRTL ? "לדוגמה: 198" : "Example: 198"}
-                        className="mt-1 border-gray-700 bg-gray-800/70 text-white placeholder:text-gray-500 focus:border-primary-500"
-                        value={formData.parcel}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
-                  </div>
+                <Tabs defaultValue="blockParcel" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 mb-6">
+                    <TabsTrigger value="blockParcel" className="text-sm">
+                      {isRTL ? "גוש וחלקה" : "Block & Parcel"}
+                    </TabsTrigger>
+                    <TabsTrigger value="address" className="text-sm">
+                      {isRTL ? "כתובת נכס" : "Property Address"}
+                    </TabsTrigger>
+                  </TabsList>
 
-                  <div>
-                    <label htmlFor="subparcel" className="block text-sm font-medium text-gray-300">
-                      {isRTL ? "תת-חלקה (אופציונלי)" : "Sub-parcel (Tat-Helka) (Optional)"}
-                    </label>
-                    <Input
-                      id="subparcel"
-                      type="text"
-                      placeholder={isRTL ? "הזן מספר תת-חלקה" : "Enter Sub-parcel number"}
-                      icon={<Info className="h-4 w-4 text-gray-400" />}
-                      iconPosition="right"
-                      helperText={
-                        isRTL
-                          ? "השאר ריק אם אין תת-חלקה או הזן מספר (לדוגמה: 42)"
-                          : "Leave empty if there's no sub-parcel or enter a number (Example: 42)"
-                      }
-                      className="mt-1 border-gray-700 bg-gray-800/70 text-white placeholder:text-gray-500 focus:border-primary-500"
-                      value={formData.subparcel}
-                      onChange={handleInputChange}
-                    />
-                  </div>
+                  <TabsContent value="blockParcel">
+                    <form className="space-y-6" onSubmit={handleSubmit}>
+                      <div className="grid gap-6 md:grid-cols-2">
+                        <div>
+                          <label htmlFor="block" className="block text-sm font-medium text-gray-300">
+                            {isRTL ? "גוש" : "Block (Gush)"}*
+                          </label>
+                          <Input
+                            id="block"
+                            type="text"
+                            placeholder={isRTL ? "הזן מספר גוש" : "Enter Block number"}
+                            helperText={isRTL ? "לדוגמה: 6941" : "Example: 6941"}
+                            className="mt-1 border-gray-700 bg-gray-800/70 text-white placeholder:text-gray-500 focus:border-primary-500"
+                            value={formData.block}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="parcel" className="block text-sm font-medium text-gray-300">
+                            {isRTL ? "חלקה" : "Parcel (Helka)"}*
+                          </label>
+                          <Input
+                            id="parcel"
+                            type="text"
+                            placeholder={isRTL ? "הזן מספר חלקה" : "Enter Parcel number"}
+                            helperText={isRTL ? "לדוגמה: 198" : "Example: 198"}
+                            className="mt-1 border-gray-700 bg-gray-800/70 text-white placeholder:text-gray-500 focus:border-primary-500"
+                            value={formData.parcel}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
+                      </div>
 
-                  <div className="flex justify-end">
-                    <Button
-                      type="submit"
-                      className="bg-gradient-to-r from-primary-500 to-primary-600 text-white transition-all duration-300 hover:from-primary-600 hover:to-primary-700 hover:shadow-lg hover:shadow-primary-500/20"
-                    >
-                      {isRTL ? "המשך לבחירת מסמך" : "Continue to Document Selection"}
-                    </Button>
-                  </div>
-                </form>
+                      <div>
+                        <label htmlFor="subparcel" className="block text-sm font-medium text-gray-300">
+                          {isRTL ? "תת-חלקה (אופציונלי)" : "Sub-parcel (Tat-Helka) (Optional)"}
+                        </label>
+                        <Input
+                          id="subparcel"
+                          type="text"
+                          placeholder={isRTL ? "הזן מספר תת-חלקה" : "Enter Sub-parcel number"}
+                          helperText={
+                            isRTL
+                              ? "השאר ריק אם אין תת-חלקה או הזן מספר (לדוגמה: 42)"
+                              : "Leave empty if there's no sub-parcel or enter a number (Example: 42)"
+                          }
+                          className="mt-1 border-gray-700 bg-gray-800/70 text-white placeholder:text-gray-500 focus:border-primary-500"
+                          value={formData.subparcel}
+                          onChange={handleInputChange}
+                        />
+                      </div>
+
+                      <div className="flex justify-end">
+                        <Button
+                          type="submit"
+                          className="bg-gradient-to-r from-primary-500 to-primary-600 text-white transition-all duration-300 hover:from-primary-600 hover:to-primary-700 hover:shadow-lg hover:shadow-primary-500/20"
+                        >
+                          {isRTL ? "המשך לבחירת מסמך" : "Continue to Document Selection"}
+                        </Button>
+                      </div>
+                    </form>
+                  </TabsContent>
+
+                  <TabsContent value="address">
+                    <form className="space-y-6" onSubmit={handleSubmit}>
+                      <div>
+                        <label htmlFor="street" className="block text-sm font-medium text-gray-300">
+                          {isRTL ? "רחוב" : "Street"}*
+                        </label>
+                        <Input
+                          id="street"
+                          type="text"
+                          placeholder={isRTL ? "הזן את שם הרחוב" : "Enter street name"}
+                          className="mt-1 border-gray-700 bg-gray-800/70 text-white placeholder:text-gray-500 focus:border-primary-500"
+                          value={formData.street}
+                          onChange={handleInputChange}
+                          required
+                        />
+                      </div>
+
+                      <div className="grid gap-6 md:grid-cols-2">
+                        <div>
+                          <label htmlFor="houseNumber" className="block text-sm font-medium text-gray-300">
+                            {isRTL ? "מספר בית" : "House Number"}*
+                          </label>
+                          <Input
+                            id="houseNumber"
+                            type="text"
+                            placeholder={isRTL ? "הזן מספר בית" : "Enter house number"}
+                            className="mt-1 border-gray-700 bg-gray-800/70 text-white placeholder:text-gray-500 focus:border-primary-500"
+                            value={formData.houseNumber}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="city" className="block text-sm font-medium text-gray-300">
+                            {isRTL ? "יישוב" : "City"}*
+                          </label>
+                          <Input
+                            id="city"
+                            type="text"
+                            placeholder={isRTL ? "הזן את שם היישוב" : "Enter city name"}
+                            className="mt-1 border-gray-700 bg-gray-800/70 text-white placeholder:text-gray-500 focus:border-primary-500"
+                            value={formData.city}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end">
+                        <Button
+                          type="submit"
+                          className="bg-gradient-to-r from-primary-500 to-primary-600 text-white transition-all duration-300 hover:from-primary-600 hover:to-primary-700 hover:shadow-lg hover:shadow-primary-500/20"
+                        >
+                          {isRTL ? "המשך לבחירת מסמך" : "Continue to Document Selection"}
+                        </Button>
+                      </div>
+                    </form>
+                  </TabsContent>
+                </Tabs>
               </CardContent>
             </Card>
           </div>
