@@ -1,4 +1,4 @@
-import { handleAuth, handleLogin, handleCallback, handleLogout } from "@/lib/auth-mock"
+import { handleAuth, handleLogin, handleCallback, handleLogout } from "@/lib/auth-utils"
 
 export const GET = handleAuth({
   login: handleLogin(),

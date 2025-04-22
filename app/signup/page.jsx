@@ -1,55 +1,39 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useLanguage } from "@/context/language-context"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useEffect, useState } from "react"
 import { Loader2, UserPlus } from "lucide-react"
 import Link from "next/link"
-
-// בסביבת ייצור, יש להחליף את הקוד הזה בקוד הבא:
-// import { useUser } from "@auth0/nextjs-auth0/client"
+import { getUser, login } from "@/lib/auth-utils"
 
 export default function SignupPage() {
   const { isRTL } = useLanguage()
   const router = useRouter()
   const searchParams = useSearchParams()
   const returnTo = searchParams.get("returnTo") || "/"
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  // מוק לבדיקת משתמש בסביבת התצוגה המקדימה
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedUser = localStorage.getItem("mock_user")
-      if (storedUser) {
-        setUser(JSON.parse(storedUser))
-      }
-      setIsLoading(false)
-    }
+    setUser(getUser())
+    setIsLoading(false)
   }, [])
 
   useEffect(() => {
-    // אם המשתמש כבר מחובר, נפנה אותו לדף הבית או לדף שממנו הגיע
+    // If user is already logged in, redirect to returnTo or home
     if (user && !isLoading) {
       router.push(returnTo)
     }
   }, [user, isLoading, router, returnTo])
 
-  // פונקציה להרשמה בסביבת התצוגה המקדימה
+  // Function for signup in preview environment
   const handleSignup = () => {
-    // בסביבת התצוגה המקדימה, נשמור משתמש מוק בלוקל סטורג'
-    const mockUser = {
-      name: "משתמש לדוגמה",
-      email: "user@example.com",
-      picture: "/vibrant-street-market.png",
-      sub: "auth0|123456789",
-      updated_at: new Date().toISOString(),
-    }
-    localStorage.setItem("mock_user", JSON.stringify(mockUser))
+    login()
     router.push(returnTo)
   }
 
@@ -62,9 +46,9 @@ export default function SignupPage() {
     )
   }
 
-  // אם המשתמש כבר מחובר, לא נציג את דף ההרשמה
+  // If user is already logged in, don't show signup page
   if (user) {
-    return null // יופנה בהמשך ב-useEffect
+    return null // Will redirect in useEffect
   }
 
   return (

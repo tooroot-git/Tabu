@@ -1,20 +1,35 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
 import Link from "next/link"
-import { useLanguage } from "@/context/language-context"
-import { useUser } from "@/lib/auth-mock"
+import { getUser, login, logout } from "@/lib/auth-utils"
 
 export function AuthButton() {
-  const { isRTL } = useLanguage()
-  const { user, isLoading, login, logout } = useUser()
+  const [user, setUser] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    setUser(getUser())
+    setIsLoading(false)
+  }, [])
+
+  const handleLogin = () => {
+    const newUser = login()
+    setUser(newUser)
+  }
+
+  const handleLogout = () => {
+    logout()
+    setUser(null)
+  }
 
   if (isLoading) {
     return (
       <Button variant="ghost" size="sm" disabled className="text-gray-300">
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        {isRTL ? "טוען..." : "Loading..."}
+        Loading...
       </Button>
     )
   }
@@ -23,10 +38,10 @@ export function AuthButton() {
     return (
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="sm" className="text-gray-300 hover:text-white" asChild>
-          <Link href="/dashboard">{isRTL ? "האזור האישי" : "Dashboard"}</Link>
+          <Link href="/dashboard">Dashboard</Link>
         </Button>
-        <Button variant="ghost" size="sm" className="text-gray-300 hover:text-white" onClick={logout}>
-          {isRTL ? "התנתק" : "Logout"}
+        <Button variant="ghost" size="sm" className="text-gray-300 hover:text-white" onClick={handleLogout}>
+          Logout
         </Button>
       </div>
     )
@@ -38,9 +53,9 @@ export function AuthButton() {
       variant="outline"
       size="sm"
       className="text-white border-gray-700 bg-gray-800/70 hover:bg-gray-800"
-      onClick={login}
+      onClick={handleLogin}
     >
-      {isRTL ? "התחבר / הירשם" : "Login / Sign Up"}
+      Login / Sign Up
     </Button>
   )
 }

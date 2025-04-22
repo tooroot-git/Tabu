@@ -1,21 +1,27 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useLanguage } from "@/context/language-context"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useEffect } from "react"
 import { Loader2, LogIn, UserPlus } from "lucide-react"
-import { useUser } from "@/lib/auth-mock"
+import { getUser, login } from "@/lib/auth-utils"
 
 export default function LoginPage() {
   const { isRTL } = useLanguage()
   const router = useRouter()
   const searchParams = useSearchParams()
   const returnTo = searchParams.get("returnTo") || "/"
-  const { user, isLoading, login } = useUser()
+  const [user, setUser] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    setUser(getUser())
+    setIsLoading(false)
+  }, [])
 
   useEffect(() => {
     // If user is already logged in, redirect to returnTo or home
