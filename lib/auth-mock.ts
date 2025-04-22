@@ -77,8 +77,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setUser(null)
   }
 
-  const value = { user, error, isLoading, login, logout }
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  // Rename 'value' to 'contextValue' to avoid potential conflicts
+  const contextValue = { user, error, isLoading, login, logout }
+  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
 }
 
 // Mock API handlers
