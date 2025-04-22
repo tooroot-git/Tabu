@@ -1,46 +1,34 @@
 "use client"
 
 import type React from "react"
-
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { Loader2 } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
-
-// בסביבת ייצור, יש להחליף את הקוד הזה בקוד הבא:
-// import { useUser } from "@auth0/nextjs-auth0/client"
+import { useUser } from "@/lib/auth-mock"
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const { isRTL } = useLanguage()
-  const [user, setUser] = useState<any>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<Error | null>(null)
-
-  // מוק לבדיקת משתמש בסביבת התצוגה המקדימה
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const storedUser = localStorage.getItem("mock_user")
-        if (storedUser) {
-          setUser(JSON.parse(storedUser))
-        } else {
-          setUser(null)
-        }
-      } catch (err) {
-        setError(err as Error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-  }, [])
+  const { user, error, isLoading, login } = useUser()
 
   useEffect(() => {
     if (!isLoading && !user && !error) {
-      // בסביבת התצוגה המקדימה, נפנה לדף התחברות מוק
-      router.push("/login?returnTo=" + encodeURIComponent(window.location.pathname))
+      // In production, this would redirect to /api/auth/login
+      // For preview, we'll just show a login prompt
+      const shouldLogin = window.confirm(
+        isRTL
+          ? "עליך להתחבר כדי לגשת לדף זה. האם ברצונך להתחבר?"
+          : "You need to be logged in to access this page. Would you like to log in?",
+      )
+
+      if (shouldLogin) {
+        login()
+      } else {
+        router.push("/")
+      }
     }
-  }, [user, isLoading, error, router])
+  }, [user, isLoading, error, router, login, isRTL])
 
   if (isLoading) {
     return (
@@ -61,7 +49,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) {
-    return null // Will redirect in the useEffect
+    return null // Will handle in the useEffect
   }
 
   return <>{children}</>

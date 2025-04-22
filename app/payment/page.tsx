@@ -107,6 +107,21 @@ export default function PaymentPage() {
     setFormData((prev) => ({ ...prev, [id]: value }))
   }
 
+  // Prepare order details for database
+  const orderDetails = {
+    serviceDetails,
+    input_type: inputType,
+    block: inputType === "blockParcel" ? block : null,
+    parcel: inputType === "blockParcel" ? parcel : null,
+    subparcel: inputType === "blockParcel" ? subparcel : null,
+    street: inputType === "address" ? street : null,
+    house_number: inputType === "address" ? houseNumber : null,
+    city: inputType === "address" ? city : null,
+    service_type: service,
+    email: formData.email,
+    name: formData.name,
+  }
+
   const handlePaymentSuccess = (paymentIntent: any) => {
     // Navigate to confirmation page with all the necessary parameters
     const params = new URLSearchParams()
@@ -236,6 +251,7 @@ export default function PaymentPage() {
                           <PaymentForm
                             amount={amount}
                             description={`Tabu.net.il - ${isRTL ? serviceDetails.titleHe : serviceDetails.titleEn}`}
+                            orderDetails={orderDetails}
                             onSuccess={handlePaymentSuccess}
                             onError={handlePaymentError}
                           />

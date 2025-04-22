@@ -1,108 +1,104 @@
 "use client"
 
-import type React from "react"
+import { useState, useEffect, createContext, useContext } from "react"
+import type { ReactNode } from "react"
 
-// מוק פשוט לאימות משתמשים לסביבת התצוגה המקדימה
-import { useState, useEffect } from "react"
-
-export type User = {
+// Mock user type similar to Auth0 user
+export interface User {
+  sub?: string
   name?: string
   email?: string
   picture?: string
-  sub?: string
   updated_at?: string
 }
 
-// מצב אימות מוק
-let mockAuthState: {
+// Context for auth state
+interface AuthContextType {
   user: User | null
-  isLoading: boolean
   error: Error | null
-} = {
-  user: null,
-  isLoading: false,
-  error: null,
+  isLoading: boolean
+  login: () => void
+  logout: () => void
 }
 
-// פונקציה להגדרת משתמש מוק
-export const setMockUser = (user: User | null) => {
-  mockAuthState = { ...mockAuthState, user }
+const AuthContext = createContext<AuthContextType | null>(null)
+
+// Hook to use auth context
+export function useUser() {
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error("useUser must be used within an AuthProvider")
+  }
+  return context
 }
 
-// הוק מוק לשימוש במקום useUser של Auth0
-export const useUser = () => {
-  const [state, setState] = useState(mockAuthState)
+// Auth provider component
+export function UserProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
+  const [error, setError] = useState<Error | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
+  // Check for stored user on mount
   useEffect(() => {
-    // בדיקה אם יש משתמש בלוקל סטורג'
-    if (typeof window !== "undefined") {
+    try {
       const storedUser = localStorage.getItem("mock_user")
-      if (storedUser && !state.user) {
-        try {
-          const user = JSON.parse(storedUser)
-          setState({ user, isLoading: false, error: null })
-        } catch (e) {
-          console.error("Failed to parse stored user", e)
-        }
+      if (storedUser) {
+        setUser(JSON.parse(storedUser))
       }
+    } catch (err) {
+      setError(err as Error)
+    } finally {
+      setIsLoading(false)
     }
-  }, [state.user])
+  }, [])
 
-  // פונקציות עזר לסימולציה של התחברות והתנתקות
+  // Login function
   const login = () => {
     const mockUser: User = {
+      sub: "auth0|123456789",
       name: "משתמש לדוגמה",
       email: "user@example.com",
       picture: "/vibrant-street-market.png",
-      sub: "auth0|123456789",
       updated_at: new Date().toISOString(),
     }
-
-    if (typeof window !== "undefined") {
-      localStorage.setItem("mock_user", JSON.stringify(mockUser))
-    }
-
-    setState({ user: mockUser, isLoading: false, error: null })
+    localStorage.setItem("mock_user", JSON.stringify(mockUser))
+    setUser(mockUser)
   }
 
+  // Logout function
   const logout = () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("mock_user")
-    }
-
-    setState({ user: null, isLoading: false, error: null })
+    localStorage.removeItem("mock_user")
+    setUser(null)
   }
 
-  return { ...state, login, logout }
+  return <AuthContext.Provider value={{ user, error, isLoading, login, logout }}>{children}</AuthContext.Provider>
 }
 
-// ספק אימות מוק
-export function UserProvider({ children }: { children: React.ReactNode }) {
-  return <>{children}</>
-}
-
-// מוק לפונקציית handleAuth
+// Mock API handlers
 export const handleAuth = () => {
   return async () => {
     return new Response("Auth handler mock", { status: 200 })
   }
 }
 
-// מוק לפונקציית handleLogin
 export const handleLogin = () => {
   return async () => {
     return new Response("Login handler mock", { status: 200 })
   }
 }
 
-// מוק לפונקציית handleCallback
 export const handleCallback = () => {
   return async () => {
     return new Response("Callback handler mock", { status: 200 })
   }
 }
 
-// מוק לפונקציית withMiddlewareAuthRequired
+export const handleLogout = () => {
+  return async () => {
+    return new Response("Logout handler mock", { status: 200 })
+  }
+}
+
 export const withMiddlewareAuthRequired = () => {
   return async () => {
     return new Response("Middleware auth required mock", { status: 200 })

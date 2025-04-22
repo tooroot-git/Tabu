@@ -7,29 +7,47 @@ import { ProtectedRoute } from "@/components/auth/protected-route"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Download, FileText, Clock, CheckCircle, User, Settings, CreditCard } from "lucide-react"
+import { Download, FileText, Clock, CheckCircle, User, Settings, CreditCard, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
+import { useUser } from "@/lib/auth-mock"
 
-// בסביבת ייצור, יש להחליף את הקוד הזה בקוד הבא:
-// import { useUser } from "@auth0/nextjs-auth0/client"
+interface Order {
+  id: string
+  date: string
+  type: string
+  details: string
+  status: string
+  statusTextEn: string
+  statusTextHe: string
+}
 
 export default function DashboardPage() {
   const { isRTL } = useLanguage()
-  const [user, setUser] = useState<any>(null)
+  const { user } = useUser()
+  const [orders, setOrders] = useState<Order[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  // מוק לבדיקת משתמש בסביבת התצוגה המקדימה
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedUser = localStorage.getItem("mock_user")
-      if (storedUser) {
-        setUser(JSON.parse(storedUser))
+    async function fetchOrders() {
+      if (user?.sub) {
+        try {
+          // For preview, we'll use mock data
+          setIsLoading(false)
+        } catch (error) {
+          console.error("Error fetching orders:", error)
+          setIsLoading(false)
+        }
+      } else {
+        setIsLoading(false)
       }
     }
-  }, [])
 
-  // Mock data for user orders - בהמשך זה יוחלף בנתונים אמיתיים מהשרת
-  const orders = [
+    fetchOrders()
+  }, [user, isRTL])
+
+  // Mock orders for preview
+  const mockOrders = [
     {
       id: "12345",
       date: "2023-05-15",
@@ -58,6 +76,8 @@ export default function DashboardPage() {
       statusTextHe: "בעיבוד",
     },
   ]
+
+  const displayOrders = mockOrders
 
   return (
     <ProtectedRoute>
@@ -100,9 +120,13 @@ export default function DashboardPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    {orders.length > 0 ? (
+                    {isLoading ? (
+                      <div className="flex justify-center py-8">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
+                      </div>
+                    ) : displayOrders.length > 0 ? (
                       <div className="space-y-4">
-                        {orders.map((order) => (
+                        {displayOrders.map((order) => (
                           <div key={order.id} className="flex items-center justify-between border-b pb-4 last:border-0">
                             <div>
                               <div className="flex items-center">
@@ -188,11 +212,11 @@ export default function DashboardPage() {
                       <div className="flex-grow space-y-4">
                         <div>
                           <h3 className="text-sm font-medium text-gray-500">{isRTL ? "שם" : "Name"}</h3>
-                          <p className="mt-1">{user?.name || "משתמש לדוגמה"}</p>
+                          <p className="mt-1">{user?.name || ""}</p>
                         </div>
                         <div>
                           <h3 className="text-sm font-medium text-gray-500">{isRTL ? "אימייל" : "Email"}</h3>
-                          <p className="mt-1">{user?.email || "user@example.com"}</p>
+                          <p className="mt-1">{user?.email || ""}</p>
                         </div>
                         <div>
                           <h3 className="text-sm font-medium text-gray-500">
@@ -205,11 +229,7 @@ export default function DashboardPage() {
                                   month: "long",
                                   day: "numeric",
                                 })
-                              : new Date().toLocaleDateString(isRTL ? "he-IL" : "en-US", {
-                                  year: "numeric",
-                                  month: "long",
-                                  day: "numeric",
-                                })}
+                              : ""}
                           </p>
                         </div>
                       </div>

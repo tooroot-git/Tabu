@@ -9,10 +9,16 @@ import { Download, Mail, FileText, Receipt } from "lucide-react"
 import { useLanguage } from "@/context/language-context"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
+import { useEffect, useState } from "react"
+import { supabase } from "@/lib/supabase"
+import { useUser } from "@auth0/nextjs-auth0/client"
 
 export default function ConfirmationPage() {
   const { language, isRTL } = useLanguage()
   const searchParams = useSearchParams()
+  const { user } = useUser()
+  const [orderDetails, setOrderDetails] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   const block = searchParams.get("block") || ""
   const parcel = searchParams.get("parcel") || ""
@@ -23,6 +29,35 @@ export default function ConfirmationPage() {
   const inputType = searchParams.get("inputType") || "blockParcel"
   const service = searchParams.get("service") || "regular"
   const paymentId = searchParams.get("paymentId") || ""
+
+  useEffect(() => {
+    async function fetchOrderDetails() {
+      if (paymentId && user?.sub) {
+        try {
+          const { data, error } = await supabase
+            .from("orders")
+            .select("*")
+            .eq("payment_id", paymentId)
+            .eq("user_id", user.sub)
+            .single()
+
+          if (error) {
+            console.error("Error fetching order:", error)
+          } else if (data) {
+            setOrderDetails(data)
+          }
+        } catch (err) {
+          console.error("Error fetching order details:", err)
+        } finally {
+          setIsLoading(false)
+        }
+      } else {
+        setIsLoading(false)
+      }
+    }
+
+    fetchOrderDetails()
+  }, [paymentId, user])
 
   const getServiceDetails = () => {
     switch (service) {
@@ -60,7 +95,8 @@ export default function ConfirmationPage() {
   }
 
   const serviceDetails = getServiceDetails()
-  const orderNumber = paymentId ? paymentId.slice(-5) : Math.floor(10000 + Math.random() * 90000).toString()
+  const orderNumber =
+    orderDetails?.id || paymentId ? paymentId.slice(-5) : Math.floor(10000 + Math.random() * 90000).toString()
 
   return (
     <div className={isRTL ? "font-sans-hebrew" : "font-sans"}>

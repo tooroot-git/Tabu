@@ -8,16 +8,19 @@ import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/context/language-context"
 import { AlertError } from "@/components/ui/alert"
 import { CreditCard, ShieldCheck } from "lucide-react"
+import { useUser } from "@/lib/auth-mock"
 
 interface PaymentFormProps {
   amount: number
   description: string
+  orderDetails: any
   onSuccess: (paymentIntent: any) => void
   onError: (error: Error) => void
 }
 
-export function PaymentForm({ amount, description, onSuccess, onError }: PaymentFormProps) {
+export function PaymentForm({ amount, description, orderDetails, onSuccess, onError }: PaymentFormProps) {
   const { isRTL } = useLanguage()
+  const { user } = useUser()
   const stripe = useStripe()
   const elements = useElements()
   const [isLoading, setIsLoading] = useState(false)
@@ -35,46 +38,39 @@ export function PaymentForm({ amount, description, onSuccess, onError }: Payment
     setErrorMessage(null)
 
     try {
-      // Create a payment intent on the server
-      const response = await fetch("/api/create-payment-intent", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          amount,
+      // For preview, we'll simulate a successful payment
+      setTimeout(() => {
+        const mockPaymentIntent = {
+          id: `pi_${Math.random().toString(36).substring(2, 15)}`,
+          status: "succeeded",
+          amount: amount * 100,
+          currency: "ils",
           description,
-        }),
-      })
+        }
 
-      if (!response.ok) {
-        throw new Error("Network response was not ok")
-      }
+        // Save order to mock database
+        if (user) {
+          try {
+            fetch("/api/orders", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                ...orderDetails,
+                payment_id: mockPaymentIntent.id,
+                amount: amount,
+                type_en: orderDetails.serviceDetails.titleEn,
+                type_he: orderDetails.serviceDetails.titleHe,
+              }),
+            }).catch((err) => console.error("Error saving order:", err))
+          } catch (err) {
+            console.error("Error saving order:", err)
+          }
+        }
 
-      const { clientSecret } = await response.json()
-
-      // Confirm the payment with the card element
-      const cardElement = elements.getElement(CardElement)
-      if (!cardElement) {
-        throw new Error("Card element not found")
-      }
-
-      const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: {
-          card: cardElement,
-          billing_details: {
-            // You can collect billing details here if needed
-          },
-        },
-      })
-
-      if (error) {
-        throw new Error(error.message)
-      } else if (paymentIntent.status === "succeeded") {
-        onSuccess(paymentIntent)
-      } else {
-        throw new Error(`Payment status: ${paymentIntent.status}`)
-      }
+        onSuccess(mockPaymentIntent)
+      }, 2000)
     } catch (error) {
       console.error("Payment error:", error)
       setErrorMessage((error as Error).message || "An unknown error occurred")

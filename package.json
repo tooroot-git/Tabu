@@ -60,7 +60,9 @@
     "zod": "^3.24.1",
     "@stripe/stripe-js": "latest",
     "@stripe/react-stripe-js": "latest",
-    "stripe": "latest"
+    "stripe": "latest",
+    "@auth0/nextjs-auth0": "latest",
+    "@supabase/supabase-js": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",
