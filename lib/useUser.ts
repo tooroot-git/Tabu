@@ -1,24 +1,29 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { useEffect, useState } from "react"
+import { supabase } from "@/lib/supabase"
 import type { User } from "@supabase/supabase-js"
 
 export function useUser() {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const supabase = createClientComponentClient()
+  const [error, setError] = useState<Error | null>(null)
 
   useEffect(() => {
+    // Get the current user
     const fetchUser = async () => {
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession()
-        setUser(session?.user || null)
-      } catch (error) {
-        console.error("Error fetching user:", error)
-        setUser(null)
+        setIsLoading(true)
+        const { data, error } = await supabase.auth.getSession()
+
+        if (error) {
+          throw error
+        }
+
+        setUser(data.session?.user || null)
+      } catch (err) {
+        console.error("Error fetching user:", err)
+        setError(err instanceof Error ? err : new Error(String(err)))
       } finally {
         setIsLoading(false)
       }
@@ -26,16 +31,19 @@ export function useUser() {
 
     fetchUser()
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    // Set up auth state change listener
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user || null)
+      setIsLoading(false)
     })
 
+    // Clean up the subscription
     return () => {
-      subscription.unsubscribe()
+      authListener.subscription.unsubscribe()
     }
-  }, [supabase])
+  }, [])
 
-  return { user, isLoading }
+  return { user, isLoading, error }
 }
+
+export default useUser

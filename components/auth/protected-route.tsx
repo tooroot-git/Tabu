@@ -2,37 +2,30 @@
 
 import type React from "react"
 
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { useAuth } from "@/components/auth/auth-provider"
 
-export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const [isLoading, setIsLoading] = useState(true)
+interface ProtectedRouteProps {
+  children: React.ReactNode
+}
+
+export function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const { user, isLoading } = useAuth()
   const router = useRouter()
-  const supabase = createClientComponentClient()
 
   useEffect(() => {
-    const checkUser = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-
-      if (!session) {
-        router.push("/login")
-      } else {
-        setIsLoading(false)
-      }
+    if (!isLoading && !user) {
+      router.push("/login?returnTo=" + encodeURIComponent(window.location.pathname))
     }
-
-    checkUser()
-  }, [router, supabase])
+  }, [user, isLoading, router])
 
   if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"></div>
-      </div>
-    )
+    return <div className="flex justify-center items-center min-h-screen">טוען...</div>
+  }
+
+  if (!user) {
+    return null
   }
 
   return <>{children}</>
