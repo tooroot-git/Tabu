@@ -92,5 +92,6 @@ export const mockAuth0 = {
   withApiAuthRequired: (handler) => handler,
 }
 
-// Export the real or mock Auth0 based on environment
-export const auth0 = process.env.VERCEL_ENV === "preview" ? mockAuth0 : require("@auth0/nextjs-auth0")
+// We're not directly importing Auth0 here anymore
+// Instead, we'll use our mock implementation for all environments
+// and the real Auth0 will be imported directly where needed
