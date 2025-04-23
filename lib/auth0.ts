@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 
-// טיפוס למשתמש
+// Define User type
 export type User = {
   name?: string
   email?: string
@@ -10,74 +10,75 @@ export type User = {
   picture?: string
 }
 
-// טיפוס לתוצאת useAuth
-export type UseAuthResult = {
-  isAuthenticated: boolean
-  isLoading: boolean
-  user: User | null
-  loginWithRedirect: (options?: any) => Promise<void>
-  logout: () => Promise<void>
-  getAccessToken: () => Promise<string | null>
-}
+// Mock implementation of Auth0's useUser hook
+export function useAuth() {
+  // Check if we're in the browser and if the auth cookie exists
+  const hasAuthCookie = typeof window !== "undefined" && document.cookie.includes("authed=true")
 
-// פונקציית useAuth פשוטה שתעבוד בסביבת הייצור
-export function useAuth(): UseAuthResult {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
 
   useEffect(() => {
-    // בדוק אם יש לנו משתמש
-    fetch("/api/auth/me")
-      .then((res) => {
-        if (res.ok) return res.json()
-        return null
-      })
-      .then((userData) => {
-        setUser(userData)
-        setIsLoading(false)
-      })
-      .catch((error) => {
-        console.error("Error fetching user:", error)
-        setIsLoading(false)
-      })
-  }, [])
+    setIsLoading(true)
+    try {
+      if (hasAuthCookie) {
+        setUser({
+          name: "Preview User",
+          email: "preview@tabuisrael.co.il",
+          picture: "/abstract-user-icon.png",
+          sub: "preview-user-id",
+        })
+      } else {
+        setUser(null)
+      }
+    } catch (e: any) {
+      setError(e)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [hasAuthCookie])
 
   return {
-    isAuthenticated: !!user,
-    isLoading,
     user,
-    loginWithRedirect: async (options = {}) => {
-      window.location.href = getLoginUrl(options?.returnTo)
+    error,
+    isLoading,
+    loginWithRedirect: () => {
+      document.cookie = "authed=true; path=/; max-age=86400"
+      window.location.href = "/dashboard"
     },
-    logout: async () => {
-      window.location.href = getLogoutUrl()
+    logout: () => {
+      document.cookie = "authed=; path=/; max-age=0"
+      window.location.href = "/"
     },
-    getAccessToken: async () => {
-      // בסביבת ייצור, זה יקרא ל-API של Auth0
-      return null
-    },
+    getAccessTokenSilently: () => Promise.resolve("mock-access-token"),
   }
 }
 
-// פונקציה לקבלת ה-URL של ה-API
+// Function to get the API URL
 export function getApiUrl(path: string): string {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || ""
   return baseUrl ? `${baseUrl}${path}` : path
 }
 
-// פונקציה לבדיקה האם המשתמש מחובר
+// Function to check if the user is authenticated
 export function isAuthenticated(cookies: Record<string, string>): boolean {
-  return !!cookies.appSession
+  return !!cookies.authed
 }
 
-// פונקציה לקבלת ה-URL של ההתחברות
+// Function to get the login URL
 export function getLoginUrl(returnTo?: string): string {
   const baseUrl = "/api/auth/login"
   return returnTo ? `${baseUrl}?returnTo=${encodeURIComponent(returnTo)}` : baseUrl
 }
 
-// פונקציה לקבלת ה-URL של ההתנתקות
+// Function to get the logout URL
 export function getLogoutUrl(returnTo?: string): string {
   const baseUrl = "/api/auth/logout"
   return returnTo ? `${baseUrl}?returnTo=${encodeURIComponent(returnTo)}` : baseUrl
+}
+
+// Mock implementation of getSession
+export function getSession() {
+  return Promise.resolve(null)
 }

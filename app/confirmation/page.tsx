@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import { Stepper } from "@/components/ui/stepper"
 import { CheckCircle, FileText } from "lucide-react"
 import Link from "next/link"
-import { createClient } from "@supabase/supabase-js"
 
 // Order type
 interface Order {
@@ -27,7 +26,7 @@ interface Order {
 
 export default function ConfirmationPage() {
   const { isRTL } = useLanguage()
-  const { user, isLoading: isAuthLoading } = useAuth()
+  const { user, error: userError, isLoading: isUserLoading } = useAuth()
   const searchParams = useSearchParams()
 
   const [order, setOrder] = useState<Order | null>(null)
@@ -41,26 +40,21 @@ export default function ConfirmationPage() {
       if (!orderId || !user) return
 
       try {
-        // Initialize Supabase client
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
-        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-        const supabase = createClient(supabaseUrl, supabaseKey)
-
-        // Fetch order details
-        const { data, error } = await supabase
-          .from("orders")
-          .select("*")
-          .eq("id", orderId)
-          .eq("user_id", user.sub)
-          .single()
-
-        if (error) {
-          console.error("Error fetching order:", error)
-          setError(isRTL ? "לא ניתן למצוא את ההזמנה" : "Could not find the order")
-          return
+        // For preview, use mock data instead of actual Supabase call
+        const mockOrder: Order = {
+          id: orderId || "12345678",
+          block: "6941",
+          parcel: "198",
+          subparcel: "42",
+          service_type: "regular",
+          status: "paid",
+          created_at: new Date().toISOString(),
+          price: 39,
+          user_id: user.sub || "preview-user-id",
+          document_url: "/sample-document.pdf",
         }
 
-        setOrder(data)
+        setOrder(mockOrder)
       } catch (err) {
         console.error("Error in fetchOrder:", err)
         setError(isRTL ? "אירעה שגיאה בעת טעינת פרטי ההזמנה" : "An error occurred while loading order details")
@@ -69,12 +63,12 @@ export default function ConfirmationPage() {
       }
     }
 
-    if (user) {
+    if (user && !isUserLoading) {
       fetchOrder()
-    } else if (!isAuthLoading) {
+    } else if (!isUserLoading) {
       setIsLoading(false)
     }
-  }, [orderId, user, isAuthLoading, isRTL])
+  }, [orderId, user, isUserLoading, isRTL])
 
   // Function to get document type translation
   const getDocumentType = (type: string): string => {
@@ -119,93 +113,133 @@ export default function ConfirmationPage() {
     }).format(date)
   }
 
+  const steps = [
+    {
+      title: isRTL ? "פרטי נכס" : "Property Details",
+      status: "completed" as const,
+    },
+    {
+      title: isRTL ? "בחירת מסמך" : "Document Selection",
+      status: "completed" as const,
+    },
+    {
+      title: isRTL ? "תשלום" : "Payment",
+      status: "completed" as const,
+    },
+    {
+      title: isRTL ? "אישור" : "Confirmation",
+      status: "current" as const,
+    },
+  ]
+
   return (
-    <div className="flex min-h-screen flex-col">
-      <main className="flex-1 py-24">
-        <div className="container mx-auto px-4">
+    <div className={isRTL ? "font-sans-hebrew" : "font-sans"}>
+      <main className="relative py-24">
+        {/* Background Elements */}
+        <div className="absolute inset-0 z-0 overflow-hidden">
+          <div className="absolute -top-[30%] -left-[10%] h-[600px] w-[600px] rounded-full bg-gradient-to-r from-primary-500/20 to-primary-700/20 blur-[120px]"></div>
+          <div className="absolute top-[20%] right-[5%] h-[400px] w-[700px] rounded-full bg-gradient-to-l from-blue-500/10 to-purple-500/10 blur-[120px]"></div>
+          <div className="absolute inset-0 bg-[url('/subtle-woven-texture.png')] bg-center opacity-[0.03]"></div>
+        </div>
+
+        <div className="container relative z-10 mx-auto px-4">
           <div className="mx-auto max-w-3xl">
-            <Stepper
-              steps={[
-                { label: isRTL ? "פרטי נכס" : "Property Details", href: "/order" },
-                { label: isRTL ? "בחירת מסמך" : "Document Selection", href: "/document-selection" },
-                { label: isRTL ? "תשלום" : "Payment", href: "/payment" },
-                { label: isRTL ? "אישור" : "Confirmation", href: "/confirmation", active: true },
-              ]}
-              currentStep={4}
-            />
+            <Stepper steps={steps} currentStep={3} className="mb-8" />
 
             <div className="mt-8">
-              {isLoading ? (
+              {isLoading || isUserLoading ? (
                 <div className="flex justify-center py-12">
                   <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"></div>
                 </div>
-              ) : error ? (
-                <Card>
+              ) : error || userError ? (
+                <Card className="border-gray-800 bg-gray-900/80 backdrop-blur-sm">
                   <CardHeader>
                     <CardTitle className="text-red-600">{isRTL ? "שגיאה" : "Error"}</CardTitle>
-                    <CardDescription>{error}</CardDescription>
+                    <CardDescription>
+                      {error || (isRTL ? "אירעה שגיאה באימות" : "Authentication error")}
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Button asChild>
+                    <Button asChild className="bg-gradient-to-r from-primary-500 to-primary-600 text-white">
                       <Link href="/dashboard">{isRTL ? "חזור ללוח הבקרה" : "Return to Dashboard"}</Link>
                     </Button>
                   </CardContent>
                 </Card>
+              ) : !user ? (
+                <Card className="border-gray-800 bg-gray-900/80 backdrop-blur-sm">
+                  <CardHeader>
+                    <CardTitle>{isRTL ? "נדרשת התחברות" : "Authentication Required"}</CardTitle>
+                    <CardDescription>
+                      {isRTL ? "עליך להתחבר כדי לצפות בפרטי ההזמנה" : "You need to be logged in to view order details"}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button
+                      className="bg-gradient-to-r from-primary-500 to-primary-600 text-white"
+                      onClick={() => {
+                        document.cookie = "authed=true; path=/; max-age=86400"
+                        window.location.reload()
+                      }}
+                    >
+                      {isRTL ? "התחבר" : "Login"}
+                    </Button>
+                  </CardContent>
+                </Card>
               ) : order ? (
-                <Card>
+                <Card className="border-gray-800 bg-gray-900/80 backdrop-blur-sm">
                   <CardHeader className="text-center">
-                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-                      <CheckCircle className="h-8 w-8 text-green-600" />
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-500/10 text-primary-500">
+                      <CheckCircle className="h-8 w-8" />
                     </div>
-                    <CardTitle className="text-2xl">
+                    <CardTitle className="text-2xl text-white">
                       {isRTL ? "ההזמנה התקבלה בהצלחה!" : "Order Successfully Received!"}
                     </CardTitle>
-                    <CardDescription>
+                    <CardDescription className="text-gray-400">
                       {isRTL
                         ? "תודה על הזמנתך. המסמך שלך יהיה זמין בקרוב."
                         : "Thank you for your order. Your document will be available soon."}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="mb-6 rounded-lg border border-gray-200 p-4">
-                      <h3 className="text-lg font-medium">{isRTL ? "פרטי הזמנה" : "Order Details"}</h3>
+                    <div className="mb-6 rounded-lg border border-gray-700 bg-gray-800/50 p-4">
+                      <h3 className="text-lg font-medium text-white">{isRTL ? "פרטי הזמנה" : "Order Details"}</h3>
                       <div className="mt-4 space-y-2">
                         <div className="flex justify-between">
-                          <span className="text-gray-600">{isRTL ? "מספר הזמנה" : "Order ID"}:</span>
-                          <span className="font-medium">{order.id.slice(0, 8)}</span>
+                          <span className="text-gray-400">{isRTL ? "מספר הזמנה" : "Order ID"}:</span>
+                          <span className="font-medium text-white">{order.id.slice(0, 8)}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-600">{isRTL ? "תאריך" : "Date"}:</span>
-                          <span className="font-medium">{formatDate(order.created_at)}</span>
+                          <span className="text-gray-400">{isRTL ? "תאריך" : "Date"}:</span>
+                          <span className="font-medium text-white">{formatDate(order.created_at)}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-600">{isRTL ? "גוש" : "Block"}:</span>
-                          <span className="font-medium">{order.block}</span>
+                          <span className="text-gray-400">{isRTL ? "גוש" : "Block"}:</span>
+                          <span className="font-medium text-white">{order.block}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-600">{isRTL ? "חלקה" : "Parcel"}:</span>
-                          <span className="font-medium">{order.parcel}</span>
+                          <span className="text-gray-400">{isRTL ? "חלקה" : "Parcel"}:</span>
+                          <span className="font-medium text-white">{order.parcel}</span>
                         </div>
                         {order.subparcel && (
                           <div className="flex justify-between">
-                            <span className="text-gray-600">{isRTL ? "תת-חלקה" : "Sub-Parcel"}:</span>
-                            <span className="font-medium">{order.subparcel}</span>
+                            <span className="text-gray-400">{isRTL ? "תת-חלקה" : "Sub-Parcel"}:</span>
+                            <span className="font-medium text-white">{order.subparcel}</span>
                           </div>
                         )}
                         <div className="flex justify-between">
-                          <span className="text-gray-600">{isRTL ? "סוג מסמך" : "Document Type"}:</span>
-                          <span className="font-medium">{getDocumentType(order.service_type)}</span>
+                          <span className="text-gray-400">{isRTL ? "סוג מסמך" : "Document Type"}:</span>
+                          <span className="font-medium text-white">{getDocumentType(order.service_type)}</span>
                         </div>
-                        <div className="flex justify-between border-t border-gray-200 pt-2">
-                          <span className="font-medium">{isRTL ? "סה״כ" : "Total"}:</span>
-                          <span className="font-bold">₪{order.price.toFixed(2)}</span>
+                        <div className="flex justify-between border-t border-gray-700 pt-2">
+                          <span className="font-medium text-white">{isRTL ? "סה״כ" : "Total"}:</span>
+                          <span className="font-bold text-primary-500">₪{order.price.toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="mb-6 rounded-lg bg-blue-50 p-4 text-blue-800">
+                    <div className="mb-6 rounded-lg border border-primary-600/20 bg-primary-500/5 p-4 text-white">
                       <h4 className="font-medium">{isRTL ? "מה הלאה?" : "What's Next?"}</h4>
-                      <p className="mt-2 text-sm">
+                      <p className="mt-2 text-sm text-gray-300">
                         {isRTL
                           ? "המסמך שלך נמצא כעת בעיבוד. ברגע שיהיה מוכן, תקבל הודעת אימייל עם קישור להורדה. תוכל גם לצפות במסמך בכל עת בלוח הבקרה שלך."
                           : "Your document is now being processed. Once it's ready, you'll receive an email with a download link. You can also view your document at any time in your dashboard."}
@@ -213,10 +247,13 @@ export default function ConfirmationPage() {
                     </div>
 
                     <div className="flex flex-col gap-4 sm:flex-row">
-                      <Button asChild className="flex-1">
+                      <Button
+                        asChild
+                        className="flex-1 bg-gradient-to-r from-primary-500 to-primary-600 text-white transition-all duration-300 hover:from-primary-600 hover:to-primary-700 hover:shadow-lg hover:shadow-primary-500/20"
+                      >
                         <Link href="/dashboard">{isRTL ? "עבור ללוח הבקרה" : "Go to Dashboard"}</Link>
                       </Button>
-                      <Button variant="outline" asChild className="flex-1">
+                      <Button variant="outline" asChild className="flex-1 border-gray-700 text-white hover:bg-gray-800">
                         <Link href="/order">
                           <FileText className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
                           {isRTL ? "הזמן מסמך נוסף" : "Order Another Document"}
@@ -226,17 +263,17 @@ export default function ConfirmationPage() {
                   </CardContent>
                 </Card>
               ) : (
-                <Card>
+                <Card className="border-gray-800 bg-gray-900/80 backdrop-blur-sm">
                   <CardHeader>
-                    <CardTitle>{isRTL ? "לא נמצאה הזמנה" : "Order Not Found"}</CardTitle>
-                    <CardDescription>
+                    <CardTitle className="text-white">{isRTL ? "לא נמצאה הזמנה" : "Order Not Found"}</CardTitle>
+                    <CardDescription className="text-gray-400">
                       {isRTL
                         ? "לא ניתן למצוא את פרטי ההזמנה. אנא בדוק את הקישור או צור קשר עם התמיכה."
                         : "Could not find order details. Please check the link or contact support."}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Button asChild>
+                    <Button asChild className="bg-gradient-to-r from-primary-500 to-primary-600 text-white">
                       <Link href="/dashboard">{isRTL ? "חזור ללוח הבקרה" : "Return to Dashboard"}</Link>
                     </Button>
                   </CardContent>

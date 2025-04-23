@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
+import { getLoginUrl } from "@/lib/auth0"
 
 // נתיבים מוגנים שדורשים אימות
 const protectedPaths = ["/dashboard", "/my-orders", "/settings"]
@@ -16,9 +17,8 @@ export function middleware(request: NextRequest) {
 
     if (!hasAuthCookie) {
       // אם המשתמש לא מחובר, הפנה אותו לדף ההתחברות
-      const url = new URL("/api/auth/login", request.url)
-      url.searchParams.set("returnTo", pathname)
-      return NextResponse.redirect(url)
+      const loginUrl = getLoginUrl(pathname)
+      return NextResponse.redirect(new URL(loginUrl, request.url))
     }
   }
 

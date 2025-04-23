@@ -11,10 +11,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useUser } from "@/lib/useUser"
+import { useAuth } from "@/lib/auth0"
 
 export function AuthButton() {
-  const { user, error, isLoading, loginWithRedirect, logout } = useUser()
+  const { user, error, isLoading, loginWithRedirect, logout } = useAuth()
   const { isRTL } = useLanguage()
 
   if (isLoading) {
