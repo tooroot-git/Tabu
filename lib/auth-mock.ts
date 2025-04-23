@@ -1,10 +1,17 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import type { User } from "./supabase"
 
-// This is a mock implementation for the preview environment
-export function useMockUser() {
+// Define User type
+export type User = {
+  name?: string
+  email?: string
+  sub?: string
+  picture?: string
+}
+
+// Mock implementation of Auth0's useUser hook
+export function useUser() {
   // Check if we're in the browser and if the auth cookie exists
   const hasAuthCookie = typeof window !== "undefined" && document.cookie.includes("authed=true")
 
@@ -47,6 +54,3 @@ export function useMockUser() {
     getAccessTokenSilently: () => Promise.resolve("mock-access-token"),
   }
 }
-
-// Use the mock in preview
-export const useUser = useMockUser

@@ -7,7 +7,6 @@ import { useAuth } from "@/lib/auth0"
 import { useLanguage } from "@/context/language-context"
 import { FileText, Download, ExternalLink, Search } from "lucide-react"
 import Link from "next/link"
-import { createClient } from "@supabase/supabase-js"
 import { Input } from "@/components/ui/input"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
@@ -35,34 +34,23 @@ export default function MyOrdersPage() {
   const [searchTerm, setSearchTerm] = useState("")
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      if (!user) return
-
+    async function fetchOrders() {
       try {
-        // Initialize Supabase client
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
-        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
-        const supabase = createClient(supabaseUrl, supabaseKey)
+        setIsLoading(true)
+        const response = await fetch("/api/orders")
 
-        // Get access token for authorization
-        const token = await getAccessToken()
-
-        // Fetch user's orders
-        const { data, error } = await supabase
-          .from("orders")
-          .select("*")
-          .eq("user_id", user.sub)
-          .order("created_at", { ascending: false })
-
-        if (error) {
-          console.error("Error fetching orders:", error)
-          return
+        if (!response.ok) {
+          throw new Error(`Failed to fetch orders: ${response.status} ${response.statusText}`)
         }
 
-        setOrders(data || [])
-        setFilteredOrders(data || [])
+        const data = await response.json()
+        setOrders(data.orders || [])
+        setFilteredOrders(data.orders || [])
       } catch (error) {
-        console.error("Error in fetchOrders:", error)
+        console.error("Error fetching orders:", error)
+        // Set empty orders array instead of keeping in loading state
+        setOrders([])
+        setFilteredOrders([])
       } finally {
         setIsLoading(false)
       }
@@ -73,7 +61,7 @@ export default function MyOrdersPage() {
     } else {
       setIsLoading(false)
     }
-  }, [user, getAccessToken])
+  }, [user])
 
   // Filter orders when search term changes
   useEffect(() => {

@@ -2,287 +2,170 @@
 
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
-import { useLanguage } from "@/context/language-context"
-import { useAuth } from "@/lib/auth0"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Stepper } from "@/components/ui/stepper"
-import { CheckCircle, FileText } from "lucide-react"
+import { CheckCircle } from "lucide-react"
 import Link from "next/link"
-
-// Order type
-interface Order {
-  id: string
-  block: string
-  parcel: string
-  subparcel?: string
-  service_type: string
-  status: string
-  created_at: string
-  price: number
-  user_id: string
-  document_url?: string
-}
+import { useLanguage } from "@/context/language-context"
 
 export default function ConfirmationPage() {
-  const { isRTL } = useLanguage()
-  const { user, error: userError, isLoading: isUserLoading } = useAuth()
   const searchParams = useSearchParams()
-
-  const [order, setOrder] = useState<Order | null>(null)
+  const { isRTL, t } = useLanguage()
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [orderDetails, setOrderDetails] = useState<any>(null)
 
-  const orderId = searchParams.get("orderId")
+  const orderId = searchParams.get("order_id")
 
   useEffect(() => {
-    const fetchOrder = async () => {
-      if (!orderId || !user) return
-
-      try {
-        // For preview, use mock data instead of actual Supabase call
-        const mockOrder: Order = {
-          id: orderId || "12345678",
-          block: "6941",
-          parcel: "198",
-          subparcel: "42",
-          service_type: "regular",
-          status: "paid",
-          created_at: new Date().toISOString(),
-          price: 39,
-          user_id: user.sub || "preview-user-id",
-          document_url: "/sample-document.pdf",
-        }
-
-        setOrder(mockOrder)
-      } catch (err) {
-        console.error("Error in fetchOrder:", err)
-        setError(isRTL ? "אירעה שגיאה בעת טעינת פרטי ההזמנה" : "An error occurred while loading order details")
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    if (user && !isUserLoading) {
-      fetchOrder()
-    } else if (!isUserLoading) {
+    if (!orderId) {
       setIsLoading(false)
+      return
     }
-  }, [orderId, user, isUserLoading, isRTL])
 
-  // Function to get document type translation
-  const getDocumentType = (type: string): string => {
-    if (isRTL) {
-      switch (type) {
-        case "regular":
-          return "נסח רגיל"
-        case "historical":
-          return "נסח היסטורי"
-        case "concentrated":
-          return "נסח מרוכז"
-        case "full":
-          return "נסח מלא"
-        default:
-          return type
-      }
-    } else {
-      switch (type) {
-        case "regular":
-          return "Regular Extract"
-        case "historical":
-          return "Historical Extract"
-        case "concentrated":
-          return "Concentrated Extract"
-        case "full":
-          return "Full Extract"
-        default:
-          return type
-      }
-    }
+    // In a real implementation, you would fetch the order details from your backend
+    // For now, we'll simulate this with a timeout
+    const timer = setTimeout(() => {
+      setOrderDetails({
+        id: orderId,
+        status: "completed",
+        documentType: "regular",
+        block: searchParams.get("block") || "12345",
+        parcel: searchParams.get("parcel") || "67",
+        email: searchParams.get("email") || "user@example.com",
+      })
+      setIsLoading(false)
+    }, 1000)
+
+    return () => clearTimeout(timer)
+  }, [orderId, searchParams])
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8 flex justify-center items-center min-h-[60vh]">
+        <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    )
   }
 
-  // Function to format date
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString)
-    return new Intl.DateTimeFormat(isRTL ? "he-IL" : "en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(date)
+  if (!orderId || !orderDetails) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-red-500">{isRTL ? "שגיאה בעיבוד ההזמנה" : "Order Processing Error"}</CardTitle>
+            <CardDescription>
+              {isRTL
+                ? "לא ניתן למצוא את פרטי ההזמנה. אנא צור קשר עם התמיכה."
+                : "Order details could not be found. Please contact support."}
+            </CardDescription>
+          </CardHeader>
+          <CardFooter>
+            <Link href="/">
+              <Button>{isRTL ? "חזרה לדף הבית" : "Return to Home"}</Button>
+            </Link>
+          </CardFooter>
+        </Card>
+      </div>
+    )
   }
-
-  const steps = [
-    {
-      title: isRTL ? "פרטי נכס" : "Property Details",
-      status: "completed" as const,
-    },
-    {
-      title: isRTL ? "בחירת מסמך" : "Document Selection",
-      status: "completed" as const,
-    },
-    {
-      title: isRTL ? "תשלום" : "Payment",
-      status: "completed" as const,
-    },
-    {
-      title: isRTL ? "אישור" : "Confirmation",
-      status: "current" as const,
-    },
-  ]
 
   return (
-    <div className={isRTL ? "font-sans-hebrew" : "font-sans"}>
-      <main className="relative py-24">
-        {/* Background Elements */}
-        <div className="absolute inset-0 z-0 overflow-hidden">
-          <div className="absolute -top-[30%] -left-[10%] h-[600px] w-[600px] rounded-full bg-gradient-to-r from-primary-500/20 to-primary-700/20 blur-[120px]"></div>
-          <div className="absolute top-[20%] right-[5%] h-[400px] w-[700px] rounded-full bg-gradient-to-l from-blue-500/10 to-purple-500/10 blur-[120px]"></div>
-          <div className="absolute inset-0 bg-[url('/subtle-woven-texture.png')] bg-center opacity-[0.03]"></div>
-        </div>
-
-        <div className="container relative z-10 mx-auto px-4">
-          <div className="mx-auto max-w-3xl">
-            <Stepper steps={steps} currentStep={3} className="mb-8" />
-
-            <div className="mt-8">
-              {isLoading || isUserLoading ? (
-                <div className="flex justify-center py-12">
-                  <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"></div>
+    <div className="container mx-auto px-4 py-8">
+      <Card className="max-w-2xl mx-auto">
+        <CardHeader className="text-center">
+          <div className="flex justify-center mb-4">
+            <CheckCircle className="h-16 w-16 text-green-500" />
+          </div>
+          <CardTitle className="text-2xl">{isRTL ? "ההזמנה התקבלה בהצלחה!" : "Order Successfully Received!"}</CardTitle>
+          <CardDescription>
+            {isRTL
+              ? "תודה על הזמנתך. המסמך יישלח לכתובת האימייל שסיפקת."
+              : "Thank you for your order. The document will be sent to the email address you provided."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="font-medium text-gray-700">{isRTL ? "פרטי הזמנה" : "Order Details"}</h3>
+              <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+                <div className="text-gray-500">{isRTL ? "מספר הזמנה" : "Order ID"}</div>
+                <div>{orderDetails.id}</div>
+                <div className="text-gray-500">{isRTL ? "סוג מסמך" : "Document Type"}</div>
+                <div>
+                  {orderDetails.documentType === "regular"
+                    ? isRTL
+                      ? "נסח טאבו רגיל"
+                      : "Regular Land Registry Extract"
+                    : orderDetails.documentType === "consolidated"
+                      ? isRTL
+                        ? "נסח טאבו מרוכז"
+                        : "Consolidated Land Registry Extract"
+                      : orderDetails.documentType === "historical"
+                        ? isRTL
+                          ? "נסח טאבו הסטורי"
+                          : "Historical Land Registry Extract"
+                        : orderDetails.documentType === "address"
+                          ? isRTL
+                            ? "נסח טאבו לפי כתובת"
+                            : "Land Registry Extract by Address"
+                          : orderDetails.documentType === "id-report"
+                            ? isRTL
+                              ? 'דו"ח נכסים על פי ת.ז'
+                              : "Property Report by ID"
+                            : orderDetails.documentType}
                 </div>
-              ) : error || userError ? (
-                <Card className="border-gray-800 bg-gray-900/80 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle className="text-red-600">{isRTL ? "שגיאה" : "Error"}</CardTitle>
-                    <CardDescription>
-                      {error || (isRTL ? "אירעה שגיאה באימות" : "Authentication error")}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button asChild className="bg-gradient-to-r from-primary-500 to-primary-600 text-white">
-                      <Link href="/dashboard">{isRTL ? "חזור ללוח הבקרה" : "Return to Dashboard"}</Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              ) : !user ? (
-                <Card className="border-gray-800 bg-gray-900/80 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle>{isRTL ? "נדרשת התחברות" : "Authentication Required"}</CardTitle>
-                    <CardDescription>
-                      {isRTL ? "עליך להתחבר כדי לצפות בפרטי ההזמנה" : "You need to be logged in to view order details"}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button
-                      className="bg-gradient-to-r from-primary-500 to-primary-600 text-white"
-                      onClick={() => {
-                        document.cookie = "authed=true; path=/; max-age=86400"
-                        window.location.reload()
-                      }}
-                    >
-                      {isRTL ? "התחבר" : "Login"}
-                    </Button>
-                  </CardContent>
-                </Card>
-              ) : order ? (
-                <Card className="border-gray-800 bg-gray-900/80 backdrop-blur-sm">
-                  <CardHeader className="text-center">
-                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-500/10 text-primary-500">
-                      <CheckCircle className="h-8 w-8" />
-                    </div>
-                    <CardTitle className="text-2xl text-white">
-                      {isRTL ? "ההזמנה התקבלה בהצלחה!" : "Order Successfully Received!"}
-                    </CardTitle>
-                    <CardDescription className="text-gray-400">
-                      {isRTL
-                        ? "תודה על הזמנתך. המסמך שלך יהיה זמין בקרוב."
-                        : "Thank you for your order. Your document will be available soon."}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="mb-6 rounded-lg border border-gray-700 bg-gray-800/50 p-4">
-                      <h3 className="text-lg font-medium text-white">{isRTL ? "פרטי הזמנה" : "Order Details"}</h3>
-                      <div className="mt-4 space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">{isRTL ? "מספר הזמנה" : "Order ID"}:</span>
-                          <span className="font-medium text-white">{order.id.slice(0, 8)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">{isRTL ? "תאריך" : "Date"}:</span>
-                          <span className="font-medium text-white">{formatDate(order.created_at)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">{isRTL ? "גוש" : "Block"}:</span>
-                          <span className="font-medium text-white">{order.block}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">{isRTL ? "חלקה" : "Parcel"}:</span>
-                          <span className="font-medium text-white">{order.parcel}</span>
-                        </div>
-                        {order.subparcel && (
-                          <div className="flex justify-between">
-                            <span className="text-gray-400">{isRTL ? "תת-חלקה" : "Sub-Parcel"}:</span>
-                            <span className="font-medium text-white">{order.subparcel}</span>
-                          </div>
-                        )}
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">{isRTL ? "סוג מסמך" : "Document Type"}:</span>
-                          <span className="font-medium text-white">{getDocumentType(order.service_type)}</span>
-                        </div>
-                        <div className="flex justify-between border-t border-gray-700 pt-2">
-                          <span className="font-medium text-white">{isRTL ? "סה״כ" : "Total"}:</span>
-                          <span className="font-bold text-primary-500">₪{order.price.toFixed(2)}</span>
-                        </div>
-                      </div>
-                    </div>
+                {orderDetails.block && (
+                  <>
+                    <div className="text-gray-500">{isRTL ? "גוש" : "Block"}</div>
+                    <div>{orderDetails.block}</div>
+                  </>
+                )}
+                {orderDetails.parcel && (
+                  <>
+                    <div className="text-gray-500">{isRTL ? "חלקה" : "Parcel"}</div>
+                    <div>{orderDetails.parcel}</div>
+                  </>
+                )}
+                {orderDetails.email && (
+                  <>
+                    <div className="text-gray-500">{isRTL ? "אימייל" : "Email"}</div>
+                    <div>{orderDetails.email}</div>
+                  </>
+                )}
+              </div>
+            </div>
 
-                    <div className="mb-6 rounded-lg border border-primary-600/20 bg-primary-500/5 p-4 text-white">
-                      <h4 className="font-medium">{isRTL ? "מה הלאה?" : "What's Next?"}</h4>
-                      <p className="mt-2 text-sm text-gray-300">
-                        {isRTL
-                          ? "המסמך שלך נמצא כעת בעיבוד. ברגע שיהיה מוכן, תקבל הודעת אימייל עם קישור להורדה. תוכל גם לצפות במסמך בכל עת בלוח הבקרה שלך."
-                          : "Your document is now being processed. Once it's ready, you'll receive an email with a download link. You can also view your document at any time in your dashboard."}
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col gap-4 sm:flex-row">
-                      <Button
-                        asChild
-                        className="flex-1 bg-gradient-to-r from-primary-500 to-primary-600 text-white transition-all duration-300 hover:from-primary-600 hover:to-primary-700 hover:shadow-lg hover:shadow-primary-500/20"
-                      >
-                        <Link href="/dashboard">{isRTL ? "עבור ללוח הבקרה" : "Go to Dashboard"}</Link>
-                      </Button>
-                      <Button variant="outline" asChild className="flex-1 border-gray-700 text-white hover:bg-gray-800">
-                        <Link href="/order">
-                          <FileText className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
-                          {isRTL ? "הזמן מסמך נוסף" : "Order Another Document"}
-                        </Link>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ) : (
-                <Card className="border-gray-800 bg-gray-900/80 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle className="text-white">{isRTL ? "לא נמצאה הזמנה" : "Order Not Found"}</CardTitle>
-                    <CardDescription className="text-gray-400">
-                      {isRTL
-                        ? "לא ניתן למצוא את פרטי ההזמנה. אנא בדוק את הקישור או צור קשר עם התמיכה."
-                        : "Could not find order details. Please check the link or contact support."}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button asChild className="bg-gradient-to-r from-primary-500 to-primary-600 text-white">
-                      <Link href="/dashboard">{isRTL ? "חזור ללוח הבקרה" : "Return to Dashboard"}</Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h3 className="font-medium text-blue-700">{isRTL ? "מה הלאה?" : "What's Next?"}</h3>
+              <ul className="mt-2 text-sm text-blue-600 space-y-1 list-disc list-inside">
+                <li>
+                  {isRTL
+                    ? "המסמך שהזמנת יעובד ויישלח לאימייל שלך בהקדם האפשרי."
+                    : "Your ordered document will be processed and sent to your email as soon as possible."}
+                </li>
+                <li>
+                  {isRTL
+                    ? "תוכל לעקוב אחר סטטוס ההזמנה שלך באזור האישי."
+                    : "You can track your order status in your personal area."}
+                </li>
+                <li>
+                  {isRTL
+                    ? "אם יש לך שאלות, אנא צור קשר עם התמיכה שלנו."
+                    : "If you have any questions, please contact our support."}
+                </li>
+              </ul>
             </div>
           </div>
-        </div>
-      </main>
+        </CardContent>
+        <CardFooter className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Link href="/">
+            <Button variant="outline">{isRTL ? "חזרה לדף הבית" : "Return to Home"}</Button>
+          </Link>
+          <Link href="/my-orders">
+            <Button>{isRTL ? "צפה בהזמנות שלי" : "View My Orders"}</Button>
+          </Link>
+        </CardFooter>
+      </Card>
     </div>
   )
 }

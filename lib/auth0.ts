@@ -63,7 +63,7 @@ export function getApiUrl(path: string): string {
 
 // Function to check if the user is authenticated
 export function isAuthenticated(cookies: Record<string, string>): boolean {
-  return !!cookies.authed
+  return cookies.has("appSession") || cookies.has("authed")
 }
 
 // Function to get the login URL
@@ -82,3 +82,15 @@ export function getLogoutUrl(returnTo?: string): string {
 export function getSession() {
   return Promise.resolve(null)
 }
+
+// Mock implementation for preview environment
+export const mockAuth0 = {
+  getSession: () => {
+    return Promise.resolve(null)
+  },
+  withPageAuthRequired: (component) => component,
+  withApiAuthRequired: (handler) => handler,
+}
+
+// Export the real or mock Auth0 based on environment
+export const auth0 = process.env.VERCEL_ENV === "preview" ? mockAuth0 : require("@auth0/nextjs-auth0")

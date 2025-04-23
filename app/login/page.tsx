@@ -5,13 +5,13 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { useUser } from "@/lib/useUser"
+import { useAuth } from "@/lib/auth0"
 
 export default function LoginPage() {
-  const { user, isLoading, loginWithRedirect } = useUser()
+  const { user, isLoading, loginWithRedirect } = useAuth()
   const router = useRouter()
 
-  // אם המשתמש כבר מחובר, הפנה אותו לדשבורד
+  // If the user is already logged in, redirect to dashboard
   useEffect(() => {
     if (user && !isLoading) {
       router.push("/dashboard")

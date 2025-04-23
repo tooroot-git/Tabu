@@ -58,12 +58,10 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.6",
     "zod": "^3.24.1",
-    "@stripe/stripe-js": "latest",
     "@auth0/nextjs-auth0": "latest",
     "stripe": "latest",
     "resend": "latest",
     "@supabase/supabase-js": "latest",
-    "@stripe/react-stripe-js": "latest",
     "micro": "latest"
   },
   "devDependencies": {

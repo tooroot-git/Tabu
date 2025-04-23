@@ -1,6 +1,6 @@
 "use client"
 
-import { useUser } from "@auth0/nextjs-auth0/client"
+import { useAuth } from "@/lib/auth0"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import type { ReactNode } from "react"
@@ -10,14 +10,14 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, isLoading } = useUser()
+  const { user, isLoading, loginWithRedirect } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
     if (!isLoading && !user) {
-      router.push("/api/auth/login")
+      loginWithRedirect()
     }
-  }, [user, isLoading, router])
+  }, [user, isLoading, loginWithRedirect])
 
   if (isLoading) {
     return (
