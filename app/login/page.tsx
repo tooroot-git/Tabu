@@ -1,41 +1,29 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useUser } from "@/lib/useUser"
 
 export default function LoginPage() {
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const { user, isLoading, loginWithRedirect } = useUser()
   const router = useRouter()
 
-  const handleLogin = async () => {
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      // בסביבת תצוגה מקדימה, נשתמש בהתחברות מדומה
-      // הגדרת משתמש מדומה ב-localStorage
-      localStorage.setItem(
-        "mockUser",
-        JSON.stringify({
-          name: "משתמש לדוגמה",
-          email: "user@example.com",
-          picture: "/abstract-user-icon.png",
-        }),
-      )
-
-      // הפניה לדשבורד
+  // אם המשתמש כבר מחובר, הפנה אותו לדשבורד
+  useEffect(() => {
+    if (user && !isLoading) {
       router.push("/dashboard")
-    } catch (err) {
-      console.error("Login error:", err)
-      setError("אירעה שגיאה בתהליך ההתחברות. אנא נסה שוב.")
-    } finally {
-      setIsLoading(false)
     }
+  }, [user, isLoading, router])
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[70vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"></div>
+      </div>
+    )
   }
 
   return (
@@ -46,14 +34,9 @@ export default function LoginPage() {
           <CardDescription>התחבר כדי לצפות בהזמנות שלך ולנהל את החשבון שלך</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
           <div className="space-y-2">
-            <Button className="w-full" onClick={handleLogin} disabled={isLoading}>
-              {isLoading ? "מתחבר..." : "התחבר למערכת"}
+            <Button className="w-full" onClick={loginWithRedirect}>
+              התחבר למערכת
             </Button>
           </div>
         </CardContent>

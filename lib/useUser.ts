@@ -1,16 +1,35 @@
 "use client"
 
-// This file provides a unified interface for authentication
-// It uses the mock implementation in development/preview and the real Auth0 in production
+import { getLoginUrl, getLogoutUrl } from "@/lib/auth0"
 
-// In production, uncomment this line and comment out the mock import
-// import { useUser as useAuth0User } from "@auth0/nextjs-auth0/client";
+// טיפוס למשתמש
+export type User = {
+  name?: string
+  email?: string
+  sub?: string
+  picture?: string
+}
 
-// For development/preview, we use the mock implementation
-import { useUser as useMockUser } from "./auth-mock"
+// טיפוס לתוצאת useUser
+export type UseUserResult = {
+  user?: User | null
+  error?: Error
+  isLoading: boolean
+  loginWithRedirect: () => void
+  logout: () => void
+}
 
-// Export the appropriate implementation
-export const useUser = useMockUser
-
-// For production, use this instead:
-// export const useUser = useAuth0User;
+// פונקציית useUser פשוטה שתעבוד בסביבת הייצור
+export function useUser(): UseUserResult {
+  // בסביבת ייצור, זה יוחלף ב-useUser האמיתי של Auth0
+  return {
+    user: null,
+    isLoading: false,
+    loginWithRedirect: () => {
+      window.location.href = getLoginUrl()
+    },
+    logout: () => {
+      window.location.href = getLogoutUrl()
+    },
+  }
+}

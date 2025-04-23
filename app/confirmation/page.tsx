@@ -6,8 +6,6 @@ import { useLanguage } from "@/context/language-context"
 import { useAuth } from "@/lib/auth0"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
 import { Stepper } from "@/components/ui/stepper"
 import { CheckCircle, FileText } from "lucide-react"
 import Link from "next/link"
@@ -29,7 +27,7 @@ interface Order {
 
 export default function ConfirmationPage() {
   const { isRTL } = useLanguage()
-  const { user, getAccessToken } = useAuth()
+  const { user, isLoading: isAuthLoading } = useAuth()
   const searchParams = useSearchParams()
 
   const [order, setOrder] = useState<Order | null>(null)
@@ -47,9 +45,6 @@ export default function ConfirmationPage() {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
         const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
         const supabase = createClient(supabaseUrl, supabaseKey)
-
-        // Get access token for authorization
-        const token = await getAccessToken()
 
         // Fetch order details
         const { data, error } = await supabase
@@ -76,8 +71,10 @@ export default function ConfirmationPage() {
 
     if (user) {
       fetchOrder()
+    } else if (!isAuthLoading) {
+      setIsLoading(false)
     }
-  }, [orderId, user, getAccessToken, isRTL])
+  }, [orderId, user, isAuthLoading, isRTL])
 
   // Function to get document type translation
   const getDocumentType = (type: string): string => {
@@ -124,7 +121,6 @@ export default function ConfirmationPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header />
       <main className="flex-1 py-24">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-3xl">
@@ -250,7 +246,6 @@ export default function ConfirmationPage() {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   )
 }

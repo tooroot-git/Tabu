@@ -1,49 +1,30 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-// בדיקת האם המשתמש מחובר באמצעות בדיקת קוקי
-function isAuthenticated(request: NextRequest) {
-  try {
-    // בדיקה פשוטה של עוגיית האימות
-    return request.cookies.has("authed")
-  } catch (error) {
-    console.error("Error checking authentication:", error)
-    return false
-  }
-}
+// נתיבים מוגנים שדורשים אימות
+const protectedPaths = ["/dashboard", "/my-orders", "/settings"]
 
 export function middleware(request: NextRequest) {
-  try {
-    const { pathname } = request.nextUrl
+  const { pathname } = request.nextUrl
 
-    // נתיבים מוגנים שדורשים אימות
-    const protectedPaths = ["/dashboard", "/my-orders", "/settings"]
-    const isProtectedPath = protectedPaths.some((path) => pathname.startsWith(path))
+  // בדוק אם הנתיב הנוכחי דורש אימות
+  const isProtectedPath = protectedPaths.some((path) => pathname.startsWith(path))
 
-    if (isProtectedPath) {
-      // בדוק אם המשתמש מחובר
-      const isLoggedIn = isAuthenticated(request)
+  if (isProtectedPath) {
+    // בסביבת ייצור, זה יבדוק את עוגיית האימות של Auth0
+    const hasAuthCookie = request.cookies.has("appSession")
 
-      if (!isLoggedIn) {
-        // אם המשתמש לא מחובר, הפנה אותו לדף ההתחברות
-        return NextResponse.redirect(new URL("/login", request.url))
-      }
+    if (!hasAuthCookie) {
+      // אם המשתמש לא מחובר, הפנה אותו לדף ההתחברות
+      const url = new URL("/api/auth/login", request.url)
+      url.searchParams.set("returnTo", pathname)
+      return NextResponse.redirect(url)
     }
-
-    // המשך לבקשה הבאה
-    return NextResponse.next()
-  } catch (error) {
-    console.error("Middleware error:", error)
-    // במקרה של שגיאה, נמשיך לבקשה הבאה
-    return NextResponse.next()
   }
+
+  return NextResponse.next()
 }
 
 export const config = {
-  matcher: [
-    // דפים שדורשים אימות
-    "/dashboard/:path*",
-    "/my-orders/:path*",
-    "/settings/:path*",
-  ],
+  matcher: ["/dashboard/:path*", "/my-orders/:path*", "/settings/:path*"],
 }

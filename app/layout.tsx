@@ -5,7 +5,6 @@ import { Inter } from "next/font/google"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { LanguageProvider } from "@/context/language-context"
-import { AuthProviderMock } from "@/lib/auth-mock"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -23,15 +22,13 @@ export default function RootLayout({
   return (
     <html lang="en" dir="ltr">
       <body className={inter.className}>
-        <AuthProviderMock>
-          <LanguageProvider>
-            <div className="flex min-h-screen flex-col bg-[#0A0E17] text-white">
-              <Header />
-              <main className="flex-1">{children}</main>
-              <Footer />
-            </div>
-          </LanguageProvider>
-        </AuthProviderMock>
+        <LanguageProvider>
+          <div className="flex min-h-screen flex-col bg-[#0A0E17] text-white">
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </div>
+        </LanguageProvider>
       </body>
     </html>
   )

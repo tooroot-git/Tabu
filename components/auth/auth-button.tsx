@@ -14,7 +14,7 @@ import {
 import { useUser } from "@/lib/useUser"
 
 export function AuthButton() {
-  const { user, error, isLoading } = useUser()
+  const { user, error, isLoading, loginWithRedirect, logout } = useUser()
   const { isRTL } = useLanguage()
 
   if (isLoading) {
@@ -50,17 +50,14 @@ export function AuthButton() {
             <Link href="/my-orders">{isRTL ? "ההזמנות שלי" : "My Orders"}</Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem asChild>
-            <Link href="/api/auth/logout">{isRTL ? "התנתק" : "Logout"}</Link>
-          </DropdownMenuItem>
+          <DropdownMenuItem onClick={logout}>{isRTL ? "התנתק" : "Logout"}</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     )
   }
 
-  // במקום להשתמש ב-Link, נשתמש בפונקציה שתנווט ישירות לדף ההתחברות
   return (
-    <Button variant="ghost" size="sm" onClick={() => (window.location.href = "/login")}>
+    <Button variant="ghost" size="sm" onClick={loginWithRedirect}>
       <LogIn className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
       {isRTL ? "התחבר" : "Login"}
     </Button>

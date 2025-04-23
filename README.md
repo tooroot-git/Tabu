@@ -1,30 +1,61 @@
-# Tabu.net.il
+# TabuIsrael.co.il
 
-*Automatically synced with your [v0.dev](https://v0.dev) deployments*
+אתר להזמנת מסמכי טאבו רשמיים מרשם המקרקעין הישראלי.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/osint-llc/v0-tabu-net-il)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/K4KljjpKArK)
+## התקנה
 
-## Overview
+1. התקן את התלויות:
 
-This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
+\`\`\`bash
+npm install
+\`\`\`
 
-## Deployment
+2. צור קובץ `.env.local` עם משתני הסביבה הנדרשים (ראה `.env.local.example`).
 
-Your project is live at:
+3. הפעל את השרת:
 
-**[https://vercel.com/osint-llc/v0-tabu-net-il](https://vercel.com/osint-llc/v0-tabu-net-il)**
+\`\`\`bash
+npm run dev
+\`\`\`
 
-## Build your app
+## הגדרת Auth0
 
-Continue building your app on:
+1. צור חשבון ב-[Auth0](https://auth0.com/).
+2. צור אפליקציה חדשה מסוג "Regular Web Application".
+3. הגדר את ה-Callback URL ל-`https://tabuisrael.co.il/api/auth/callback`.
+4. הגדר את ה-Logout URL ל-`https://tabuisrael.co.il`.
+5. העתק את ה-Domain, Client ID ו-Client Secret לקובץ `.env.local`.
 
-**[https://v0.dev/chat/projects/K4KljjpKArK](https://v0.dev/chat/projects/K4KljjpKArK)**
+## פריסה לייצור
 
-## How It Works
+1. התקן את [Vercel CLI](https://vercel.com/cli):
 
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+\`\`\`bash
+npm i -g vercel
+\`\`\`
+
+2. פרוס את האפליקציה:
+
+\`\`\`bash
+vercel --prod
+\`\`\`
+
+3. הגדר את משתני הסביבה ב-Vercel:
+
+\`\`\`bash
+vercel env add AUTH0_SECRET
+vercel env add AUTH0_BASE_URL
+vercel env add AUTH0_ISSUER_BASE_URL
+vercel env add AUTH0_CLIENT_ID
+vercel env add AUTH0_CLIENT_SECRET
+\`\`\`
+
+4. עדכן את ה-Callback URL וה-Logout URL ב-Auth0 לדומיין הייצור שלך.
+
+## טכנולוגיות
+
+- Next.js
+- Auth0
+- Supabase
+- Stripe
+- Tailwind CSS

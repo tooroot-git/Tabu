@@ -60,9 +60,9 @@
     "zod": "^3.24.1",
     "@stripe/stripe-js": "latest",
     "@auth0/nextjs-auth0": "latest",
-    "@supabase/supabase-js": "latest",
     "stripe": "latest",
     "resend": "latest",
+    "@supabase/supabase-js": "latest",
     "@stripe/react-stripe-js": "latest",
     "micro": "latest"
   },
