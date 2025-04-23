@@ -1,13 +1,8 @@
 "use client"
 
-import { Elements } from "@stripe/react-stripe-js"
-import { stripePromise } from "@/lib/stripe"
 import type { ReactNode } from "react"
 
-interface StripeProviderProps {
-  children: ReactNode
-}
-
-export function StripeProvider({ children }: StripeProviderProps) {
-  return <Elements stripe={stripePromise}>{children}</Elements>
+// Mock Stripe provider that doesn't rely on the actual Stripe library
+export function StripeProvider({ children }: { children: ReactNode }) {
+  return <>{children}</>
 }

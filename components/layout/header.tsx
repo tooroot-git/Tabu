@@ -33,7 +33,7 @@ export function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center">
           <Link href="/" className="flex items-center">
-            <span className="text-xl font-bold text-primary-500">Tabu.net.il</span>
+            <span className="text-xl font-bold text-primary-500">TabuIsrael.co.il</span>
           </Link>
         </div>
 

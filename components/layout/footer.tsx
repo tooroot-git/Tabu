@@ -22,9 +22,11 @@ export function Footer() {
         <div className={`grid grid-cols-1 gap-8 md:grid-cols-3 ${isRTL ? "text-right" : "text-left"}`}>
           <div>
             <h3 className="text-lg font-semibold text-white">
-              <span className="bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent">
-                {isRTL ? "טאבו.נט.איל" : "Tabu.net.il"}
-              </span>
+              <div className="flex items-center">
+                <Link href="/" className="text-xl font-bold text-primary-500">
+                  TabuIsrael.co.il
+                </Link>
+              </div>
             </h3>
             <p className="mt-2 text-sm text-gray-400">
               {isRTL
@@ -64,8 +66,10 @@ export function Footer() {
             isRTL ? "text-right" : "text-left"
           }`}
         >
-          <p>
-            &copy; {currentYear} Tabu.net.il. {isRTL ? "כל הזכויות שמורות" : "All rights reserved"}.
+          <p className="text-sm text-gray-500">
+            {isRTL
+              ? `© ${new Date().getFullYear()} TabuIsrael.co.il. כל הזכויות שמורות.`
+              : `© ${new Date().getFullYear()} TabuIsrael.co.il. All rights reserved.`}
           </p>
         </div>
       </div>

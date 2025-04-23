@@ -1,7 +1,5 @@
 "use client"
 
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
 import { useLanguage } from "@/context/language-context"
 
 export default function TermsPage() {
@@ -12,17 +10,17 @@ export default function TermsPage() {
       titleEn: "1. Acceptance of Terms",
       titleHe: "1. קבלת תנאים",
       contentEn:
-        "By accessing and using the Tabu.net.il website and services, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service. If you do not agree with any part of these terms, you may not use our services.",
+        "By accessing and using the TabuIsrael.co.il website and services, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service. If you do not agree with any part of these terms, you may not use our services.",
       contentHe:
-        "על ידי גישה ושימוש באתר ובשירותים של Tabu.net.il, אתה מאשר כי קראת, הבנת ומסכים להיות מחויב לתנאי שירות אלה. אם אינך מסכים לחלק כלשהו מתנאים אלה, אינך רשאי להשתמש בשירותים שלנו.",
+        "על ידי גישה ושימוש באתר ובשירותים של TabuIsrael.co.il, אתה מאשר כי קראת, הבנת ומסכים להיות מחויב לתנאי שירות אלה. אם אינך מסכים לחלק כלשהו מתנאים אלה, אינך רשאי להשתמש בשירותים שלנו.",
     },
     {
       titleEn: "2. Service Description",
       titleHe: "2. תיאור השירות",
       contentEn:
-        "Tabu.net.il provides online access to official Land Registry (Tabu) documents in Israel. Our service allows users to order and receive digital copies of these documents. The documents provided through our service are official extracts from the Israel Land Registry and are digitally signed.",
+        "TabuIsrael.co.il provides online access to official Land Registry (Tabu) documents in Israel. Our service allows users to order and receive digital copies of these documents. The documents provided through our service are official extracts from the Israel Land Registry and are digitally signed.",
       contentHe:
-        "Tabu.net.il מספק גישה מקוונת למסמכי רישום מקרקעין (טאבו) רשמיים בישראל. השירות שלנו מאפשר למשתמשים להזמין ולקבל עותקים דיגיטליים של מסמכים אלה. המסמכים המסופקים באמצעות השירות שלנו הם נסחים רשמיים מרשם המקרקעין בישראל והם חתומים דיגיטלית.",
+        "TabuIsrael.co.il מספק גישה מקוונת למסמכי רישום מקרקעין (טאבו) רשמיים בישראל. השירות שלנו מאפשר למשתמשים להזמין ולקבל עותקים דיגיטליים של מסמכים אלה. המסמכים המסופקים באמצעות השירות שלנו הם נסחים רשמיים מרשם המקרקעין בישראל והם חתומים דיגיטלית.",
     },
     {
       titleEn: "3. User Obligations",
@@ -52,17 +50,17 @@ export default function TermsPage() {
       titleEn: "6. Intellectual Property",
       titleHe: "6. קניין רוחני",
       contentEn:
-        "All content on the Tabu.net.il website, including text, graphics, logos, and software, is the property of Tabu.net.il or its content suppliers and is protected by Israeli and international copyright laws.",
+        "All content on the TabuIsrael.co.il website, including text, graphics, logos, and software, is the property of TabuIsrael.co.il or its content suppliers and is protected by Israeli and international copyright laws.",
       contentHe:
-        "כל התוכן באתר Tabu.net.il, כולל טקסט, גרפיקה, לוגואים ותוכנה, הוא רכושה של Tabu.net.il או ספקי התוכן שלה ומוגן על ידי חוקי זכויות יוצרים ישראליים ובינלאומיים.",
+        "כל התוכן באתר TabuIsrael.co.il, כולל טקסט, גרפיקה, לוגואים ותוכנה, הוא רכושה של TabuIsrael.co.il או ספקי התוכן שלה ומוגן על ידי חוקי זכויות יוצרים ישראליים ובינלאומיים.",
     },
     {
       titleEn: "7. Limitation of Liability",
       titleHe: "7. הגבלת אחריות",
       contentEn:
-        "Tabu.net.il provides documents as they appear in the official Land Registry. We are not responsible for the accuracy of the information contained in these documents. Our service is provided on an 'as is' and 'as available' basis without warranties of any kind.",
+        "TabuIsrael.co.il provides documents as they appear in the official Land Registry. We are not responsible for the accuracy of the information contained in these documents. Our service is provided on an 'as is' and 'as available' basis without warranties of any kind.",
       contentHe:
-        "Tabu.net.il מספקת מסמכים כפי שהם מופיעים ברישום המקרקעין הרשמי. איננו אחראים לדיוק המידע הכלול במסמכים אלה. השירות שלנו ניתן על בסיס 'כמות שהוא' ו'כפי שהוא זמין' ללא אחריות מכל סוג שהוא.",
+        "TabuIsrael.co.il מספקת מסמכים כפי שהם מופיעים ברישום המקרקעין הרשמי. איננו אחראים לדיוק המידע הכלול במסמכים אלה. השירות שלנו ניתן על בסיס 'כמות שהוא' ו'כפי שהוא זמין' ללא אחריות מכל סוג שהוא.",
     },
     {
       titleEn: "8. Changes to Terms",
@@ -82,15 +80,14 @@ export default function TermsPage() {
     {
       titleEn: "10. Contact Information",
       titleHe: "10. פרטי קשר",
-      contentEn: "If you have any questions about these Terms of Service, please contact us at support@tabu.net.il.",
-      contentHe: "אם יש לך שאלות כלשהן לגבי תנאי שירות אלה, אנא צור איתנו קשר בכתובת support@tabu.net.il.",
+      contentEn:
+        "If you have any questions about these Terms of Service, please contact us at support@tabuisrael.co.il.",
+      contentHe: "אם יש לך שאלות כלשהן לגבי תנאי שירות אלה, אנא צור איתנו קשר בכתובת support@tabuisrael.co.il.",
     },
   ]
 
   return (
     <div className={isRTL ? "font-sans-hebrew" : "font-sans"}>
-      <Header />
-
       <main className="py-16 md:py-24">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-3xl">
@@ -112,8 +109,6 @@ export default function TermsPage() {
           </div>
         </div>
       </main>
-
-      <Footer />
     </div>
   )
 }

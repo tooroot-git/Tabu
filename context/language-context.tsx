@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, type ReactNode, useCallback } from "react"
 
 type Language = "en" | "he"
 
@@ -48,4 +48,51 @@ export function useLanguage() {
     throw new Error("useLanguage must be used within a LanguageProvider")
   }
   return context
+}
+
+export function useTranslation() {
+  const { language } = useLanguage()
+  const isHebrew = language === "he"
+
+  const t = useCallback(
+    (key: string) => {
+      // Replace with your translation logic here
+      // This is just a placeholder
+      switch (key) {
+        case "myOrders":
+          return isHebrew ? "ההזמנות שלי" : "My Orders"
+        case "loading":
+          return isHebrew ? "טוען" : "Loading"
+        case "errorFetchingOrders":
+          return isHebrew ? "שגיאה בטעינת הזמנות" : "Error fetching orders"
+        case "noOrdersFound":
+          return isHebrew ? "לא נמצאו הזמנות" : "No orders found"
+        case "orderNewDocument":
+          return isHebrew ? "הזמן מסמך חדש" : "Order new document"
+        case "orderFor":
+          return isHebrew ? "הזמנה עבור" : "Order for"
+        case "block":
+          return isHebrew ? "גוש" : "Block"
+        case "parcel":
+          return isHebrew ? "חלקה" : "Parcel"
+        case "orderDate":
+          return isHebrew ? "תאריך הזמנה" : "Order date"
+        case "orderID":
+          return isHebrew ? "מספר הזמנה" : "Order ID"
+        case "status":
+          return isHebrew ? "סטטוס" : "Status"
+        case "price":
+          return isHebrew ? "מחיר" : "Price"
+        case "paid":
+          return isHebrew ? "שולם" : "paid"
+        case "downloadDocument":
+          return isHebrew ? "הורד מסמך" : "Download document"
+        default:
+          return key
+      }
+    },
+    [isHebrew],
+  )
+
+  return { t, isHebrew }
 }

@@ -1,44 +1,61 @@
 import { createClient } from "@supabase/supabase-js"
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://zqlramegnhtthdzeqpis.supabase.co"
-const supabaseAnonKey =
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpxbHJhbWVnbmh0dGhkemVxcGlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyODkyNjQsImV4cCI6MjA2MDg2NTI2NH0.vKM2m7toh0jQITTAZFC-iN0bbI0GbmHUq29OTdE8ulc"
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-// Mock functions for preview environment
-export const mockSupabase = {
-  from: (table: string) => ({
-    select: () => ({
-      eq: () => ({
-        order: () => ({
-          data: [],
-          error: null,
-        }),
-        single: () => ({
-          data: null,
-          error: null,
-        }),
-      }),
-    }),
-    insert: () => ({
-      select: () => ({
-        data: [{ id: Math.random().toString(36).substring(7) }],
-        error: null,
-      }),
-    }),
-  }),
+// Types for our database
+export type Order = {
+  id?: string
+  user_id: string
+  block: string
+  parcel: string
+  subparcel?: string
+  service_type: string
+  price: number
+  status: "pending" | "paid" | "completed" | "cancelled"
+  email: string
+  created_at?: string
 }
 
-// Use this in preview environment
-export const getSupabase = () => {
-  // In production, return the real Supabase client
-  // For preview, return the mock
-  try {
-    return supabase
-  } catch (error) {
-    console.warn("Using mock Supabase client for preview")
-    return mockSupabase as any
+// Initialize the Supabase client
+export const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
+)
+
+// Helper function to get orders for a user
+export async function getUserOrders(userId: string) {
+  const { data, error } = await supabase
+    .from("orders")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    console.error("Error fetching orders:", error)
+    throw error
   }
+
+  return data || []
+}
+
+// Helper function to create a new order
+export async function createOrder(order: Order) {
+  const { data, error } = await supabase.from("orders").insert(order).select()
+
+  if (error) {
+    console.error("Error creating order:", error)
+    throw error
+  }
+
+  return data?.[0]
+}
+
+// Helper function to update an order
+export async function updateOrder(id: string, updates: Partial<Order>) {
+  const { data, error } = await supabase.from("orders").update(updates).eq("id", id).select()
+
+  if (error) {
+    console.error("Error updating order:", error)
+    throw error
+  }
+
+  return data?.[0]
 }
