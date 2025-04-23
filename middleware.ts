@@ -4,10 +4,8 @@ import type { NextRequest } from "next/server"
 // בדיקת האם המשתמש מחובר באמצעות בדיקת קוקי
 function isAuthenticated(request: NextRequest) {
   try {
-    // בסביבת תצוגה מקדימה, נבדוק אם יש לנו נתוני משתמש מוקיים
-    // בסביבת ייצור, נבדוק את הקוקי של Auth0
-    const hasAuthCookie = request.cookies.has("appSession") || request.cookies.has("authed")
-    return hasAuthCookie
+    // בדיקה פשוטה של עוגיית האימות
+    return request.cookies.has("authed")
   } catch (error) {
     console.error("Error checking authentication:", error)
     return false
@@ -15,26 +13,30 @@ function isAuthenticated(request: NextRequest) {
 }
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
+  try {
+    const { pathname } = request.nextUrl
 
-  // נתיבים מוגנים שדורשים אימות
-  const protectedPaths = ["/dashboard", "/my-orders", "/settings"]
-  const isProtectedPath = protectedPaths.some((path) => pathname.startsWith(path))
+    // נתיבים מוגנים שדורשים אימות
+    const protectedPaths = ["/dashboard", "/my-orders", "/settings"]
+    const isProtectedPath = protectedPaths.some((path) => pathname.startsWith(path))
 
-  if (isProtectedPath) {
-    // בדוק אם המשתמש מחובר
-    const isLoggedIn = isAuthenticated(request)
+    if (isProtectedPath) {
+      // בדוק אם המשתמש מחובר
+      const isLoggedIn = isAuthenticated(request)
 
-    if (!isLoggedIn) {
-      // אם המשתמש לא מחובר, הפנה אותו לדף ההתחברות
-      const redirectUrl = new URL("/login", request.url)
-      redirectUrl.searchParams.set("returnTo", pathname)
-      return NextResponse.redirect(redirectUrl)
+      if (!isLoggedIn) {
+        // אם המשתמש לא מחובר, הפנה אותו לדף ההתחברות
+        return NextResponse.redirect(new URL("/login", request.url))
+      }
     }
-  }
 
-  // המשך לבקשה הבאה
-  return NextResponse.next()
+    // המשך לבקשה הבאה
+    return NextResponse.next()
+  } catch (error) {
+    console.error("Middleware error:", error)
+    // במקרה של שגיאה, נמשיך לבקשה הבאה
+    return NextResponse.next()
+  }
 }
 
 export const config = {

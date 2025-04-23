@@ -1,10 +1,43 @@
 "use client"
 
+import { useState } from "react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 export default function LoginPage() {
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
+
+  const handleLogin = async () => {
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      // בסביבת תצוגה מקדימה, נשתמש בהתחברות מדומה
+      // הגדרת משתמש מדומה ב-localStorage
+      localStorage.setItem(
+        "mockUser",
+        JSON.stringify({
+          name: "משתמש לדוגמה",
+          email: "user@example.com",
+          picture: "/abstract-user-icon.png",
+        }),
+      )
+
+      // הפניה לדשבורד
+      router.push("/dashboard")
+    } catch (err) {
+      console.error("Login error:", err)
+      setError("אירעה שגיאה בתהליך ההתחברות. אנא נסה שוב.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className="container flex items-center justify-center min-h-[calc(100vh-200px)] py-12">
       <Card className="w-full max-w-md">
@@ -13,30 +46,14 @@ export default function LoginPage() {
           <CardDescription>התחבר כדי לצפות בהזמנות שלך ולנהל את החשבון שלך</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
           <div className="space-y-2">
-            <Button className="w-full" onClick={() => (window.location.href = "/api/auth/login")}>
-              התחבר עם Auth0
-            </Button>
-          </div>
-          <div className="text-center text-sm">או</div>
-          <div className="space-y-2">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => {
-                // מוק להתחברות בסביבת תצוגה מקדימה
-                localStorage.setItem(
-                  "mockUser",
-                  JSON.stringify({
-                    name: "משתמש לדוגמה",
-                    email: "user@example.com",
-                    picture: "/abstract-user-icon.png",
-                  }),
-                )
-                window.location.href = "/dashboard"
-              }}
-            >
-              התחבר כמשתמש לדוגמה
+            <Button className="w-full" onClick={handleLogin} disabled={isLoading}>
+              {isLoading ? "מתחבר..." : "התחבר למערכת"}
             </Button>
           </div>
         </CardContent>
