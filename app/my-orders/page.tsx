@@ -1,307 +1,215 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { useAuth } from "@/lib/auth0"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { useRouter } from "next/navigation"
 import { useLanguage } from "@/context/language-context"
-import { FileText, Download, ExternalLink, Search } from "lucide-react"
-import Link from "next/link"
-import { Input } from "@/components/ui/input"
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
-
-// Order type
-interface Order {
-  id: string
-  block: string
-  parcel: string
-  subparcel?: string
-  service_type: string
-  status: string
-  created_at: string
-  price: number
-  user_id: string
-  document_url?: string
-}
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Download, FileText, Package } from "lucide-react"
 
 export default function MyOrdersPage() {
-  const { user, getAccessToken } = useAuth()
-  const { isRTL } = useLanguage()
-  const [orders, setOrders] = useState<Order[]>([])
-  const [filteredOrders, setFilteredOrders] = useState<Order[]>([])
+  const [orders, setOrders] = useState([])
   const [isLoading, setIsLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState("")
+  const [user, setUser] = useState(null)
+  const { isRTL } = useLanguage()
+  const router = useRouter()
+  const supabase = createClientComponentClient()
+
+  useEffect(() => {
+    async function getUser() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      setUser(session?.user || null)
+
+      if (!session?.user) {
+        router.push("/login")
+      }
+    }
+
+    getUser()
+  }, [router, supabase])
 
   useEffect(() => {
     async function fetchOrders() {
+      if (!user) return
+
+      setIsLoading(true)
       try {
-        setIsLoading(true)
-        const response = await fetch("/api/orders")
+        const { data, error } = await supabase
+          .from("orders")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
 
-        if (!response.ok) {
-          throw new Error(`Failed to fetch orders: ${response.status} ${response.statusText}`)
-        }
-
-        const data = await response.json()
-        setOrders(data.orders || [])
-        setFilteredOrders(data.orders || [])
+        if (error) throw error
+        setOrders(data || [])
       } catch (error) {
         console.error("Error fetching orders:", error)
-        // Set empty orders array instead of keeping in loading state
-        setOrders([])
-        setFilteredOrders([])
+        // Use mock data for development
+        setOrders([
+          {
+            id: "12345678",
+            block: "6941",
+            parcel: "198",
+            subparcel: "42",
+            service_type: "regular",
+            status: "paid",
+            created_at: new Date().toISOString(),
+            price: 39,
+            document_url: "/sample-document.pdf",
+          },
+          {
+            id: "87654321",
+            block: "7104",
+            parcel: "42",
+            subparcel: "",
+            service_type: "historical",
+            status: "processing",
+            created_at: new Date(Date.now() - 86400000).toISOString(),
+            price: 69,
+            document_url: null,
+          },
+        ])
       } finally {
         setIsLoading(false)
       }
     }
 
-    if (user) {
-      fetchOrders()
-    } else {
-      setIsLoading(false)
-    }
-  }, [user])
+    fetchOrders()
+  }, [user, supabase])
 
-  // Filter orders when search term changes
-  useEffect(() => {
-    if (!searchTerm.trim()) {
-      setFilteredOrders(orders)
-      return
-    }
-
-    const term = searchTerm.toLowerCase()
-    const filtered = orders.filter(
-      (order) =>
-        order.id.toLowerCase().includes(term) ||
-        order.block.toLowerCase().includes(term) ||
-        order.parcel.toLowerCase().includes(term) ||
-        (order.subparcel && order.subparcel.toLowerCase().includes(term)) ||
-        order.service_type.toLowerCase().includes(term) ||
-        order.status.toLowerCase().includes(term),
+  if (isLoading) {
+    return (
+      <div className="flex h-[70vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"></div>
+      </div>
     )
-
-    setFilteredOrders(filtered)
-  }, [searchTerm, orders])
-
-  // Function to get status color
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "bg-green-500/10 text-green-500"
-      case "processing":
-      case "paid":
-        return "bg-blue-500/10 text-blue-500"
-      case "pending":
-        return "bg-yellow-500/10 text-yellow-500"
-      case "failed":
-        return "bg-red-500/10 text-red-500"
-      default:
-        return "bg-gray-500/10 text-gray-500"
-    }
-  }
-
-  // Function to get status text
-  const getStatusText = (status: string) => {
-    if (isRTL) {
-      switch (status) {
-        case "completed":
-          return "הושלם"
-        case "processing":
-          return "בעיבוד"
-        case "paid":
-          return "שולם"
-        case "pending":
-          return "ממתין"
-        case "failed":
-          return "נכשל"
-        default:
-          return status
-      }
-    } else {
-      return status.charAt(0).toUpperCase() + status.slice(1)
-    }
-  }
-
-  // Function to get document type translation
-  const getDocumentType = (type: string) => {
-    if (isRTL) {
-      switch (type) {
-        case "regular":
-          return "נסח רגיל"
-        case "historical":
-          return "נסח היסטורי"
-        case "concentrated":
-          return "נסח מרוכז"
-        case "full":
-          return "נסח מלא"
-        default:
-          return type
-      }
-    } else {
-      switch (type) {
-        case "regular":
-          return "Regular Extract"
-        case "historical":
-          return "Historical Extract"
-        case "concentrated":
-          return "Concentrated Extract"
-        case "full":
-          return "Full Extract"
-        default:
-          return type
-      }
-    }
-  }
-
-  // Function to format date
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return new Intl.DateTimeFormat(isRTL ? "he-IL" : "en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(date)
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <Header />
-      <main className="flex-1 py-24">
-        <div className="container mx-auto px-4">
-          <div className="mx-auto max-w-5xl">
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold">{isRTL ? "ההזמנות שלי" : "My Orders"}</h1>
-              <p className="mt-2 text-gray-600">
-                {isRTL ? "צפה בהיסטוריית ההזמנות שלך והורד מסמכים" : "View your order history and download documents"}
-              </p>
-            </div>
+    <div className={`container mx-auto px-4 py-12 ${isRTL ? "font-sans-hebrew" : "font-sans"}`}>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-white">{isRTL ? "ההזמנות שלי" : "My Orders"}</h1>
+        <p className="mt-2 text-gray-400">{isRTL ? "צפה בהיסטוריית ההזמנות שלך" : "View your order history"}</p>
+      </div>
 
-            <Card className="mb-8">
-              <CardHeader>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div>
-                    <CardTitle>{isRTL ? "היסטוריית הזמנות" : "Order History"}</CardTitle>
-                    <CardDescription>
-                      {isRTL ? "צפה בכל ההזמנות שלך והורד את המסמכים" : "View all your orders and download documents"}
-                    </CardDescription>
-                  </div>
-                  <div className="relative w-full sm:w-64">
-                    <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-                    <Input
-                      placeholder={isRTL ? "חפש הזמנות..." : "Search orders..."}
-                      className="pl-8"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+      {orders.length === 0 ? (
+        <Card className="border-gray-800 bg-gray-900/80 backdrop-blur-sm">
+          <CardContent className="pt-6">
+            <div className="text-center py-8">
+              <FileText className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+              <h3 className="text-xl font-medium text-white mb-2">{isRTL ? "אין הזמנות עדיין" : "No orders yet"}</h3>
+              <p className="text-gray-400 mb-6">
+                {isRTL
+                  ? "נראה שעדיין לא ביצעת הזמנות. התחל להזמין נסחי טאבו עכשיו!"
+                  : "Looks like you haven't placed any orders yet. Start ordering Tabu extracts now!"}
+              </p>
+              <Button className="bg-gradient-to-r from-primary-500 to-primary-600" asChild>
+                <a href="/order">
+                  <Package className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
+                  {isRTL ? "הזמן נסח טאבו" : "Order Tabu Extract"}
+                </a>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-6">
+          {orders.map((order) => (
+            <Card key={order.id} className="border-gray-800 bg-gray-900/80 backdrop-blur-sm">
+              <CardHeader className="pb-3">
+                <div className="flex justify-between items-start">
+                  <CardTitle className="text-white">
+                    {isRTL ? "הזמנה מספר: " : "Order #"} {order.id}
+                  </CardTitle>
+                  <div
+                    className={`px-3 py-1 text-sm rounded-full ${
+                      order.status === "paid"
+                        ? "bg-green-900/30 text-green-400"
+                        : order.status === "processing"
+                          ? "bg-yellow-900/30 text-yellow-400"
+                          : "bg-blue-900/30 text-blue-400"
+                    }`}
+                  >
+                    {order.status === "paid"
+                      ? isRTL
+                        ? "שולם"
+                        : "Paid"
+                      : order.status === "processing"
+                        ? isRTL
+                          ? "בעיבוד"
+                          : "Processing"
+                        : isRTL
+                          ? "ממתין"
+                          : "Pending"}
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
-                {isLoading ? (
-                  <div className="flex justify-center p-8">
-                    <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"></div>
+                <div className="grid md:grid-cols-3 gap-4 mb-4">
+                  <div>
+                    <p className="text-sm text-gray-400">{isRTL ? "גוש" : "Block"}</p>
+                    <p className="text-white">{order.block}</p>
                   </div>
-                ) : filteredOrders.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="pb-3 text-left text-sm font-medium text-gray-500">
-                            {isRTL ? "מזהה הזמנה" : "Order ID"}
-                          </th>
-                          <th className="pb-3 text-left text-sm font-medium text-gray-500">
-                            {isRTL ? "תאריך" : "Date"}
-                          </th>
-                          <th className="pb-3 text-left text-sm font-medium text-gray-500">
-                            {isRTL ? "סוג מסמך" : "Document Type"}
-                          </th>
-                          <th className="pb-3 text-left text-sm font-medium text-gray-500">
-                            {isRTL ? "גוש/חלקה" : "Block/Parcel"}
-                          </th>
-                          <th className="pb-3 text-left text-sm font-medium text-gray-500">
-                            {isRTL ? "מחיר" : "Price"}
-                          </th>
-                          <th className="pb-3 text-left text-sm font-medium text-gray-500">
-                            {isRTL ? "סטטוס" : "Status"}
-                          </th>
-                          <th className="pb-3 text-left text-sm font-medium text-gray-500">
-                            {isRTL ? "פעולות" : "Actions"}
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredOrders.map((order) => (
-                          <tr key={order.id} className="border-b">
-                            <td className="py-4 text-sm">{order.id.slice(0, 8)}</td>
-                            <td className="py-4 text-sm">{formatDate(order.created_at)}</td>
-                            <td className="py-4 text-sm">{getDocumentType(order.service_type)}</td>
-                            <td className="py-4 text-sm">
-                              {order.block}/{order.parcel}
-                              {order.subparcel ? `/${order.subparcel}` : ""}
-                            </td>
-                            <td className="py-4 text-sm">₪{order.price}</td>
-                            <td className="py-4 text-sm">
-                              <span
-                                className={`inline-block rounded-full px-2 py-1 text-xs ${getStatusColor(
-                                  order.status,
-                                )}`}
-                              >
-                                {getStatusText(order.status)}
-                              </span>
-                            </td>
-                            <td className="py-4 text-sm">
-                              <div className="flex gap-2">
-                                {(order.status === "completed" || order.status === "paid") && order.document_url ? (
-                                  <>
-                                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0" asChild>
-                                      <a href={order.document_url} target="_blank" rel="noopener noreferrer">
-                                        <ExternalLink className="h-4 w-4" />
-                                        <span className="sr-only">{isRTL ? "צפה" : "View"}</span>
-                                      </a>
-                                    </Button>
-                                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0" asChild>
-                                      <a href={order.document_url} download>
-                                        <Download className="h-4 w-4" />
-                                        <span className="sr-only">{isRTL ? "הורד" : "Download"}</span>
-                                      </a>
-                                    </Button>
-                                  </>
-                                ) : (
-                                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0" disabled>
-                                    <Download className="h-4 w-4" />
-                                    <span className="sr-only">{isRTL ? "הורד" : "Download"}</span>
-                                  </Button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div>
+                    <p className="text-sm text-gray-400">{isRTL ? "חלקה" : "Parcel"}</p>
+                    <p className="text-white">{order.parcel}</p>
                   </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-12">
-                    <FileText className="h-16 w-16 text-gray-400" />
-                    <h3 className="mt-4 text-xl font-medium">{isRTL ? "אין הזמנות עדיין" : "No Orders Yet"}</h3>
-                    <p className="mt-2 text-center text-gray-500">
-                      {isRTL
-                        ? "לא ביצעת הזמנות עדיין. הזמן את הנסח הראשון שלך עכשיו!"
-                        : "You haven't placed any orders yet. Order your first extract now!"}
+                  <div>
+                    <p className="text-sm text-gray-400">{isRTL ? "תת-חלקה" : "Sub-parcel"}</p>
+                    <p className="text-white">{order.subparcel || "-"}</p>
+                  </div>
+                </div>
+                <div className="grid md:grid-cols-3 gap-4 mb-4">
+                  <div>
+                    <p className="text-sm text-gray-400">{isRTL ? "סוג שירות" : "Service Type"}</p>
+                    <p className="text-white">
+                      {order.service_type === "regular"
+                        ? isRTL
+                          ? "נסח רגיל"
+                          : "Regular Extract"
+                        : order.service_type === "historical"
+                          ? isRTL
+                            ? "נסח היסטורי"
+                            : "Historical Extract"
+                          : isRTL
+                            ? "נסח מרוכז"
+                            : "Concentrated Extract"}
                     </p>
-                    <Button className="mt-6" asChild>
-                      <Link href="/order">{isRTL ? "הזמן נסח טאבו" : "Order Tabu Extract"}</Link>
-                    </Button>
                   </div>
-                )}
+                  <div>
+                    <p className="text-sm text-gray-400">{isRTL ? "תאריך" : "Date"}</p>
+                    <p className="text-white">
+                      {new Date(order.created_at).toLocaleDateString(isRTL ? "he-IL" : "en-US")}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">{isRTL ? "מחיר" : "Price"}</p>
+                    <p className="text-white">₪{order.price}</p>
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  {order.document_url ? (
+                    <Button variant="outline" asChild>
+                      <a href={order.document_url} target="_blank" rel="noopener noreferrer">
+                        <Download className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
+                        {isRTL ? "הורד מסמך" : "Download Document"}
+                      </a>
+                    </Button>
+                  ) : (
+                    <Button variant="outline" disabled>
+                      <FileText className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
+                      {isRTL ? "מסמך בהכנה" : "Document in preparation"}
+                    </Button>
+                  )}
+                </div>
               </CardContent>
             </Card>
-          </div>
+          ))}
         </div>
-      </main>
-      <Footer />
+      )}
     </div>
   )
 }

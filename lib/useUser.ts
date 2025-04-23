@@ -1,35 +1,41 @@
 "use client"
 
-import { getLoginUrl, getLogoutUrl } from "@/lib/auth0"
+import { useState, useEffect } from "react"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import type { User } from "@supabase/supabase-js"
 
-// טיפוס למשתמש
-export type User = {
-  name?: string
-  email?: string
-  sub?: string
-  picture?: string
-}
+export function useUser() {
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const supabase = createClientComponentClient()
 
-// טיפוס לתוצאת useUser
-export type UseUserResult = {
-  user?: User | null
-  error?: Error
-  isLoading: boolean
-  loginWithRedirect: () => void
-  logout: () => void
-}
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+        setUser(session?.user || null)
+      } catch (error) {
+        console.error("Error fetching user:", error)
+        setUser(null)
+      } finally {
+        setIsLoading(false)
+      }
+    }
 
-// פונקציית useUser פשוטה שתעבוד בסביבת הייצור
-export function useUser(): UseUserResult {
-  // בסביבת ייצור, זה יוחלף ב-useUser האמיתי של Auth0
-  return {
-    user: null,
-    isLoading: false,
-    loginWithRedirect: () => {
-      window.location.href = getLoginUrl()
-    },
-    logout: () => {
-      window.location.href = getLogoutUrl()
-    },
-  }
+    fetchUser()
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null)
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [supabase])
+
+  return { user, isLoading }
 }

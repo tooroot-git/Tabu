@@ -1,65 +1,87 @@
 "use client"
 
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { LogIn, User } from "lucide-react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { useLanguage } from "@/context/language-context"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { useAuth } from "@/lib/auth0"
+import { LogIn, LogOut, User } from "lucide-react"
 
 export function AuthButton() {
-  const { user, error, isLoading, loginWithRedirect, logout } = useAuth()
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
   const { isRTL } = useLanguage()
+  const supabase = createClientComponentClient()
+  const [user, setUser] = useState(null)
 
-  if (isLoading) {
-    return (
-      <Button variant="ghost" size="sm" disabled className="text-gray-400">
-        <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-      </Button>
-    )
+  // Check if user is logged in
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    setUser(session?.user || null)
+  })
+
+  // Listen for auth changes
+  supabase.auth.onAuthStateChange((event, session) => {
+    setUser(session?.user || null)
+  })
+
+  const handleLogin = async () => {
+    setIsLoading(true)
+    try {
+      router.push("/login")
+    } catch (error) {
+      console.error("Login error:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleLogout = async () => {
+    setIsLoading(true)
+    try {
+      await supabase.auth.signOut()
+      router.push("/")
+    } catch (error) {
+      console.error("Logout error:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleProfile = () => {
+    router.push("/dashboard")
   }
 
   if (user) {
     return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="gap-2">
-            {user.picture ? (
-              <img
-                src={user.picture || "/placeholder.svg"}
-                alt={user.name || "User"}
-                className="h-6 w-6 rounded-full object-cover"
-              />
-            ) : (
-              <User className="h-4 w-4" />
-            )}
-            <span className="hidden md:inline">{user.name?.split(" ")[0] || user.email}</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align={isRTL ? "start" : "end"}>
-          <DropdownMenuItem asChild>
-            <Link href="/dashboard">{isRTL ? "לוח בקרה" : "Dashboard"}</Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/my-orders">{isRTL ? "ההזמנות שלי" : "My Orders"}</Link>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={logout}>{isRTL ? "התנתק" : "Logout"}</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <div className="flex gap-2">
+        <Button variant="ghost" size="sm" onClick={handleProfile} className="text-gray-200 hover:text-white">
+          <User className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
+          <span className="hidden md:inline">{isRTL ? "החשבון שלי" : "My Account"}</span>
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleLogout}
+          disabled={isLoading}
+          className="text-gray-200 hover:text-white"
+        >
+          <LogOut className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
+          <span className="hidden md:inline">{isRTL ? "התנתק" : "Logout"}</span>
+        </Button>
+      </div>
     )
   }
 
   return (
-    <Button variant="ghost" size="sm" onClick={loginWithRedirect}>
-      <LogIn className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
-      {isRTL ? "התחבר" : "Login"}
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={handleLogin}
+      disabled={isLoading}
+      className="text-gray-200 hover:text-white"
+    >
+      <LogIn className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0" />
+      <span>{isRTL ? "התחבר" : "Login"}</span>
     </Button>
   )
 }

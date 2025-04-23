@@ -101,6 +101,94 @@ export default function PrivacyPage() {
                   <p className="mt-2 text-gray-600">{isRTL ? section.contentHe : section.contentEn}</p>
                 </div>
               ))}
+
+              <section className="mb-8">
+                <h2 className="text-2xl font-bold mb-4">{isRTL ? "אבטחת מידע" : "Data Security"}</h2>
+                <p className="mb-4">
+                  {isRTL
+                    ? "חברת Open Source Intelligence LLC, המפעילה את אתר TabuIsrael, מיישמת אמצעי אבטחה מתקדמים להגנה על המידע האישי שלך, כולל הצפנת SSL 256-bit בכל העברות הנתונים באתר."
+                    : "Open Source Intelligence LLC, which operates the TabuIsrael website, implements advanced security measures to protect your personal information, including 256-bit SSL encryption on all data transfers on the website."}
+                </p>
+                <p className="mb-4">
+                  {isRTL
+                    ? "עם זאת, איננו יכולים להבטיח אבטחה מוחלטת של המידע המועבר באינטרנט או המאוחסן במערכות אלקטרוניות. המשתמש מסכים להשתמש באתר על אחריותו בלבד."
+                    : "However, we cannot guarantee absolute security of information transmitted over the Internet or stored in electronic systems. The user agrees to use the site at their own risk."}
+                </p>
+              </section>
+
+              <section className="mb-8">
+                <h2 className="text-2xl font-bold mb-4">{isRTL ? "שימוש במידע" : "Use of Information"}</h2>
+                <p className="mb-4">
+                  {isRTL
+                    ? "המידע האישי שנאסף משמש אותנו למטרות הבאות:"
+                    : "The personal information collected is used for the following purposes:"}
+                </p>
+                <ul className="list-disc list-inside mb-4 space-y-2">
+                  <li>
+                    {isRTL
+                      ? "לספק את השירותים המבוקשים ולעבד הזמנות"
+                      : "Provide the requested services and process orders"}
+                  </li>
+                  <li>
+                    {isRTL
+                      ? "לשפר ולהתאים אישית את חווית המשתמש באתר"
+                      : "Improve and personalize the user experience on the site"}
+                  </li>
+                  <li>
+                    {isRTL
+                      ? "לתקשר עם המשתמשים בנוגע להזמנות, עדכונים ושירותים"
+                      : "Communicate with users regarding orders, updates and services"}
+                  </li>
+                  <li>{isRTL ? "לעמוד בדרישות חוקיות ורגולטוריות" : "Meet legal and regulatory requirements"}</li>
+                  <li>{isRTL ? "לאבטח ולהגן על האתר והמשתמשים בו" : "Secure and protect the site and its users"}</li>
+                </ul>
+                <p className="mb-4">
+                  {isRTL
+                    ? "לא נמכור, נסחר או נעביר את המידע האישי שלך לצדדים שלישיים ללא הסכמתך, למעט ספקי שירות הפועלים מטעמנו ובכפוף להתחייבותם לשמירה על סודיות המידע."
+                    : "We will not sell, trade or transfer your personal information to third parties without your consent, except for service providers acting on our behalf and subject to their commitment to maintain the confidentiality of the information."}
+                </p>
+              </section>
+
+              <section className="mb-8">
+                <h2 className="text-2xl font-bold mb-4">{isRTL ? "זכויות המשתמש" : "User Rights"}</h2>
+                <p className="mb-4">
+                  {isRTL
+                    ? "בהתאם לחוקי הגנת הפרטיות, יש לך זכויות מסוימות בנוגע למידע האישי שלך, כולל:"
+                    : "In accordance with privacy protection laws, you have certain rights regarding your personal information, including:"}
+                </p>
+                <ul className="list-disc list-inside mb-4 space-y-2">
+                  <li>
+                    {isRTL
+                      ? "הזכות לגשת למידע האישי שלך ולקבל עותק ממנו"
+                      : "The right to access your personal information and receive a copy of it"}
+                  </li>
+                  <li>
+                    {isRTL
+                      ? "הזכות לתקן מידע שגוי או לא מדויק"
+                      : "The right to correct incorrect or inaccurate information"}
+                  </li>
+                  <li>
+                    {isRTL
+                      ? "הזכות למחוק את המידע האישי שלך בנסיבות מסוימות"
+                      : "The right to delete your personal information in certain circumstances"}
+                  </li>
+                  <li>
+                    {isRTL
+                      ? "הזכות להגביל את עיבוד המידע שלך"
+                      : "The right to limit the processing of your information"}
+                  </li>
+                  <li>
+                    {isRTL
+                      ? "הזכות להתנגד לעיבוד המידע שלך למטרות מסוימות"
+                      : "The right to object to the processing of your information for specific purposes"}
+                  </li>
+                </ul>
+                <p className="mb-4">
+                  {isRTL
+                    ? "לממש את זכויותיך או לקבל מידע נוסף, אנא צור קשר באמצעות טופס יצירת הקשר באתר."
+                    : "To exercise your rights or obtain more information, please contact us via the contact form on the website."}
+                </p>
+              </section>
             </div>
           </div>
         </div>

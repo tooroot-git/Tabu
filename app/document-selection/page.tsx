@@ -1,156 +1,198 @@
+// בדיקה אם יש ייבוא של @/lib/auth0 ותיקון אם צריך
 "use client"
 
-import { useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { DocumentCard } from "@/components/ui/document-card"
-import { Stepper } from "@/components/ui/stepper"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { useLanguage } from "@/context/language-context"
-import { getPaymentLinkWithOrderDetails } from "@/lib/stripe-links"
-
-const documentTypes = [
-  {
-    id: "regular",
-    title: "נסח טאבו רגיל",
-    titleEn: "Regular Land Registry Extract",
-    description:
-      "מסמך המרכז את כל המידע על בעלי הזכויות הרשומים בפנקסי המקרקעין, הכולל את תיאור המקרקעין, בעלי הזכויות ומהות זכויותיהם, וכן שעבודים ופעולות הרשומים במקרקעין, במידה וישנם.",
-    descriptionEn:
-      "A document that centralizes all information about the registered property owners, including property description, owners and their rights, as well as liens and actions registered on the property, if any.",
-    icon: "📄",
-    price: 69,
-  },
-  {
-    id: "consolidated",
-    title: "נסח טאבו מרוכז",
-    titleEn: "Consolidated Land Registry Extract",
-    description:
-      "נסח מרוכז מעיד כי הנכס רשום בפנקס הבתים המשותפים. המושג בית משותף קיים במקרים בהם יש על אותה חלקה שתי דירות או יותר, בעל מבנה אחד או יותר.",
-    descriptionEn:
-      "A consolidated extract indicates that the property is registered in the Condominium Registry. The term condominium exists in cases where there are two or more apartments on the same plot, with one or more structures.",
-    icon: "📑",
-    price: 89,
-  },
-  {
-    id: "historical",
-    title: "נסח טאבו הסטורי",
-    titleEn: "Historical Land Registry Extract",
-    description:
-      "נסח טאבו היסטורי כלול במידע מלא עכשוי וכולל רשומות היסטוריות ממוחשבות. כל המידע אשר נרשם מאז תקופת המחשב, כל המידע אשר קיים בתיק לפני תקופת המחשב נמצא במיקרופילים.",
-    descriptionEn:
-      "A historical land registry extract includes current full information and computerized historical records. All information recorded since the computer era, all information that existed in the file before the computer era is found in microfilms.",
-    icon: "🕰️",
-    price: 129,
-  },
-  {
-    id: "address",
-    title: "נסח טאבו לפי כתובת",
-    titleEn: "Land Registry Extract by Address",
-    description:
-      'נציגנו יאתרו עבורכם את פרטי החלקה ע"פ הכתובת שמסרתם ויעבירו לכם למייל נסח חתום דיגיטלית. לנסח המקוון מעמד של נסח רשמי כל עוד הוא נשאר בתצורתו הדיגיטלית.',
-    descriptionEn:
-      "Our representatives will locate the plot details according to the address you provided and send you a digitally signed extract by email. The online extract has the status of an official extract as long as it remains in its digital form.",
-    icon: "🏠",
-    price: 149,
-  },
-  {
-    id: "id-report",
-    title: 'דו"ח נכסים על פי ת.ז',
-    titleEn: "Property Report by ID",
-    description:
-      "דוח נכסים לפי תעודת זהות הינו דוח המפרט את רשימת כל הנכסים המשועבדים בהווה ו/או בעבר של אדם, אזרח בישראל.",
-    descriptionEn:
-      "A property report by ID is a report that details the list of all properties mortgaged in the present and/or in the past of a person, a citizen in Israel.",
-    icon: "📋",
-    price: 199,
-  },
-]
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { Header } from "@/components/layout/header"
+import { Footer } from "@/components/layout/footer"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Stepper } from "@/components/ui/stepper"
+import { DocumentCard } from "@/components/ui/document-card"
 
 export default function DocumentSelectionPage() {
+  const { isRTL } = useLanguage()
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const { isRTL, t } = useLanguage()
-  const [selectedDocument, setSelectedDocument] = useState<string | null>(null)
+  const [selectedDocument, setSelectedDocument] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [orderDetails, setOrderDetails] = useState(null)
+  const supabase = createClientComponentClient()
 
-  // Get order details from URL parameters
-  const block = searchParams.get("block") || ""
-  const parcel = searchParams.get("parcel") || ""
-  const subParcel = searchParams.get("subParcel") || ""
-  const address = searchParams.get("address") || ""
-  const idNumber = searchParams.get("idNumber") || ""
-  const email = searchParams.get("email") || ""
-  const name = searchParams.get("name") || ""
+  useEffect(() => {
+    // Get order details from session storage
+    const details = sessionStorage.getItem("orderDetails")
+    if (!details) {
+      router.push("/order")
+      return
+    }
 
-  const handleContinue = () => {
-    if (!selectedDocument) return
+    setOrderDetails(JSON.parse(details))
+  }, [router])
+
+  const documentTypes = [
+    {
+      id: "regular",
+      title: isRTL ? "נסח רגיל" : "Regular Extract",
+      description: isRTL
+        ? "נסח טאבו סטנדרטי המציג את פרטי הבעלות הנוכחיים של הנכס"
+        : "Standard Tabu extract showing current ownership details of the property",
+      price: 39,
+    },
+    {
+      id: "historical",
+      title: isRTL ? "נסח היסטורי" : "Historical Extract",
+      description: isRTL
+        ? "נסח טאבו מורחב הכולל היסטוריית בעלות ועסקאות קודמות"
+        : "Extended Tabu extract including ownership history and previous transactions",
+      price: 69,
+    },
+    {
+      id: "concentrated",
+      title: isRTL ? "נסח מרוכז" : "Concentrated Extract",
+      description: isRTL
+        ? "נסח טאבו מקוצר המציג את המידע החיוני ביותר בפורמט תמציתי"
+        : "Condensed Tabu extract showing the most essential information in a concise format",
+      price: 29,
+    },
+    {
+      id: "full",
+      title: isRTL ? "נסח מלא" : "Full Extract",
+      description: isRTL
+        ? "נסח טאבו מלא הכולל את כל המידע הזמין, כולל הערות, משכנתאות ושעבודים"
+        : "Complete Tabu extract including all available information, including notes, mortgages, and liens",
+      price: 89,
+    },
+  ]
+
+  const handleContinue = async () => {
+    if (!selectedDocument) {
+      return
+    }
+
+    setIsLoading(true)
 
     try {
-      // Get the payment link with order details
-      const paymentLink = getPaymentLinkWithOrderDetails(selectedDocument, {
-        block,
-        parcel,
-        subParcel,
-        address,
-        idNumber,
-        email,
-        name,
-      })
+      // Check if user is logged in
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
 
-      // Redirect to the Stripe payment link
-      window.location.href = paymentLink
+      // Update order details in session storage
+      const updatedDetails = {
+        ...orderDetails,
+        documentType: selectedDocument,
+        price: documentTypes.find((doc) => doc.id === selectedDocument).price,
+        userId: session?.user?.id || null,
+      }
+
+      sessionStorage.setItem("orderDetails", JSON.stringify(updatedDetails))
+
+      // Navigate to payment page
+      router.push("/payment")
     } catch (error) {
-      console.error("Error generating payment link:", error)
-      // Handle error - perhaps show an error message to the user
+      console.error("Error:", error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <Stepper
-        steps={[
-          { label: isRTL ? "פרטי נכס" : "Property Details", completed: true },
-          { label: isRTL ? "בחירת מסמך" : "Document Selection", completed: false },
-          { label: isRTL ? "תשלום" : "Payment", completed: false },
-        ]}
-        currentStep={1}
-      />
-
-      <div className="mt-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>{isRTL ? "בחר את סוג המסמך הרצוי" : "Select Document Type"}</CardTitle>
-            <CardDescription>
-              {isRTL
-                ? "בחר את סוג המסמך שברצונך להזמין. המחיר משתנה בהתאם לסוג המסמך."
-                : "Choose the type of document you wish to order. Price varies according to document type."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {documentTypes.map((doc) => (
-                <DocumentCard
-                  key={doc.id}
-                  title={isRTL ? doc.title : doc.titleEn}
-                  description={isRTL ? doc.description : doc.descriptionEn}
-                  icon={doc.icon}
-                  price={doc.price}
-                  selected={selectedDocument === doc.id}
-                  onClick={() => setSelectedDocument(doc.id)}
-                />
-              ))}
+  if (!orderDetails) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <Header />
+        <main className="flex-1 py-24">
+          <div className="container mx-auto px-4">
+            <div className="flex h-[50vh] items-center justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"></div>
             </div>
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button variant="outline" onClick={() => router.back()}>
-              {isRTL ? "חזרה" : "Back"}
-            </Button>
-            <Button onClick={handleContinue} disabled={!selectedDocument}>
-              {isRTL ? "המשך לתשלום" : "Continue to Payment"}
-            </Button>
-          </CardFooter>
-        </Card>
+          </div>
+        </main>
+        <Footer />
       </div>
+    )
+  }
+
+  return (
+    <div className="flex min-h-screen flex-col">
+      <Header />
+      <main className="flex-1 py-24">
+        <div className="container mx-auto px-4">
+          <div className="mx-auto max-w-3xl">
+            <Stepper
+              steps={[
+                { label: isRTL ? "פרטי נכס" : "Property Details", completed: true },
+                { label: isRTL ? "בחירת מסמך" : "Document Selection", active: true },
+                { label: isRTL ? "תשלום" : "Payment" },
+              ]}
+              currentStep={1}
+            />
+
+            <Card className="mt-8 border-gray-800 bg-gray-900/80 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-white">{isRTL ? "בחר סוג מסמך" : "Select Document Type"}</CardTitle>
+                <CardDescription className="text-gray-400">
+                  {isRTL ? "בחר את סוג נסח הטאבו שברצונך להזמין" : "Choose the type of Tabu extract you want to order"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {documentTypes.map((doc) => (
+                    <DocumentCard
+                      key={doc.id}
+                      title={doc.title}
+                      description={doc.description}
+                      price={doc.price}
+                      selected={selectedDocument === doc.id}
+                      onClick={() => setSelectedDocument(doc.id)}
+                    />
+                  ))}
+                </div>
+
+                <div className="mt-8">
+                  <Button
+                    onClick={handleContinue}
+                    className="w-full bg-gradient-to-r from-primary-500 to-primary-600"
+                    disabled={!selectedDocument || isLoading}
+                  >
+                    {isLoading ? (
+                      <span className="flex items-center">
+                        <svg
+                          className="mr-2 h-4 w-4 animate-spin rtl:ml-2 rtl:mr-0"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        {isRTL ? "מעבד..." : "Processing..."}
+                      </span>
+                    ) : isRTL ? (
+                      "המשך לתשלום"
+                    ) : (
+                      "Continue to Payment"
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </main>
+      <Footer />
     </div>
   )
 }

@@ -58,7 +58,7 @@ export default function AboutPage() {
           <div className="container relative z-10 mx-auto px-4">
             <div className="mx-auto max-w-3xl text-center">
               <h1 className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-4xl font-bold tracking-tight text-transparent md:text-5xl">
-                {isRTL ? "אודות Tabu.net.il" : "About Tabu.net.il"}
+                {isRTL ? "אודות TabuIsrael" : "About TabuIsrael"}
               </h1>
               <p className="mt-6 text-xl text-gray-400">
                 {isRTL
@@ -83,8 +83,8 @@ export default function AboutPage() {
               <div className={`mt-8 text-lg text-gray-400 ${isRTL ? "text-right" : "text-left"}`}>
                 <p className="mb-4">
                   {isRTL
-                    ? "ב-Tabu.net.il, המשימה שלנו היא להפוך את תהליך השגת מסמכי רישום מקרקעין רשמיים לפשוט, מהיר ונגיש לכולם."
-                    : "At Tabu.net.il, our mission is to make the process of obtaining official land registry documents simple, fast, and accessible to everyone."}
+                    ? "ב-TabuIsrael, המשימה שלנו היא להפוך את תהליך השגת מסמכי רישום מקרקעין רשמיים לפשוט, מהיר ונגיש לכולם."
+                    : "At TabuIsrael, our mission is to make the process of obtaining official land registry documents simple, fast, and accessible to everyone."}
                 </p>
                 <p className="mb-4">
                   {isRTL

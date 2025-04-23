@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useUser } from "@auth0/nextjs-auth0/client"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
@@ -8,9 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/context/language-context"
-import { FileText, User, Settings, Clock, Download, ExternalLink } from "lucide-react"
+import { FileText, User, Settings, Clock, Download, ExternalLink, AlertCircle } from "lucide-react"
 import Link from "next/link"
-import { useEffect } from "react"
 import type { Order } from "@/lib/supabase"
 import { useTranslation } from "../../context/language-context"
 
@@ -20,11 +19,13 @@ export function DashboardClient() {
   const [activeTab, setActiveTab] = useState("overview")
   const [orders, setOrders] = useState<Order[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const { t, isHebrew } = useTranslation()
 
   useEffect(() => {
     async function fetchOrders() {
       try {
+        setIsLoading(true)
         const response = await fetch("/api/orders")
         if (!response.ok) {
           throw new Error("Failed to fetch orders")
@@ -33,16 +34,17 @@ export function DashboardClient() {
         setOrders(data.orders || [])
       } catch (error) {
         console.error("Error fetching orders:", error)
+        setError(isRTL ? "שגיאה בטעינת הזמנות" : "Error fetching orders")
       } finally {
         setIsLoading(false)
       }
     }
 
     fetchOrders()
-  }, [])
+  }, [isRTL])
 
   // Format date to local format
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string) => {
     if (!dateString) return ""
     const date = new Date(dateString)
     return new Intl.DateTimeFormat(isRTL ? "he-IL" : "en-US", {
@@ -53,23 +55,23 @@ export function DashboardClient() {
   }
 
   // Get status color based on status
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
-        return "bg-green-500/10 text-green-500"
+        return "bg-green-100 text-green-800"
       case "paid":
-        return "bg-blue-500/10 text-blue-500"
+        return "bg-blue-100 text-blue-800"
       case "pending":
-        return "bg-yellow-500/10 text-yellow-500"
+        return "bg-yellow-100 text-yellow-800"
       case "cancelled":
-        return "bg-red-500/10 text-red-500"
+        return "bg-red-100 text-red-800"
       default:
-        return "bg-gray-500/10 text-gray-500"
+        return "bg-gray-100 text-gray-800"
     }
   }
 
   // Get status text based on status
-  const getStatusText = (status) => {
+  const getStatusText = (status: string) => {
     if (isRTL) {
       switch (status) {
         case "completed":
@@ -89,7 +91,7 @@ export function DashboardClient() {
   }
 
   // Get service type text
-  const getServiceTypeText = (serviceType) => {
+  const getServiceTypeText = (serviceType: string) => {
     if (isRTL) {
       switch (serviceType) {
         case "Regular Extract":
@@ -179,6 +181,11 @@ export function DashboardClient() {
                         {isLoading ? (
                           <div className="flex justify-center py-4">
                             <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent"></div>
+                          </div>
+                        ) : error ? (
+                          <div className="flex items-center justify-center py-4 text-red-400">
+                            <AlertCircle className="h-5 w-5 mr-2" />
+                            <span>{error}</span>
                           </div>
                         ) : orders.length > 0 ? (
                           <>
@@ -294,6 +301,11 @@ export function DashboardClient() {
                     {isLoading ? (
                       <div className="flex justify-center py-8">
                         <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"></div>
+                      </div>
+                    ) : error ? (
+                      <div className="flex flex-col items-center justify-center py-8 text-red-400">
+                        <AlertCircle className="h-10 w-10 mb-2" />
+                        <p>{error}</p>
                       </div>
                     ) : orders.length > 0 ? (
                       <div className="overflow-x-auto">

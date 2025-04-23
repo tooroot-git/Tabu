@@ -1,35 +1,41 @@
 "use client"
 
-import { useAuth } from "@/lib/auth0"
+import type React from "react"
+
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { useEffect } from "react"
-import type { ReactNode } from "react"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
-interface ProtectedRouteProps {
-  children: ReactNode
-}
-
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, isLoading, loginWithRedirect } = useAuth()
+export function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
+  const supabase = createClientComponentClient()
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      loginWithRedirect()
+    const checkUser = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      if (!session) {
+        router.push("/login")
+      } else {
+        setIsLoading(false)
+      }
     }
-  }, [user, isLoading, loginWithRedirect])
+
+    checkUser()
+  }, [router, supabase])
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-16 w-16 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"></div>
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"></div>
       </div>
     )
   }
 
-  if (!user) {
-    return null
-  }
-
   return <>{children}</>
 }
+
+export default ProtectedRoute

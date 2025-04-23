@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://tabuisrael.co.il/</loc>
+    <lastmod>2024-04-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://tabuisrael.co.il/he" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://tabuisrael.co.il/en" />
+  </url>
+  <url>
+    <loc>https://tabuisrael.co.il/order</loc>
+    <lastmod>2024-04-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://tabuisrael.co.il/he/order" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://tabuisrael.co.il/en/order" />
+  </url>
+  <url>
+    <loc>https://tabuisrael.co.il/document-selection</loc>
+    <lastmod>2024-04-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://tabuisrael.co.il/he/document-selection" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://tabuisrael.co.il/en/document-selection" />
+  </url>
+  <url>
+    <loc>https://tabuisrael.co.il/faq</loc>
+    <lastmod>2024-04-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://tabuisrael.co.il/he/faq" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://tabuisrael.co.il/en/faq" />
+  </url>
+  <url>
+    <loc>https://tabuisrael.co.il/about</loc>
+    <lastmod>2024-04-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://tabuisrael.co.il/he/about" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://tabuisrael.co.il/en/about" />
+  </url>
+  <url>
+    <loc>https://tabuisrael.co.il/contact</loc>
+    <lastmod>2024-04-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://tabuisrael.co.il/he/contact" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://tabuisrael.co.il/en/contact" />
+  </url>
+  <url>
+    <loc>https://tabuisrael.co.il/login</loc>
+    <lastmod>2024-04-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://tabuisrael.co.il/he/login" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://tabuisrael.co.il/en/login" />
+  </url>
+  <url>
+    <loc>https://tabuisrael.co.il/signup</loc>
+    <lastmod>2024-04-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://tabuisrael.co.il/he/signup" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://tabuisrael.co.il/en/signup" />
+  </url>
+  <url>
+    <loc>https://tabuisrael.co.il/terms</loc>
+    <lastmod>2024-04-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://tabuisrael.co.il/he/terms" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://tabuisrael.co.il/en/terms" />
+  </url>
+  <url>
+    <loc>https://tabuisrael.co.il/privacy</loc>
+    <lastmod>2024-04-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://tabuisrael.co.il/he/privacy" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://tabuisrael.co.il/en/privacy" />
+  </url>
+  <url>
+    <loc>https://tabuisrael.co.il/accessibility</loc>
+    <lastmod>2024-04-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+    <xhtml:link rel="alternate" hreflang="he" href="https://tabuisrael.co.il/he/accessibility" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://tabuisrael.co.il/en/accessibility" />
+  </url>
+</urlset>

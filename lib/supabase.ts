@@ -1,3 +1,13 @@
+import { createClient as createSupabaseClient } from "@supabase/supabase-js"
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
+import { cookies } from "next/headers"
+
+// יצירת לקוח Supabase לשימוש בצד הלקוח
+export const supabase = createSupabaseClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+)
+
 export type Order = {
   id: string
   block: string
@@ -8,14 +18,24 @@ export type Order = {
   created_at: string
   price: number
   user_id: string
-  payment_intent_id?: string
-  email?: string
   document_url?: string
 }
 
-export type User = {
-  name?: string
-  email?: string
-  sub?: string
-  picture?: string
+// יצירת לקוח Supabase לשימוש בקומפוננטות שרת
+export const createClient = () => {
+  return createServerComponentClient({ cookies })
+}
+
+export async function getCurrentUser() {
+  const supabase = createClient()
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+
+    return session?.user || null
+  } catch (error) {
+    console.error("Error getting session:", error)
+    return null
+  }
 }

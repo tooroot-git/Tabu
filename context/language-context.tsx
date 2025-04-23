@@ -1,98 +1,215 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, type ReactNode, useCallback } from "react"
+import type React from "react"
+import { createContext, useContext, useState, useEffect, useCallback } from "react"
+import { usePathname, useRouter } from "next/navigation"
 
 type Language = "en" | "he"
 
+interface TranslationObject {
+  [key: string]: {
+    en: string
+    he: string
+  }
+}
+
+// Common translations
+const translations: TranslationObject = {
+  loading: {
+    en: "Loading",
+    he: "טוען",
+  },
+  error: {
+    en: "Error",
+    he: "שגיאה",
+  },
+  success: {
+    en: "Success",
+    he: "הצלחה",
+  },
+  myOrders: {
+    en: "My Orders",
+    he: "ההזמנות שלי",
+  },
+  orderNewDocument: {
+    en: "Order New Document",
+    he: "הזמן מסמך חדש",
+  },
+  noOrdersFound: {
+    en: "No orders found",
+    he: "לא נמצאו הזמנות",
+  },
+  errorFetchingOrders: {
+    en: "Error fetching orders",
+    he: "שגיאה בטעינת הזמנות",
+  },
+  downloadDocument: {
+    en: "Download Document",
+    he: "הורד מסמך",
+  },
+  orderFor: {
+    en: "Order for",
+    he: "הזמנה עבור",
+  },
+  block: {
+    en: "Block",
+    he: "גוש",
+  },
+  parcel: {
+    en: "Parcel",
+    he: "חלקה",
+  },
+  subParcel: {
+    en: "Sub-Parcel",
+    he: "תת-חלקה",
+  },
+  orderDate: {
+    en: "Order Date",
+    he: "תאריך הזמנה",
+  },
+  status: {
+    en: "Status",
+    he: "סטטוס",
+  },
+  price: {
+    en: "Price",
+    he: "מחיר",
+  },
+  paid: {
+    en: "Paid",
+    he: "שולם",
+  },
+  pending: {
+    en: "Pending",
+    he: "ממתין",
+  },
+  processing: {
+    en: "Processing",
+    he: "בעיבוד",
+  },
+  completed: {
+    en: "Completed",
+    he: "הושלם",
+  },
+  failed: {
+    en: "Failed",
+    he: "נכשל",
+  },
+  startOrder: {
+    en: "Start Order",
+    he: "התחל הזמנה",
+  },
+  services: {
+    en: "Services",
+    he: "שירותים",
+  },
+  about: {
+    en: "About",
+    he: "אודות",
+  },
+  faq: {
+    en: "FAQ",
+    he: "שאלות נפוצות",
+  },
+  contact: {
+    en: "Contact",
+    he: "צור קשר",
+  },
+  openMenu: {
+    en: "Open Menu",
+    he: "פתח תפריט",
+  },
+  closeMenu: {
+    en: "Close Menu",
+    he: "סגור תפריט",
+  },
+}
+
 interface LanguageContextType {
   language: Language
-  setLanguage: (language: Language) => void
+  setLanguage: (lang: Language) => void
   isRTL: boolean
+  isHebrew: boolean
+  t: (key: string) => string
 }
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
+const LanguageContext = createContext<LanguageContextType>({
+  language: "he", // Default to Hebrew
+  setLanguage: () => {},
+  isRTL: true, // Default to RTL
+  isHebrew: true, // Default to Hebrew
+  t: (key: string) => key,
+})
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
-  // בדיקה אם אנחנו בצד הלקוח כדי לגשת ל-localStorage
-  const isClient = typeof window !== "undefined"
+export const useLanguage = () => useContext(LanguageContext)
 
-  // ננסה לקרוא את השפה מה-localStorage, אחרת נשתמש בעברית כברירת מחדל
-  const [language, setLanguage] = useState<Language>("he")
-  const isRTL = language === "he"
-
-  // טעינת השפה מה-localStorage רק בצד הלקוח
-  useEffect(() => {
-    if (isClient) {
-      const savedLanguage = localStorage.getItem("language") as Language
-      if (savedLanguage === "he" || savedLanguage === "en") {
-        setLanguage(savedLanguage)
-      }
-    }
-  }, [isClient])
-
-  // עדכון ה-localStorage וכיוון המסמך כאשר השפה משתנה
-  useEffect(() => {
-    if (isClient) {
-      localStorage.setItem("language", language)
-      document.documentElement.dir = isRTL ? "rtl" : "ltr"
-      document.documentElement.lang = language
-    }
-  }, [language, isRTL, isClient])
-
-  return <LanguageContext.Provider value={{ language, setLanguage, isRTL }}>{children}</LanguageContext.Provider>
-}
-
-export function useLanguage() {
-  const context = useContext(LanguageContext)
-  if (context === undefined) {
-    throw new Error("useLanguage must be used within a LanguageProvider")
-  }
-  return context
-}
-
-export function useTranslation() {
-  const { language } = useLanguage()
+export const useTranslation = () => {
+  const { language, t } = useContext(LanguageContext)
   const isHebrew = language === "he"
 
-  const t = useCallback(
-    (key: string) => {
-      // Replace with your translation logic here
-      // This is just a placeholder
-      switch (key) {
-        case "myOrders":
-          return isHebrew ? "ההזמנות שלי" : "My Orders"
-        case "loading":
-          return isHebrew ? "טוען" : "Loading"
-        case "errorFetchingOrders":
-          return isHebrew ? "שגיאה בטעינת הזמנות" : "Error fetching orders"
-        case "noOrdersFound":
-          return isHebrew ? "לא נמצאו הזמנות" : "No orders found"
-        case "orderNewDocument":
-          return isHebrew ? "הזמן מסמך חדש" : "Order new document"
-        case "orderFor":
-          return isHebrew ? "הזמנה עבור" : "Order for"
-        case "block":
-          return isHebrew ? "גוש" : "Block"
-        case "parcel":
-          return isHebrew ? "חלקה" : "Parcel"
-        case "orderDate":
-          return isHebrew ? "תאריך הזמנה" : "Order date"
-        case "orderID":
-          return isHebrew ? "מספר הזמנה" : "Order ID"
-        case "status":
-          return isHebrew ? "סטטוס" : "Status"
-        case "price":
-          return isHebrew ? "מחיר" : "Price"
-        case "paid":
-          return isHebrew ? "שולם" : "paid"
-        case "downloadDocument":
-          return isHebrew ? "הורד מסמך" : "Download document"
-        default:
-          return key
+  return { t, isHebrew }
+}
+
+export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const pathname = usePathname()
+  const router = useRouter()
+
+  // Always default to Hebrew
+  const [language, setLanguageState] = useState<Language>("he")
+  const isRTL = language === "he"
+  const isHebrew = language === "he"
+
+  // Update HTML lang and dir attributes when language changes
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.documentElement.lang = language
+      document.documentElement.dir = isRTL ? "rtl" : "ltr"
+
+      // Add/remove RTL-specific class to body for additional styling if needed
+      if (isRTL) {
+        document.body.classList.add("rtl")
+      } else {
+        document.body.classList.remove("rtl")
       }
+    }
+  }, [language, isRTL])
+
+  // Handle language change
+  const setLanguage = useCallback(
+    (lang: Language) => {
+      setLanguageState(lang)
+
+      // Force refresh to apply RTL/LTR changes properly
+      router.refresh()
     },
-    [isHebrew],
+    [router],
   )
 
-  return { t, isHebrew }
+  // Translation function
+  const t = useCallback(
+    (key: string): string => {
+      // Check if we have a translation for this key
+      if (translations[key]?.[language]) {
+        return translations[key][language]
+      }
+
+      // Fallback to the key itself
+      return key
+    },
+    [language],
+  )
+
+  return (
+    <LanguageContext.Provider
+      value={{
+        language,
+        setLanguage,
+        isRTL,
+        isHebrew,
+        t,
+      }}
+    >
+      {children}
+    </LanguageContext.Provider>
+  )
 }

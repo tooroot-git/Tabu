@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { useUser } from "@/lib/useUser"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { useLanguage } from "@/context/language-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -10,13 +10,34 @@ import { FileText, Package, Settings } from "lucide-react"
 import Link from "next/link"
 
 export default function DashboardPage() {
-  const { user, isLoading } = useUser()
+  const [user, setUser] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
   const { isRTL } = useLanguage()
   const router = useRouter()
+  const supabase = createClientComponentClient()
+
+  useEffect(() => {
+    async function getUser() {
+      setIsLoading(true)
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+        setUser(session?.user || null)
+      } catch (error) {
+        console.error("Error fetching user:", error)
+        setUser(null)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    getUser()
+  }, [supabase])
 
   useEffect(() => {
     if (!isLoading && !user) {
-      router.push("/api/auth/login?returnTo=/dashboard")
+      router.push("/login")
     }
   }, [isLoading, user, router])
 
@@ -37,7 +58,7 @@ export default function DashboardPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white">{isRTL ? "לוח בקרה" : "Dashboard"}</h1>
         <p className="mt-2 text-gray-400">
-          {isRTL ? `שלום, ${user.name || "משתמש"}` : `Hello, ${user.name || "User"}`}
+          {isRTL ? `שלום, ${user.user_metadata?.name || "משתמש"}` : `Hello, ${user.user_metadata?.name || "User"}`}
         </p>
       </div>
 

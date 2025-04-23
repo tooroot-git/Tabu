@@ -2,127 +2,153 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
+:root {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 0, 0, 0;
+  --background-end-rgb: 0, 0, 0;
+
+  /* Primary colors */
+  --primary-50: 255, 247, 237;
+  --primary-100: 255, 237, 213;
+  --primary-200: 254, 215, 170;
+  --primary-300: 253, 186, 116;
+  --primary-400: 251, 146, 60;
+  --primary-500: 249, 115, 22;
+  --primary-600: 234, 88, 12;
+  --primary-700: 194, 65, 12;
+  --primary-800: 154, 52, 18;
+  --primary-900: 124, 45, 18;
+  --primary-950: 67, 20, 7;
+
+  /* Secondary colors */
+  --secondary-50: 240, 253, 250;
+  --secondary-100: 204, 251, 241;
+  --secondary-200: 153, 246, 228;
+  --secondary-300: 94, 234, 212;
+  --secondary-400: 45, 212, 191;
+  --secondary-500: 20, 184, 166;
+  --secondary-600: 13, 148, 136;
+  --secondary-700: 15, 118, 110;
+  --secondary-800: 17, 94, 89;
+  --secondary-900: 19, 78, 74;
+  --secondary-950: 4, 47, 46;
+
+  /* Neutral colors */
+  --neutral-50: 250, 250, 250;
+  --neutral-100: 244, 244, 245;
+  --neutral-200: 228, 228, 231;
+  --neutral-300: 212, 212, 216;
+  --neutral-400: 161, 161, 170;
+  --neutral-500: 113, 113, 122;
+  --neutral-600: 82, 82, 91;
+  --neutral-700: 63, 63, 70;
+  --neutral-800: 39, 39, 42;
+  --neutral-900: 24, 24, 27;
+  --neutral-950: 9, 9, 11;
+
+  /* Destructive colors */
+  --destructive-50: 254, 242, 242;
+  --destructive-100: 254, 226, 226;
+  --destructive-200: 254, 202, 202;
+  --destructive-300: 252, 165, 165;
+  --destructive-400: 248, 113, 113;
+  --destructive-500: 239, 68, 68;
+  --destructive-600: 220, 38, 38;
+  --destructive-700: 185, 28, 28;
+  --destructive-800: 153, 27, 27;
+  --destructive-900: 127, 29, 29;
+  --destructive-950: 69, 10, 10;
+
+  /* UI colors */
+  --background: 0, 0, 0;
+  --foreground: 255, 255, 255;
+  --card: 24, 24, 27;
+  --card-foreground: 255, 255, 255;
+  --popover: 24, 24, 27;
+  --popover-foreground: 255, 255, 255;
+  --primary: 249, 115, 22;
+  --primary-foreground: 255, 255, 255;
+  --secondary: 20, 184, 166;
+  --secondary-foreground: 255, 255, 255;
+  --muted: 39, 39, 42;
+  --muted-foreground: 161, 161, 170;
+  --accent: 39, 39, 42;
+  --accent-foreground: 255, 255, 255;
+  --destructive: 239, 68, 68;
+  --destructive-foreground: 255, 255, 255;
+  --border: 39, 39, 42;
+  --input: 39, 39, 42;
+  --ring: 249, 115, 22;
+
+  /* Chart colors */
+  --chart-1: 249, 115, 22;
+  --chart-2: 20, 184, 166;
+  --chart-3: 16, 185, 129;
+  --chart-4: 14, 165, 233;
+  --chart-5: 139, 92, 246;
+  --chart-6: 236, 72, 153;
+  --chart-7: 244, 63, 94;
+  --chart-8: 234, 179, 8;
+
+  /* Radius */
+  --radius: 0.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-
-    --primary: 24 95% 46%;
-    --primary-foreground: 0 0% 98%;
-
-    --secondary: 327 73% 53%;
-    --secondary-foreground: 0 0% 98%;
-
-    --accent: 142.1 76.2% 36.3%;
-    --accent-foreground: 355.7 100% 97.3%;
-
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 24 95% 46%;
-
-    --radius: 0.5rem;
-  }
-
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-
-    --primary: 24 95% 46%;
-    --primary-foreground: 0 0% 98%;
-
-    --secondary: 327 73% 53%;
-    --secondary-foreground: 0 0% 98%;
-
-    --accent: 142.1 70.6% 45.3%;
-    --accent-foreground: 0 0% 98%;
-
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 24 95% 46%;
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(to bottom, transparent, rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
 }
 
-/* Auth0-inspired Styles */
-.auth0-gradient-text {
-  @apply bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent;
+/* Custom transitions */
+.transition-standard {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
 }
 
-.auth0-primary-gradient {
-  @apply bg-gradient-to-r from-primary-500 to-primary-600;
+/* Mobile menu item */
+.mobile-menu-item {
+  @apply flex items-center py-3 px-4 rounded-md mb-2 transition-colors;
 }
 
-.auth0-glow {
-  @apply transition-all duration-300 hover:shadow-lg hover:shadow-primary-500/20;
+/* Fix for button text in RTL */
+.btn-text-fix {
+  @apply inline-block;
 }
 
-.auth0-card {
-  @apply rounded-xl border border-gray-800 bg-gray-900/80 p-8 transition-all duration-300 hover:border-primary-500/50 hover:bg-gray-900;
+/* Text truncation */
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.auth0-input {
-  @apply border-gray-700 bg-gray-800/70 text-white placeholder:text-gray-500 focus:border-primary-500;
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-/* Animations */
-@keyframes float {
-  0% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-  100% {
-    transform: translateY(0px);
-  }
+/* Fix for white buttons */
+button[class*="bg-white"],
+a[class*="bg-white"],
+.bg-white {
+  color: rgb(var(--primary-600)) !important;
+  font-weight: 500 !important;
 }
 
-.float-animation {
-  animation: float 6s ease-in-out infinite;
-}
-
-@keyframes pulse-glow {
-  0%,
-  100% {
-    opacity: 0.5;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
-.pulse-glow {
-  animation: pulse-glow 3s ease-in-out infinite;
+/* Fix for hover states on white buttons */
+button[class*="bg-white"]:hover,
+a[class*="bg-white"]:hover,
+.bg-white:hover {
+  background-color: rgb(249, 250, 251) !important;
 }

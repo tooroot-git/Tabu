@@ -8,13 +8,16 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Stepper } from "@/components/ui/stepper"
-import { Tooltip, TooltipProvider } from "@/components/ui/tooltip"
 import { useLanguage } from "@/context/language-context"
-import { useAuth } from "@/lib/auth0"
+import { useAuth } from "@/components/auth/auth-provider"
+import { MetaTags } from "@/components/seo/meta-tags"
+import { StructuredData } from "@/components/seo/structured-data"
+import { Header } from "@/components/layout/header"
+import { Footer } from "@/components/layout/footer"
 
 export default function OrderPage() {
   const router = useRouter()
-  const { isRTL, t } = useLanguage()
+  const { isRTL } = useLanguage()
   const { user } = useAuth()
 
   const [formData, setFormData] = useState({
@@ -29,6 +32,7 @@ export default function OrderPage() {
 
   const [formType, setFormType] = useState<"property" | "address" | "id">("property")
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -78,239 +82,225 @@ export default function OrderPage() {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!validateForm()) {
       return
     }
 
-    // Build query parameters
-    const params = new URLSearchParams()
+    setIsSubmitting(true)
 
-    if (formType === "property") {
-      params.append("block", formData.block)
-      params.append("parcel", formData.parcel)
-      if (formData.subParcel) {
-        params.append("subParcel", formData.subParcel)
+    try {
+      // Build query parameters
+      const params = new URLSearchParams()
+
+      if (formType === "property") {
+        params.append("block", formData.block)
+        params.append("parcel", formData.parcel)
+        if (formData.subParcel) {
+          params.append("subParcel", formData.subParcel)
+        }
+      } else if (formType === "address") {
+        params.append("address", formData.address)
+      } else if (formType === "id") {
+        params.append("idNumber", formData.idNumber)
       }
-    } else if (formType === "address") {
-      params.append("address", formData.address)
-    } else if (formType === "id") {
-      params.append("idNumber", formData.idNumber)
+
+      params.append("email", formData.email)
+      params.append("name", formData.name)
+
+      // Navigate to document selection page with form data
+      router.push(`/document-selection?${params.toString()}`)
+    } catch (error) {
+      console.error("Error submitting form:", error)
+    } finally {
+      setIsSubmitting(false)
     }
-
-    params.append("email", formData.email)
-    params.append("name", formData.name)
-
-    // Navigate to document selection page with form data
-    router.push(`/document-selection?${params.toString()}`)
   }
 
+  const title = isRTL
+    ? "הזמנת נסח טאבו לפי גוש וחלקה | טאבוי ישראל"
+    : "Order Land Registry Extract by Block and Parcel | TabuIsrael"
+
+  const description = isRTL
+    ? "טופס מקוון להזמנת נסח טאבו ממאגר רשות מקרקעין – מהיר, מאובטח, בעברית מלאה."
+    : "Online form for ordering land registry extracts from the Israel Land Authority database - fast, secure, in Hebrew and English."
+
   return (
-    <TooltipProvider>
-      <div className="container mx-auto px-4 py-8">
-        <Stepper
-          steps={[
-            { label: isRTL ? "פרטי נכס" : "Property Details", completed: false },
-            { label: isRTL ? "בחירת מסמך" : "Document Selection", completed: false },
-            { label: isRTL ? "תשלום" : "Payment", completed: false },
-          ]}
-          currentStep={0}
-        />
+    <>
+      <MetaTags title={title} description={description} />
+      <StructuredData type="Service" />
 
-        <div className="mt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>{isRTL ? "הזן את פרטי הנכס" : "Enter Property Details"}</CardTitle>
-              <CardDescription>
-                {isRTL
-                  ? "אנא הזן את פרטי הנכס עבורו תרצה לקבל נסח טאבו"
-                  : "Please enter the property details for which you want to receive a land registry extract"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-6">
-                <div className="flex flex-wrap gap-4 mb-6">
-                  <Button
-                    variant={formType === "property" ? "default" : "outline"}
-                    onClick={() => setFormType("property")}
-                  >
-                    {isRTL ? "לפי גוש וחלקה" : "By Block & Parcel"}
-                  </Button>
-                  <Button
-                    variant={formType === "address" ? "default" : "outline"}
-                    onClick={() => setFormType("address")}
-                  >
-                    {isRTL ? "לפי כתובת" : "By Address"}
-                  </Button>
-                  <Button variant={formType === "id" ? "default" : "outline"} onClick={() => setFormType("id")}>
-                    {isRTL ? "לפי תעודת זהות" : "By ID Number"}
-                  </Button>
-                </div>
+      <div className={isRTL ? "font-sans-hebrew" : "font-sans"}>
+        <Header />
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  {formType === "property" && (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label htmlFor="block" className="block text-sm font-medium mb-1">
-                          {isRTL ? "גוש" : "Block"} *
-                        </label>
-                        <TooltipProvider>
-                          <Tooltip
-                            content={
-                              isRTL
-                                ? "מספר הגוש כפי שמופיע במסמכי הנכס"
-                                : "Block number as appears in property documents"
-                            }
-                          >
+        <main className="py-24">
+          <div className="container mx-auto px-4">
+            <Stepper
+              steps={[
+                { label: isRTL ? "פרטי נכס" : "Property Details", completed: false },
+                { label: isRTL ? "בחירת מסמך" : "Document Selection", completed: false },
+                { label: isRTL ? "תשלום" : "Payment", completed: false },
+              ]}
+              currentStep={0}
+            />
+
+            <div className="mt-8 max-w-3xl mx-auto">
+              <Card className="shadow-lg">
+                <CardHeader className="border-b border-gray-100 pb-6">
+                  <CardTitle className="text-2xl">{isRTL ? "הזן את פרטי הנכס" : "Enter Property Details"}</CardTitle>
+                  <CardDescription className="mt-2">
+                    {isRTL
+                      ? "אנא הזן את פרטי הנכס עבורו תרצה לקבל נסח טאבו"
+                      : "Please enter the property details for which you want to receive a land registry extract"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <div className="mb-6">
+                    <div className="flex flex-wrap gap-4 mb-6 justify-center sm:justify-start">
+                      <Button
+                        variant={formType === "property" ? "default" : "outline"}
+                        onClick={() => setFormType("property")}
+                        className="min-w-[140px]"
+                      >
+                        {isRTL ? "לפי גוש וחלקה" : "By Block & Parcel"}
+                      </Button>
+                      <Button
+                        variant={formType === "address" ? "default" : "outline"}
+                        onClick={() => setFormType("address")}
+                        className="min-w-[140px]"
+                      >
+                        {isRTL ? "לפי כתובת" : "By Address"}
+                      </Button>
+                      <Button
+                        variant={formType === "id" ? "default" : "outline"}
+                        onClick={() => setFormType("id")}
+                        className="min-w-[140px]"
+                      >
+                        {isRTL ? "לפי תעודת זהות" : "By ID Number"}
+                      </Button>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                      {formType === "property" && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          <div>
                             <Input
                               id="block"
                               name="block"
                               value={formData.block}
                               onChange={handleInputChange}
                               placeholder={isRTL ? "לדוגמה: 6941" : "e.g., 6941"}
-                              className={errors.block ? "border-red-500" : ""}
+                              label={isRTL ? "גוש" : "Block"}
+                              required
+                              error={errors.block}
+                              aria-required="true"
                             />
-                          </Tooltip>
-                        </TooltipProvider>
-                        {errors.block && <p className="text-red-500 text-sm mt-1">{errors.block}</p>}
-                      </div>
-                      <div>
-                        <label htmlFor="parcel" className="block text-sm font-medium mb-1">
-                          {isRTL ? "חלקה" : "Parcel"} *
-                        </label>
-                        <TooltipProvider>
-                          <Tooltip
-                            content={
-                              isRTL
-                                ? "מספר החלקה כפי שמופיע במסמכי הנכס"
-                                : "Parcel number as appears in property documents"
-                            }
-                          >
+                          </div>
+                          <div>
                             <Input
                               id="parcel"
                               name="parcel"
                               value={formData.parcel}
                               onChange={handleInputChange}
                               placeholder={isRTL ? "לדוגמה: 128" : "e.g., 128"}
-                              className={errors.parcel ? "border-red-500" : ""}
+                              label={isRTL ? "חלקה" : "Parcel"}
+                              required
+                              error={errors.parcel}
+                              aria-required="true"
                             />
-                          </Tooltip>
-                        </TooltipProvider>
-                        {errors.parcel && <p className="text-red-500 text-sm mt-1">{errors.parcel}</p>}
-                      </div>
-                      <div>
-                        <label htmlFor="subParcel" className="block text-sm font-medium mb-1">
-                          {isRTL ? "תת-חלקה" : "Sub-Parcel"}
-                        </label>
-                        <TooltipProvider>
-                          <Tooltip content={isRTL ? "מספר תת-החלקה (אופציונלי)" : "Sub-parcel number (optional)"}>
+                          </div>
+                          <div>
                             <Input
                               id="subParcel"
                               name="subParcel"
                               value={formData.subParcel}
                               onChange={handleInputChange}
                               placeholder={isRTL ? "לדוגמה: 2" : "e.g., 2"}
+                              label={isRTL ? "תת-חלקה" : "Sub-Parcel"}
+                              helperText={isRTL ? "(אופציונלי)" : "(optional)"}
                             />
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                    </div>
-                  )}
+                          </div>
+                        </div>
+                      )}
 
-                  {formType === "address" && (
-                    <div>
-                      <label htmlFor="address" className="block text-sm font-medium mb-1">
-                        {isRTL ? "כתובת מלאה" : "Full Address"} *
-                      </label>
-                      <TooltipProvider>
-                        <Tooltip
-                          content={
-                            isRTL
-                              ? "הזן כתובת מלאה כולל רחוב, מספר, עיר ומיקוד"
-                              : "Enter full address including street, number, city and postal code"
-                          }
-                        >
+                      {formType === "address" && (
+                        <div>
                           <Input
                             id="address"
                             name="address"
                             value={formData.address}
                             onChange={handleInputChange}
                             placeholder={isRTL ? "לדוגמה: רוטשילד 123, תל אביב" : "e.g., 123 Rothschild Blvd, Tel Aviv"}
-                            className={errors.address ? "border-red-500" : ""}
+                            label={isRTL ? "כתובת מלאה" : "Full Address"}
+                            required
+                            error={errors.address}
+                            aria-required="true"
                           />
-                        </Tooltip>
-                      </TooltipProvider>
-                      {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
-                    </div>
-                  )}
+                        </div>
+                      )}
 
-                  {formType === "id" && (
-                    <div>
-                      <label htmlFor="idNumber" className="block text-sm font-medium mb-1">
-                        {isRTL ? "מספר תעודת זהות" : "ID Number"} *
-                      </label>
-                      <TooltipProvider>
-                        <Tooltip
-                          content={
-                            isRTL ? "הזן מספר תעודת זהות ישראלית (9 ספרות)" : "Enter Israeli ID number (9 digits)"
-                          }
-                        >
+                      {formType === "id" && (
+                        <div>
                           <Input
                             id="idNumber"
                             name="idNumber"
                             value={formData.idNumber}
                             onChange={handleInputChange}
                             placeholder={isRTL ? "לדוגמה: 123456789" : "e.g., 123456789"}
-                            className={errors.idNumber ? "border-red-500" : ""}
+                            label={isRTL ? "מספר תעודת זהות" : "ID Number"}
+                            required
+                            error={errors.idNumber}
+                            aria-required="true"
                           />
-                        </Tooltip>
-                      </TooltipProvider>
-                      {errors.idNumber && <p className="text-red-500 text-sm mt-1">{errors.idNumber}</p>}
-                    </div>
-                  )}
+                        </div>
+                      )}
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                    <div>
-                      <label htmlFor="email" className="block text-sm font-medium mb-1">
-                        {isRTL ? "אימייל" : "Email"} *
-                      </label>
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        placeholder={isRTL ? "your@email.com" : "your@email.com"}
-                        className={errors.email ? "border-red-500" : ""}
-                      />
-                      {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
-                    </div>
-                    <div>
-                      <label htmlFor="name" className="block text-sm font-medium mb-1">
-                        {isRTL ? "שם מלא" : "Full Name"} *
-                      </label>
-                      <Input
-                        id="name"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        placeholder={isRTL ? "ישראל ישראלי" : "John Doe"}
-                        className={errors.name ? "border-red-500" : ""}
-                      />
-                      {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
-                    </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100">
+                        <div>
+                          <Input
+                            id="email"
+                            name="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={handleInputChange}
+                            placeholder="your@email.com"
+                            label={isRTL ? "אימייל" : "Email"}
+                            required
+                            error={errors.email}
+                            aria-required="true"
+                          />
+                        </div>
+                        <div>
+                          <Input
+                            id="name"
+                            name="name"
+                            value={formData.name}
+                            onChange={handleInputChange}
+                            placeholder={isRTL ? "ישראל ישראלי" : "John Doe"}
+                            label={isRTL ? "שם מלא" : "Full Name"}
+                            required
+                            error={errors.name}
+                            aria-required="true"
+                          />
+                        </div>
+                      </div>
+                    </form>
                   </div>
-                </form>
-              </div>
-            </CardContent>
-            <CardFooter className="flex justify-end">
-              <Button onClick={handleSubmit}>{isRTL ? "המשך לבחירת מסמך" : "Continue to Document Selection"}</Button>
-            </CardFooter>
-          </Card>
-        </div>
+                </CardContent>
+                <CardFooter className="flex justify-end border-t border-gray-100 pt-6">
+                  <Button onClick={handleSubmit} size="lg" isLoading={isSubmitting} className="min-w-[200px]">
+                    {isRTL ? "המשך לבחירת מסמך" : "Continue to Document Selection"}
+                  </Button>
+                </CardFooter>
+              </Card>
+            </div>
+          </div>
+        </main>
+
+        <Footer />
       </div>
-    </TooltipProvider>
+    </>
   )
 }
