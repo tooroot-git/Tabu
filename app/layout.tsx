@@ -6,11 +6,17 @@ import { LanguageProvider } from "@/context/language-context"
 import { AuthProvider } from "@/components/auth/auth-provider"
 import Script from "next/script"
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap", // Improves performance by allowing the font to be displayed before it's fully loaded
+})
+
 const montserrat = Montserrat({
   subsets: ["latin"],
   variable: "--font-montserrat",
   weight: ["300", "400", "500", "600", "700", "800", "900"],
+  display: "swap", // Improves performance
 })
 
 export const metadata: Metadata = {
@@ -52,6 +58,16 @@ export const metadata: Metadata = {
   verification: {
     google: "YOUR_GOOGLE_VERIFICATION_CODE",
   },
+  // Add security headers
+  other: {
+    "Content-Security-Policy":
+      "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.tabuisrael.co.il https://www.google-analytics.com;",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "X-XSS-Protection": "1; mode=block",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+  },
     generator: 'v0.dev'
 }
 
@@ -77,13 +93,49 @@ export default function RootLayout({
             `,
           }}
         />
+        <meta name="theme-color" content="#000000" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
       <body className={`${inter.variable} ${montserrat.variable} font-sans`}>
+        {/* Skip to content link for accessibility */}
+        <a href="#main-content" className="skip-to-content">
+          Skip to content
+        </a>
+
         <AuthProvider>
           <LanguageProvider>
             <div className="flex min-h-screen flex-col bg-[#0A0E17] text-white">{children}</div>
           </LanguageProvider>
         </AuthProvider>
+
+        {/* Structured data for SEO */}
+        <Script
+          id="structured-data"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "TabuIsrael",
+              url: "https://tabuisrael.co.il",
+              logo: "https://tabuisrael.co.il/logo.png",
+              contactPoint: {
+                "@type": "ContactPoint",
+                telephone: "",
+                contactType: "customer service",
+                email: "support@tabuisrael.co.il",
+                availableLanguage: ["English", "Hebrew"],
+              },
+              sameAs: [
+                "https://www.facebook.com/tabuisrael",
+                "https://twitter.com/tabuisrael",
+                "https://www.linkedin.com/company/tabuisrael",
+              ],
+            }),
+          }}
+        />
       </body>
     </html>
   )

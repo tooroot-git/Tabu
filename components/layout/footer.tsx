@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useLanguage } from "@/context/language-context"
-import { Mail, MapPin, Phone, FileText, Info, HelpCircle, Shield, Heart } from "lucide-react"
+import { Mail, FileText, Info, HelpCircle, Shield, Heart } from "lucide-react"
 
 export function Footer() {
   const { isRTL } = useLanguage()
@@ -59,18 +59,6 @@ export function Footer() {
       textEn: "support@tabuisrael.co.il",
       textHe: "support@tabuisrael.co.il",
       href: "mailto:support@tabuisrael.co.il",
-    },
-    {
-      icon: <Phone className="h-5 w-5 text-primary-500" />,
-      textEn: "+972-3-123-4567",
-      textHe: "03-123-4567",
-      href: "tel:+97231234567",
-    },
-    {
-      icon: <MapPin className="h-5 w-5 text-primary-500" />,
-      textEn: "123 Rothschild Blvd, Tel Aviv",
-      textHe: "שדרות רוטשילד 123, תל אביב",
-      href: "https://maps.google.com/?q=Rothschild+Boulevard+123+Tel+Aviv",
     },
   ]
 

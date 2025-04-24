@@ -27,9 +27,10 @@ export function Stepper({ steps, currentStep, className, orientation = "horizont
 
   return (
     <div className={cn("w-full", className)}>
-      <ol
+      <div
         className={cn(
-          orientation === "horizontal" ? "flex items-center" : "flex flex-col space-y-6",
+          "flex",
+          orientation === "horizontal" ? "items-center justify-center" : "flex-col space-y-6",
           isRTL && orientation === "horizontal" && "flex-row-reverse",
         )}
         aria-label="Progress steps"
@@ -37,60 +38,43 @@ export function Stepper({ steps, currentStep, className, orientation = "horizont
       >
         {steps.map((step, index) => {
           const status = index < currentStep ? "completed" : index === currentStep ? "current" : "upcoming"
+          const isLast = index === steps.length - 1
 
           return (
-            <li
-              key={step.title}
-              className={cn(
-                "relative",
-                orientation === "horizontal" && index !== steps.length - 1 && "flex-1",
-                orientation === "vertical" && "flex",
-              )}
+            <div
+              key={step.title || index}
+              className={cn("relative flex flex-col items-center", orientation === "horizontal" && !isLast && "flex-1")}
               aria-current={status === "current" ? "step" : undefined}
             >
-              {/* Step Indicator */}
-              <div className={cn("flex items-center", orientation === "vertical" && "flex-col")}>
-                <div
-                  className={cn(
-                    "z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 shadow-md",
-                    status === "completed"
-                      ? "border-primary-600 bg-primary-600 text-white"
-                      : status === "current"
-                        ? "border-primary-600 bg-gray-900 text-primary-600"
-                        : "border-gray-700 bg-gray-900 text-gray-500",
-                  )}
-                  aria-hidden="true"
-                >
-                  {status === "completed" ? (
-                    <CheckIcon className="h-5 w-5" />
-                  ) : (
-                    <span className="text-sm font-medium">{index + 1}</span>
-                  )}
-                </div>
-
-                {/* Connector Line */}
-                {index !== steps.length - 1 && (
-                  <div
-                    className={cn(
-                      orientation === "horizontal" ? `absolute top-5 w-full h-0.5` : `h-full w-0.5 mt-2.5 ml-5`,
-                      status === "completed" ? "bg-primary-600" : "bg-gray-700",
-                      isRTL && orientation === "horizontal" ? "right-1/2" : orientation === "horizontal" && "left-1/2",
-                    )}
-                    aria-hidden="true"
-                  />
+              {/* Step Circle */}
+              <div
+                className={cn(
+                  "z-10 flex h-12 w-12 items-center justify-center rounded-full border-2 shadow-md",
+                  status === "completed"
+                    ? "border-primary-600 bg-primary-600 text-white"
+                    : status === "current"
+                      ? "border-primary-600 bg-gray-900 text-primary-600"
+                      : "border-gray-700 bg-gray-900 text-gray-500",
+                )}
+                aria-hidden="true"
+              >
+                {status === "completed" ? (
+                  <CheckIcon className="h-5 w-5" />
+                ) : (
+                  <span className="text-sm font-medium">{index + 1}</span>
                 )}
               </div>
 
-              {/* Step Content */}
-              <div className={cn(orientation === "horizontal" ? "mt-3 text-center" : "ml-4 mt-0")}>
-                <h3
+              {/* Step Title */}
+              <div className="mt-2 text-center">
+                <span
                   className={cn(
                     "text-sm font-medium",
                     status === "completed" || status === "current" ? "text-white" : "text-gray-500",
                   )}
                 >
                   {step.title}
-                </h3>
+                </span>
                 {step.description && (
                   <p
                     className={cn(
@@ -102,10 +86,23 @@ export function Stepper({ steps, currentStep, className, orientation = "horizont
                   </p>
                 )}
               </div>
-            </li>
+
+              {/* Connector Line */}
+              {!isLast && orientation === "horizontal" && (
+                <div
+                  className={cn(
+                    "absolute top-6 h-[2px] w-full",
+                    status === "completed" ? "bg-primary-600" : "bg-gray-700",
+                    isRTL ? "right-1/2" : "left-1/2",
+                  )}
+                  style={{ width: "calc(100% - 3rem)" }}
+                  aria-hidden="true"
+                />
+              )}
+            </div>
           )
         })}
-      </ol>
+      </div>
     </div>
   )
 }

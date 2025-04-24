@@ -87,29 +87,29 @@ export default function PrivacyPage() {
       <main className="py-16 md:py-24">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-3xl">
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 text-center md:text-5xl">
+            <h1 className="text-4xl font-bold tracking-tight text-white text-center md:text-5xl">
               {isRTL ? "מדיניות פרטיות" : "Privacy Policy"}
             </h1>
-            <p className="mt-6 text-xl text-gray-600 text-center">
+            <p className="mt-6 text-xl text-gray-300 text-center">
               {isRTL ? "עודכן לאחרונה: 1 במאי, 2023" : "Last Updated: May 1, 2023"}
             </p>
 
             <div className="mt-12 space-y-8">
               {sections.map((section, index) => (
                 <div key={index} className={isRTL ? "text-right" : ""}>
-                  <h2 className="text-xl font-bold text-gray-900">{isRTL ? section.titleHe : section.titleEn}</h2>
-                  <p className="mt-2 text-gray-600">{isRTL ? section.contentHe : section.contentEn}</p>
+                  <h2 className="text-xl font-bold text-white">{isRTL ? section.titleHe : section.titleEn}</h2>
+                  <p className="mt-2 text-gray-300">{isRTL ? section.contentHe : section.contentEn}</p>
                 </div>
               ))}
 
               <section className="mb-8">
-                <h2 className="text-2xl font-bold mb-4">{isRTL ? "אבטחת מידע" : "Data Security"}</h2>
-                <p className="mb-4">
+                <h2 className="text-2xl font-bold mb-4 text-white">{isRTL ? "אבטחת מידע" : "Data Security"}</h2>
+                <p className="mb-4 text-gray-300">
                   {isRTL
                     ? "חברת Open Source Intelligence LLC, המפעילה את אתר TabuIsrael, מיישמת אמצעי אבטחה מתקדמים להגנה על המידע האישי שלך, כולל הצפנת SSL 256-bit בכל העברות הנתונים באתר."
                     : "Open Source Intelligence LLC, which operates the TabuIsrael website, implements advanced security measures to protect your personal information, including 256-bit SSL encryption on all data transfers on the website."}
                 </p>
-                <p className="mb-4">
+                <p className="mb-4 text-gray-300">
                   {isRTL
                     ? "עם זאת, איננו יכולים להבטיח אבטחה מוחלטת של המידע המועבר באינטרנט או המאוחסן במערכות אלקטרוניות. המשתמש מסכים להשתמש באתר על אחריותו בלבד."
                     : "However, we cannot guarantee absolute security of information transmitted over the Internet or stored in electronic systems. The user agrees to use the site at their own risk."}
@@ -117,13 +117,13 @@ export default function PrivacyPage() {
               </section>
 
               <section className="mb-8">
-                <h2 className="text-2xl font-bold mb-4">{isRTL ? "שימוש במידע" : "Use of Information"}</h2>
-                <p className="mb-4">
+                <h2 className="text-2xl font-bold mb-4 text-white">{isRTL ? "שימוש במידע" : "Use of Information"}</h2>
+                <p className="mb-4 text-gray-300">
                   {isRTL
                     ? "המידע האישי שנאסף משמש אותנו למטרות הבאות:"
                     : "The personal information collected is used for the following purposes:"}
                 </p>
-                <ul className="list-disc list-inside mb-4 space-y-2">
+                <ul className="list-disc list-inside mb-4 space-y-2 text-gray-300">
                   <li>
                     {isRTL
                       ? "לספק את השירותים המבוקשים ולעבד הזמנות"
@@ -142,7 +142,7 @@ export default function PrivacyPage() {
                   <li>{isRTL ? "לעמוד בדרישות חוקיות ורגולטוריות" : "Meet legal and regulatory requirements"}</li>
                   <li>{isRTL ? "לאבטח ולהגן על האתר והמשתמשים בו" : "Secure and protect the site and its users"}</li>
                 </ul>
-                <p className="mb-4">
+                <p className="mb-4 text-gray-300">
                   {isRTL
                     ? "לא נמכור, נסחר או נעביר את המידע האישי שלך לצדדים שלישיים ללא הסכמתך, למעט ספקי שירות הפועלים מטעמנו ובכפוף להתחייבותם לשמירה על סודיות המידע."
                     : "We will not sell, trade or transfer your personal information to third parties without your consent, except for service providers acting on our behalf and subject to their commitment to maintain the confidentiality of the information."}
@@ -150,13 +150,13 @@ export default function PrivacyPage() {
               </section>
 
               <section className="mb-8">
-                <h2 className="text-2xl font-bold mb-4">{isRTL ? "זכויות המשתמש" : "User Rights"}</h2>
-                <p className="mb-4">
+                <h2 className="text-2xl font-bold mb-4 text-white">{isRTL ? "זכויות המשתמש" : "User Rights"}</h2>
+                <p className="mb-4 text-gray-300">
                   {isRTL
                     ? "בהתאם לחוקי הגנת הפרטיות, יש לך זכויות מסוימות בנוגע למידע האישי שלך, כולל:"
                     : "In accordance with privacy protection laws, you have certain rights regarding your personal information, including:"}
                 </p>
-                <ul className="list-disc list-inside mb-4 space-y-2">
+                <ul className="list-disc list-inside mb-4 space-y-2 text-gray-300">
                   <li>
                     {isRTL
                       ? "הזכות לגשת למידע האישי שלך ולקבל עותק ממנו"
@@ -183,7 +183,7 @@ export default function PrivacyPage() {
                       : "The right to object to the processing of your information for specific purposes"}
                   </li>
                 </ul>
-                <p className="mb-4">
+                <p className="mb-4 text-gray-300">
                   {isRTL
                     ? "לממש את זכויותיך או לקבל מידע נוסף, אנא צור קשר באמצעות טופס יצירת הקשר באתר."
                     : "To exercise your rights or obtain more information, please contact us via the contact form on the website."}

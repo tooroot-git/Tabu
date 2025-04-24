@@ -7,7 +7,7 @@ import { useLanguage } from "@/context/language-context"
 import { usePathname } from "next/navigation"
 import { AuthButton } from "@/components/auth/auth-button"
 import { Menu, X, Home, FileText, HelpCircle, Info, Mail } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Logo } from "@/components/ui/logo"
 
 export function Header() {
@@ -15,6 +15,8 @@ export function Header() {
   const pathname = usePathname()
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   // Check if user has scrolled
   useEffect(() => {
@@ -43,6 +45,18 @@ export function Header() {
     window.addEventListener("resize", handleResize)
     return () => window.removeEventListener("resize", handleResize)
   }, [isMobileMenuOpen])
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
@@ -87,10 +101,11 @@ export function Header() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-standard ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled ? "bg-black/95 backdrop-blur-md shadow-md" : "bg-transparent"
       }`}
       role="banner"
+      aria-label={isRTL ? "ניווט ראשי" : "Main navigation"}
     >
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
@@ -102,7 +117,11 @@ export function Header() {
         <div className={`hidden md:flex items-center gap-4 ${isRTL ? "order-first" : "order-last"}`}>
           {/* Start Order Button - Only in Hebrew */}
           {isRTL && (
-            <Button size="sm" className="bg-primary-500 hover:bg-primary-600 text-white" asChild>
+            <Button
+              size="sm"
+              className="bg-primary-500 hover:bg-primary-600 text-white transition-all duration-300 hover:scale-105"
+              asChild
+            >
               <Link href="/order">
                 <span className="btn-text-fix">התחל הזמנה</span>
               </Link>
@@ -118,7 +137,7 @@ export function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`text-sm font-medium transition-colors rounded-md px-3 py-2 ${
+                className={`text-sm font-medium transition-all duration-200 rounded-md px-3 py-2 ${
                   pathname?.startsWith(item.href)
                     ? "text-primary-500 bg-primary-500/10"
                     : "text-gray-300 hover:text-primary-400 hover:bg-gray-800/50"
@@ -136,7 +155,11 @@ export function Header() {
 
             {/* Start Order Button - Only in English */}
             {!isRTL && (
-              <Button size="sm" className="bg-primary-500 hover:bg-primary-600 text-white ml-1" asChild>
+              <Button
+                size="sm"
+                className="bg-primary-500 hover:bg-primary-600 text-white ml-1 transition-all duration-300 hover:scale-105"
+                asChild
+              >
                 <Link href="/order">
                   <span className="btn-text-fix">Start Order</span>
                 </Link>
@@ -150,7 +173,7 @@ export function Header() {
           <Button
             variant="ghost"
             size="icon"
-            className="text-white"
+            className="text-white transition-all duration-200 hover:bg-gray-800/50"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-expanded={isMobileMenuOpen}
             aria-controls="mobile-menu"
@@ -163,7 +186,7 @@ export function Header() {
 
       {/* Mobile menu - Full screen overlay */}
       {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 bg-black z-40 flex flex-col" id="mobile-menu">
+        <div className="md:hidden fixed inset-0 bg-black z-40 flex flex-col animate-fade-in" id="mobile-menu">
           <div className="flex justify-end p-4">
             <Button
               variant="ghost"
@@ -176,12 +199,12 @@ export function Header() {
             </Button>
           </div>
 
-          <div className="flex justify-center mb-6">
+          <div className="flex justify-center mb-6 animate-slide-down">
             <Logo size="lg" />
           </div>
 
           <nav
-            className={`flex flex-col mt-6 px-6 ${isRTL ? "text-right" : "text-left"}`}
+            className={`flex flex-col mt-6 px-6 ${isRTL ? "text-right" : "text-left"} animate-slide-up`}
             aria-label={isRTL ? "ניווט מובייל" : "Mobile navigation"}
           >
             <Link
@@ -197,7 +220,7 @@ export function Header() {
               {isRTL ? "דף הבית" : "Home"}
             </Link>
 
-            {navItems.map((item) => (
+            {navItems.map((item, index) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -207,6 +230,7 @@ export function Header() {
                     : "text-gray-300 hover:bg-gray-800 hover:text-primary-400"
                 }`}
                 onClick={() => setIsMobileMenuOpen(false)}
+                style={{ animationDelay: `${index * 50}ms` }}
               >
                 <span className={`${isRTL ? "ml-3" : "mr-3"}`}>{item.icon}</span>
                 {isRTL ? item.labelHe : item.labelEn}
@@ -214,7 +238,7 @@ export function Header() {
             ))}
           </nav>
 
-          <div className="mt-auto px-6 pb-8 space-y-6">
+          <div className="mt-auto px-6 pb-8 space-y-6 animate-slide-up" style={{ animationDelay: "200ms" }}>
             <div className="flex justify-center pt-6 border-t border-gray-800">
               <LanguageSwitcher currentLanguage={language} />
             </div>
@@ -223,7 +247,7 @@ export function Header() {
               <AuthButton />
               <Button
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="w-full bg-primary-500 hover:bg-primary-600 text-white py-3"
+                className="w-full bg-primary-500 hover:bg-primary-600 text-white py-3 transition-all duration-300"
                 asChild
               >
                 <Link href="/order">{isRTL ? "התחל הזמנה" : "Start Order"}</Link>

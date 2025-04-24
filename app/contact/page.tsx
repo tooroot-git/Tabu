@@ -9,7 +9,7 @@ import { useLanguage } from "@/context/language-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Mail, Send } from "lucide-react"
+import { Mail, Send, AlertCircle, CheckCircle, Info } from "lucide-react"
 import { MetaTags } from "@/components/seo/meta-tags"
 import { StructuredData } from "@/components/seo/structured-data"
 
@@ -24,6 +24,7 @@ export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [isTestMode, setIsTestMode] = useState(false)
 
   const contactInfo = [
     {
@@ -44,6 +45,7 @@ export default function ContactPage() {
     e.preventDefault()
     setIsSubmitting(true)
     setSubmitError(null)
+    setIsTestMode(false)
 
     try {
       const response = await fetch("/api/send-email", {
@@ -60,23 +62,37 @@ export default function ContactPage() {
         }),
       })
 
-      if (!response.ok) {
-        throw new Error("Failed to send email")
-      }
+      const result = await response.json()
 
-      setSubmitSuccess(true)
-      setFormData({
-        name: "",
-        email: "",
-        subject: "",
-        message: "",
-      })
-    } catch (error) {
+      if (!response.ok) {
+        // בדוק אם השגיאה קשורה למצב בדיקות
+        if (result.error && result.error.includes("testing emails")) {
+          setIsTestMode(true)
+          setSubmitSuccess(true)
+          setFormData({
+            name: "",
+            email: "",
+            subject: "",
+            message: "",
+          })
+        } else {
+          throw new Error(result.error || "Failed to send email")
+        }
+      } else {
+        setSubmitSuccess(true)
+        setFormData({
+          name: "",
+          email: "",
+          subject: "",
+          message: "",
+        })
+      }
+    } catch (error: any) {
       console.error("Error sending email:", error)
       setSubmitError(
         isRTL
-          ? "אירעה שגיאה בשליחת ההודעה. אנא נסה שוב מאוחר יותר."
-          : "An error occurred while sending your message. Please try again later.",
+          ? "אירעה שגיאה בשליחת ההודעה. אנא נסה שוב מאוחר יותר או שלח אימייל ישירות ל-support@tabuisrael.co.il"
+          : "An error occurred while sending your message. Please try again later or email us directly at support@tabuisrael.co.il",
       )
     } finally {
       setIsSubmitting(false)
@@ -115,9 +131,9 @@ export default function ContactPage() {
               </p>
             </div>
 
-            <div className="mt-16 grid gap-8 md:grid-cols-2">
+            <div className="mt-16 flex justify-center">
               {contactInfo.map((item, index) => (
-                <Card key={index} className="border-gray-800 bg-gray-900/80 backdrop-blur-sm">
+                <Card key={index} className="border-gray-800 bg-gray-900/80 backdrop-blur-sm max-w-md w-full">
                   <CardContent className="flex flex-col items-center p-6 text-center">
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-500/10 text-primary-500">
                       {item.icon}
@@ -142,25 +158,39 @@ export default function ContactPage() {
                 <CardContent>
                   {submitSuccess ? (
                     <div
-                      className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative"
+                      className={`rounded relative border px-4 py-3 ${
+                        isTestMode
+                          ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                          : "border-green-500 bg-green-500/10 text-green-400"
+                      }`}
                       role="alert"
                     >
-                      <strong className="font-bold">{isRTL ? "תודה!" : "Thank you!"}</strong>
-                      <span className="block sm:inline">
-                        {" "}
-                        {isRTL
-                          ? "הודעתך נשלחה בהצלחה. נחזור אליך בהקדם."
-                          : "Your message has been sent successfully. We'll get back to you soon."}
+                      <div className="flex items-center">
+                        {isTestMode ? <Info className="mr-2 h-5 w-5" /> : <CheckCircle className="mr-2 h-5 w-5" />}
+                        <strong className="font-bold">{isRTL ? "תודה!" : "Thank you!"}</strong>
+                      </div>
+                      <span className="block mt-1">
+                        {isTestMode
+                          ? isRTL
+                            ? "הודעתך התקבלה במצב בדיקות. במצב זה, ההודעה נשלחת לכתובת בדיקות ולא לצוות התמיכה. האתר נמצא כרגע בשלב פיתוח."
+                            : "Your message was received in test mode. In this mode, the message is sent to a test address, not to the support team. The site is currently in development."
+                          : isRTL
+                            ? "הודעתך נשלחה בהצלחה. נחזור אליך בהקדם."
+                            : "Your message has been sent successfully. We'll get back to you soon."}
                       </span>
                     </div>
                   ) : (
                     <form className="space-y-6" onSubmit={handleSubmit}>
                       {submitError && (
                         <div
-                          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+                          className="rounded relative border border-red-500 bg-red-500/10 px-4 py-3 text-red-400"
                           role="alert"
                         >
-                          <span className="block sm:inline">{submitError}</span>
+                          <div className="flex items-center">
+                            <AlertCircle className="mr-2 h-5 w-5" />
+                            <span className="font-bold">{isRTL ? "שגיאה" : "Error"}</span>
+                          </div>
+                          <span className="block mt-1">{submitError}</span>
                         </div>
                       )}
                       <div className="grid gap-6 md:grid-cols-2">
