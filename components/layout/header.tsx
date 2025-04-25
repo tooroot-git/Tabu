@@ -6,10 +6,9 @@ import { LanguageSwitcher } from "@/components/ui/language-switcher"
 import { useLanguage } from "@/context/language-context"
 import { usePathname } from "next/navigation"
 import { AuthButton } from "@/components/auth/auth-button"
-import { Menu, X, Home, FileText, HelpCircle, Info, Mail, LayoutDashboard } from "lucide-react"
+import { Menu, X, Home, FileText, HelpCircle, Info, Mail } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { Logo } from "@/components/ui/logo"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
 export function Header() {
   const { language, isRTL } = useLanguage()
@@ -17,37 +16,7 @@ export function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const mobileMenuRef = useRef<HTMLDivElement>(null)
-  const supabase = createClientComponentClient()
-
-  // Check if user is logged in
-  useEffect(() => {
-    const checkSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      setIsLoggedIn(!!session)
-    }
-
-    checkSession()
-
-    // Set up auth state change listener
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN") {
-        setIsLoggedIn(true)
-      } else if (event === "SIGNED_OUT") {
-        setIsLoggedIn(false)
-      }
-    })
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [supabase])
 
   // Check if user has scrolled
   useEffect(() => {
@@ -83,18 +52,11 @@ export function Header() {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false)
       }
-      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node) && isMobileMenuOpen) {
-        // Only close if clicking outside and not on the toggle button (which has its own handler)
-        const target = event.target as HTMLElement
-        if (!target.closest('button[aria-controls="mobile-menu"]')) {
-          setIsMobileMenuOpen(false)
-        }
-      }
     }
 
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [isMobileMenuOpen])
+  }, [])
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
@@ -153,21 +115,6 @@ export function Header() {
 
         {/* Desktop menu */}
         <div className={`hidden md:flex items-center gap-4 ${isRTL ? "order-first" : "order-last"}`}>
-          {/* Dashboard Button - Only when logged in */}
-          {isLoggedIn && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="border-gray-700 text-white hover:bg-gray-800 hover:text-primary-400"
-              asChild
-            >
-              <Link href="/dashboard">
-                <LayoutDashboard className="h-4 w-4 mr-1.5 rtl:ml-1.5 rtl:mr-0" />
-                <span className="btn-text-fix">{isRTL ? "דשבורד" : "Dashboard"}</span>
-              </Link>
-            </Button>
-          )}
-
           {/* Start Order Button - Only in Hebrew */}
           {isRTL && (
             <Button
@@ -239,11 +186,7 @@ export function Header() {
 
       {/* Mobile menu - Full screen overlay */}
       {isMobileMenuOpen && (
-        <div
-          id="mobile-menu"
-          ref={mobileMenuRef}
-          className="md:hidden fixed inset-0 bg-black/95 z-40 flex flex-col animate-fade-in backdrop-blur-md"
-        >
+        <div className="md:hidden fixed inset-0 bg-black z-40 flex flex-col animate-fade-in" id="mobile-menu">
           <div className="flex justify-end p-4">
             <Button
               variant="ghost"
@@ -261,8 +204,7 @@ export function Header() {
           </div>
 
           <nav
-            className="flex flex-col mt-6 px-6 overflow-y-auto flex-grow"
-            style={{ direction: isRTL ? "rtl" : "ltr" }}
+            className={`flex flex-col mt-6 px-6 ${isRTL ? "text-right" : "text-left"} animate-slide-up`}
             aria-label={isRTL ? "ניווט מובייל" : "Mobile navigation"}
           >
             <Link
@@ -277,22 +219,6 @@ export function Header() {
               <Home className={`h-5 w-5 ${isRTL ? "ml-3" : "mr-3"}`} />
               {isRTL ? "דף הבית" : "Home"}
             </Link>
-
-            {/* Dashboard Link - Only when logged in */}
-            {isLoggedIn && (
-              <Link
-                href="/dashboard"
-                className={`mobile-menu-item ${
-                  pathname?.startsWith("/dashboard")
-                    ? "bg-primary-500/20 text-primary-500"
-                    : "text-gray-300 hover:bg-gray-800 hover:text-primary-400"
-                }`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <LayoutDashboard className={`h-5 w-5 ${isRTL ? "ml-3" : "mr-3"}`} />
-                {isRTL ? "דשבורד" : "Dashboard"}
-              </Link>
-            )}
 
             {navItems.map((item, index) => (
               <Link
@@ -312,13 +238,13 @@ export function Header() {
             ))}
           </nav>
 
-          <div className="mt-auto px-6 pb-8 space-y-6 animate-slide-up">
+          <div className="mt-auto px-6 pb-8 space-y-6 animate-slide-up" style={{ animationDelay: "200ms" }}>
             <div className="flex justify-center pt-6 border-t border-gray-800">
               <LanguageSwitcher currentLanguage={language} />
             </div>
 
             <div className="flex flex-col gap-4">
-              <AuthButton onClose={() => setIsMobileMenuOpen(false)} />
+              <AuthButton />
               <Button
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="w-full bg-primary-500 hover:bg-primary-600 text-white py-3 transition-all duration-300"
