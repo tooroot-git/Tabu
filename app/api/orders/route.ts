@@ -90,12 +90,12 @@ export async function GET(request: Request) {
     let supabase
     try {
       supabase = createRouteHandlerClient({ cookies: () => cookieStore })
-    } catch (clientError: any) {
+    } catch (clientError) {
       console.error("Error creating Supabase client:", clientError)
       return NextResponse.json(
         {
           error: "Database connection error",
-          details: clientError.message,
+          details: clientError instanceof Error ? clientError.message : "Unknown client error",
         },
         { status: 500 },
       )
@@ -107,12 +107,12 @@ export async function GET(request: Request) {
       const { data, error } = await supabase.auth.getSession()
       if (error) throw error
       session = data.session
-    } catch (sessionError: any) {
+    } catch (sessionError) {
       console.error("Session error:", sessionError)
       return NextResponse.json(
         {
           error: "Authentication error",
-          details: sessionError.message,
+          details: sessionError instanceof Error ? sessionError.message : "Unknown session error",
         },
         { status: 401 },
       )
@@ -124,6 +124,7 @@ export async function GET(request: Request) {
 
     // Get user's orders with error handling
     try {
+      console.log("Fetching orders for user:", session.user.id)
       const { data: orders, error } = await supabase
         .from("orders")
         .select("*")
@@ -141,28 +142,30 @@ export async function GET(request: Request) {
         )
       }
 
+      console.log("Successfully fetched orders:", orders?.length || 0)
+
       // Return a properly formatted JSON response
       return NextResponse.json({
         success: true,
         orders: orders || [],
       })
-    } catch (queryError: any) {
+    } catch (queryError) {
       console.error("Unexpected query error:", queryError)
       return NextResponse.json(
         {
           error: "Unexpected database error",
-          details: queryError.message,
+          details: queryError instanceof Error ? queryError.message : "Unknown query error",
         },
         { status: 500 },
       )
     }
-  } catch (error: any) {
+  } catch (error) {
     // Catch-all error handler to ensure we always return valid JSON
     console.error("Unhandled server error:", error)
     return NextResponse.json(
       {
         error: "Internal server error",
-        details: error.message || "Unknown error",
+        details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 },
     )

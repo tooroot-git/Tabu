@@ -62,10 +62,10 @@
     "@auth0/nextjs-auth0": "latest",
     "stripe": "latest",
     "resend": "latest",
-    "@supabase/ssr": "latest",
     "uuid": "latest",
     "@supabase/auth-helpers-nextjs": "latest",
     "micro": "latest",
+    "@supabase/ssr": "latest",
     "@stripe/stripe-js": "latest"
   },
   "devDependencies": {

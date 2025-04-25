@@ -1,32 +1,37 @@
 import { NextResponse } from "next/server"
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
-import { stripe } from "@/lib/stripe"
+import Stripe from "stripe"
 
 export async function GET() {
   try {
-    // Get the current user
+    // Initialize Supabase client
     const supabase = createRouteHandlerClient({ cookies })
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
 
-    if (userError || !user) {
+    // Check if user is authenticated
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Get the customer ID from the database
-    const { data: customerData, error: customerError } = await supabase
+    // Get Stripe customer ID
+    const { data: customerData } = await supabase
       .from("customers")
       .select("stripe_customer_id")
-      .eq("user_id", user.id)
+      .eq("user_id", session.user.id)
       .single()
 
-    if (customerError || !customerData?.stripe_customer_id) {
-      // If no customer ID is found, return an empty array
+    if (!customerData?.stripe_customer_id) {
+      // No Stripe customer found, return empty invoices
       return NextResponse.json({ invoices: [] })
     }
+
+    // Initialize Stripe
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
+      apiVersion: "2023-10-16",
+    })
 
     // Fetch invoices from Stripe
     const invoices = await stripe.invoices.list({

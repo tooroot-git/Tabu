@@ -3,12 +3,33 @@
 import { useLanguage } from "@/context/language-context"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { ArrowLeft, ArrowRight } from "lucide-react"
+import { ArrowLeft, ArrowRight, LayoutDashboard } from "lucide-react"
 import { QuickOrder } from "./quick-order"
+import { useState, useEffect } from "react"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
 export function Hero() {
   const { isRTL } = useLanguage()
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const supabase = createClientComponentClient()
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getSession()
+      setIsLoggedIn(!!data.session)
+    }
+
+    checkAuth()
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsLoggedIn(!!session)
+    })
+
+    return () => {
+      authListener.subscription.unsubscribe()
+    }
+  }, [supabase])
 
   return (
     <section className="relative overflow-hidden py-20 md:py-32">
@@ -58,14 +79,25 @@ export function Hero() {
                 </Link>
               </Button>
 
-              <Button
-                size="lg"
-                variant="outline"
-                asChild
-                className="w-full border-gray-700 bg-gray-800/50 text-gray-300 hover:bg-gray-800 hover:text-white sm:w-auto"
-              >
-                <Link href="/services">{isRTL ? "השירותים שלנו" : "Our Services"}</Link>
-              </Button>
+              {isLoggedIn && (
+                <Button size="lg" asChild className="group w-full bg-blue-600 hover:bg-blue-700 sm:w-auto">
+                  <Link href="/dashboard" className="flex items-center whitespace-nowrap">
+                    <LayoutDashboard className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
+                    <span>{isRTL ? "לוח הבקרה שלי" : "My Dashboard"}</span>
+                  </Link>
+                </Button>
+              )}
+
+              {!isLoggedIn && (
+                <Button
+                  size="lg"
+                  variant="outline"
+                  asChild
+                  className="w-full border-gray-700 bg-gray-800/50 text-gray-300 hover:bg-gray-800 hover:text-white sm:w-auto"
+                >
+                  <Link href="/services">{isRTL ? "השירותים שלנו" : "Our Services"}</Link>
+                </Button>
+              )}
             </div>
           </div>
 

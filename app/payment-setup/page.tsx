@@ -32,9 +32,9 @@ export default function PaymentSetup() {
         const stripeElements = elements({
           clientSecret: setupIntent,
           appearance: {
-            theme: 'night',
+            theme: "night",
             variables: {
-              colorPrimary: '#6366f1',
+              colorPrimary: "#6366f1",
             },
           },
         })
@@ -43,10 +43,10 @@ export default function PaymentSetup() {
         const cardElement = stripeElements.create("card", {
           style: {
             base: {
-              fontSize: '16px',
-              color: '#ffffff',
-              '::placeholder': {
-                color: '#aab7c4',
+              fontSize: "16px",
+              color: "#ffffff",
+              "::placeholder": {
+                color: "#aab7c4",
               },
             },
           },
@@ -99,13 +99,9 @@ export default function PaymentSetup() {
 
   return (
     <div className="container max-w-md py-12">
-      <Card className="border  router])
-
-  return (
-    <div className="container max-w-md py-12">
-      <Card className="border-gray-800 bg-gray-900/80 backdrop-blur-sm">\
+      <Card className="border-gray-800 bg-gray-900/80 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="text-white">{isRTL ? "הוספת אמצעי תשלום" : "Add Payment Method"}</CardTitle>/CardTitle>
+          <CardTitle className="text-white">{isRTL ? "הוספת אמצעי תשלום" : "Add Payment Method"}</CardTitle>
           <CardDescription>
             {isRTL ? "הוסף כרטיס אשראי או אמצעי תשלום אחר" : "Add a credit card or other payment method"}
           </CardDescription>
@@ -121,14 +117,11 @@ export default function PaymentSetup() {
                 <label htmlFor="card-element" className="block text-sm font-medium text-gray-300">
                   {isRTL ? "פרטי כרטיס אשראי" : "Card Details"}
                 </label>
-                <div 
-                  id="card-element" 
-                  className="p-3 border border-gray-700 rounded-md bg-gray-800/50 min-h-[40px]"
-                />
+                <div id="card-element" className="p-3 border border-gray-700 rounded-md bg-gray-800/50 min-h-[40px]" />
               </div>
-              
-              <Button 
-                type="submit" 
+
+              <Button
+                type="submit"
                 className="w-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700"
                 disabled={processing}
               >
@@ -137,8 +130,10 @@ export default function PaymentSetup() {
                     <Loader2 className="h-4 w-4 mr-2 rtl:ml-2 rtl:mr-0 animate-spin" />
                     {isRTL ? "מעבד..." : "Processing..."}
                   </>
+                ) : isRTL ? (
+                  "הוסף אמצעי תשלום"
                 ) : (
-                  isRTL ? "הוסף אמצעי תשלום" : "Add Payment Method"
+                  "Add Payment Method"
                 )}
               </Button>
             </form>

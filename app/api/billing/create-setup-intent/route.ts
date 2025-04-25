@@ -1,54 +1,56 @@
 import { NextResponse } from "next/server"
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
-import { stripe } from "@/lib/stripe"
+import Stripe from "stripe"
 
 export async function POST() {
   try {
-    // Get the current user
+    // Initialize Supabase client
     const supabase = createRouteHandlerClient({ cookies })
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
 
-    if (userError || !user) {
+    // Check if user is authenticated
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Get or create a Stripe customer
-    let stripeCustomerId: string
+    // Initialize Stripe
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
+      apiVersion: "2023-10-16",
+    })
 
-    // Check if the user already has a Stripe customer ID
-    const { data: customerData, error: customerError } = await supabase
+    // Get or create Stripe customer
+    const { data: customerData } = await supabase
       .from("customers")
       .select("stripe_customer_id")
-      .eq("user_id", user.id)
+      .eq("user_id", session.user.id)
       .single()
 
-    if (customerError || !customerData?.stripe_customer_id) {
-      // Create a new Stripe customer
+    let customerId = customerData?.stripe_customer_id
+
+    if (!customerId) {
+      // Create a new customer in Stripe
       const customer = await stripe.customers.create({
-        email: user.email,
+        email: session.user.email,
         metadata: {
-          user_id: user.id,
+          supabase_user_id: session.user.id,
         },
       })
 
-      stripeCustomerId = customer.id
+      customerId = customer.id
 
       // Save the customer ID to the database
       await supabase.from("customers").insert({
-        user_id: user.id,
-        stripe_customer_id: stripeCustomerId,
+        user_id: session.user.id,
+        stripe_customer_id: customerId,
       })
-    } else {
-      stripeCustomerId = customerData.stripe_customer_id
     }
 
     // Create a SetupIntent
     const setupIntent = await stripe.setupIntents.create({
-      customer: stripeCustomerId,
+      customer: customerId,
       payment_method_types: ["card"],
     })
 

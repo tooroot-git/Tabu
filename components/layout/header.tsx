@@ -6,9 +6,10 @@ import { LanguageSwitcher } from "@/components/ui/language-switcher"
 import { useLanguage } from "@/context/language-context"
 import { usePathname } from "next/navigation"
 import { AuthButton } from "@/components/auth/auth-button"
-import { Menu, X, Home, FileText, HelpCircle, Info, Mail } from "lucide-react"
+import { Menu, X, Home, FileText, HelpCircle, Info, Mail, LayoutDashboard } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { Logo } from "@/components/ui/logo"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
 export function Header() {
   const { language, isRTL } = useLanguage()
@@ -16,7 +17,28 @@ export function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const supabase = createClientComponentClient()
+
+  // Check if user is logged in
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getSession()
+      setIsLoggedIn(!!data.session)
+    }
+
+    checkAuth()
+
+    // Set up auth state change listener
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsLoggedIn(!!session)
+    })
+
+    return () => {
+      authListener.subscription.unsubscribe()
+    }
+  }, [supabase])
 
   // Check if user has scrolled
   useEffect(() => {
@@ -99,6 +121,19 @@ export function Header() {
     },
   ]
 
+  // Add dashboard link for logged-in users
+  const allNavItems = isLoggedIn
+    ? [
+        ...navItems,
+        {
+          href: "/dashboard",
+          labelEn: "Dashboard",
+          labelHe: "לוח בקרה",
+          icon: <LayoutDashboard className="h-5 w-5" />,
+        },
+      ]
+    : navItems
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -133,7 +168,7 @@ export function Header() {
             className={`flex items-center gap-4 ${isRTL ? "flex-row-reverse" : ""}`}
             aria-label={isRTL ? "ניווט ראשי" : "Main navigation"}
           >
-            {navItems.map((item) => (
+            {allNavItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -220,7 +255,7 @@ export function Header() {
               {isRTL ? "דף הבית" : "Home"}
             </Link>
 
-            {navItems.map((item, index) => (
+            {allNavItems.map((item, index) => (
               <Link
                 key={item.href}
                 href={item.href}

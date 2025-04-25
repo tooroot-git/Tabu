@@ -1,143 +1,111 @@
 "use client"
 
-import type React from "react"
-
-import { useEffect, useState } from "react"
-import { useRouter, usePathname } from "next/navigation"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { useState, useEffect } from "react"
+import { usePathname, useRouter } from "next/navigation"
 import { useLanguage } from "@/context/language-context"
 import Link from "next/link"
-import { User, Shield, Bell, CreditCard, HelpCircle, LogOut, ChevronRight } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { User, Shield, Bell, CreditCard, HelpCircle, LogOut, Loader2 } from "lucide-react"
 
-export default function SettingsLayout({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<any>(null)
-  const [isLoading, setIsLoading] = useState(true)
+export default function SettingsLayout({ children }) {
   const { isRTL } = useLanguage()
-  const router = useRouter()
   const pathname = usePathname()
+  const router = useRouter()
+  const [loading, setLoading] = useState(true)
   const supabase = createClientComponentClient()
 
   useEffect(() => {
-    async function getUser() {
-      setIsLoading(true)
-      try {
-        const {
-          data: { session },
-          error: sessionError,
-        } = await supabase.auth.getSession()
-
-        if (sessionError) {
-          throw sessionError
-        }
-
-        if (!session) {
-          // If no session, redirect to login
-          router.push("/login")
-          return
-        }
-
-        setUser(session.user)
-      } catch (error: any) {
-        console.error("Error in settings layout:", error)
+    const checkAuth = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (!session) {
         router.push("/login")
-      } finally {
-        setIsLoading(false)
+      } else {
+        setLoading(false)
       }
     }
 
-    getUser()
-  }, [supabase, router])
+    checkAuth()
+  }, [router, supabase])
 
-  if (isLoading) {
+  const handleSignOut = async () => {
+    setLoading(true)
+    await supabase.auth.signOut()
+    router.push("/")
+  }
+
+  const navItems = [
+    {
+      href: "/settings/profile",
+      label: isRTL ? "פרופיל" : "Profile",
+      icon: <User className="h-5 w-5" />,
+    },
+    {
+      href: "/settings/security",
+      label: isRTL ? "אבטחה" : "Security",
+      icon: <Shield className="h-5 w-5" />,
+    },
+    {
+      href: "/settings/notifications",
+      label: isRTL ? "התראות" : "Notifications",
+      icon: <Bell className="h-5 w-5" />,
+    },
+    {
+      href: "/settings/billing",
+      label: isRTL ? "חיוב ותשלום" : "Billing & Payments",
+      icon: <CreditCard className="h-5 w-5" />,
+    },
+    {
+      href: "/settings/help",
+      label: isRTL ? "עזרה ותמיכה" : "Help & Support",
+      icon: <HelpCircle className="h-5 w-5" />,
+    },
+  ]
+
+  if (loading) {
     return (
-      <div className="flex h-[70vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary-500" />
       </div>
     )
   }
 
-  if (!user) {
-    return null
-  }
-
-  const menuItems = [
-    {
-      href: "/settings/profile",
-      icon: <User className="h-5 w-5" />,
-      labelEn: "Profile",
-      labelHe: "פרופיל",
-    },
-    {
-      href: "/settings/security",
-      icon: <Shield className="h-5 w-5" />,
-      labelEn: "Security",
-      labelHe: "אבטחה",
-    },
-    {
-      href: "/settings/notifications",
-      icon: <Bell className="h-5 w-5" />,
-      labelEn: "Notifications",
-      labelHe: "התראות",
-    },
-    {
-      href: "/settings/billing",
-      icon: <CreditCard className="h-5 w-5" />,
-      labelEn: "Billing",
-      labelHe: "חיובים",
-    },
-    {
-      href: "/settings/help",
-      icon: <HelpCircle className="h-5 w-5" />,
-      labelEn: "Help & Support",
-      labelHe: "עזרה ותמיכה",
-    },
-  ]
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    router.push("/login")
-  }
-
   return (
-    <div className={`container mx-auto px-4 py-12 ${isRTL ? "font-sans-hebrew" : "font-sans"}`}>
+    <div className="container py-10">
       <div className="flex flex-col md:flex-row gap-8">
         {/* Sidebar */}
-        <div className="w-full md:w-64 shrink-0">
-          <div className="sticky top-20">
-            <h2 className="text-xl font-bold text-white mb-6">{isRTL ? "הגדרות" : "Settings"}</h2>
-
-            <div className="space-y-1">
-              {menuItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center justify-between rounded-lg px-3 py-2 transition-colors ${
-                    pathname === item.href
-                      ? "bg-primary-500/20 text-primary-500"
-                      : "text-gray-300 hover:bg-gray-800 hover:text-primary-400"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    {item.icon}
-                    <span>{isRTL ? item.labelHe : item.labelEn}</span>
-                  </div>
-                  {pathname === item.href && <ChevronRight className={`h-4 w-4 ${isRTL ? "rotate-180" : ""}`} />}
-                </Link>
-              ))}
-
-              <button
-                onClick={handleSignOut}
-                className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
+        <aside className="md:w-64 flex-shrink-0">
+          <nav className="space-y-1">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center px-3 py-2 rounded-md transition-colors ${
+                  pathname === item.href
+                    ? "bg-primary-500/10 text-primary-500"
+                    : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                }`}
               >
-                <LogOut className="h-5 w-5" />
-                <span>{isRTL ? "התנתק" : "Sign Out"}</span>
-              </button>
-            </div>
-          </div>
-        </div>
+                <span className={`${isRTL ? "ml-3" : "mr-3"}`}>{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            ))}
 
-        {/* Main Content */}
-        <div className="flex-1">{children}</div>
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-500/10 mt-6"
+              onClick={handleSignOut}
+            >
+              <LogOut className={`h-5 w-5 ${isRTL ? "ml-3" : "mr-3"}`} />
+              <span>{isRTL ? "התנתק" : "Sign out"}</span>
+            </Button>
+          </nav>
+        </aside>
+
+        {/* Main content */}
+        <main className="flex-1">{children}</main>
       </div>
     </div>
   )

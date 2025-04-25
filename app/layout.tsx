@@ -5,6 +5,15 @@ import { Inter, Montserrat } from "next/font/google"
 import { LanguageProvider } from "@/context/language-context"
 import { AuthProvider } from "@/components/auth/auth-provider"
 import Script from "next/script"
+import { logEnvWarnings } from "@/utils/validate-env"
+import { GoogleAnalytics } from "@/components/analytics/google-analytics"
+import { GoogleConsent } from "@/components/analytics/google-consent"
+import { CookieConsent } from "@/components/cookie-consent"
+
+// Log any environment variable warnings during initialization
+if (typeof window === "undefined") {
+  logEnvWarnings()
+}
 
 const inter = Inter({
   subsets: ["latin"],
@@ -79,26 +88,18 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl" suppressHydrationWarning>
       <head>
-        {/* Google Tag Manager */}
-        <Script strategy="afterInteractive" src={`https://www.googletagmanager.com/gtag/js?id=G-90GNK6C2PY`} />
-        <Script
-          id="google-analytics"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', 'G-90GNK6C2PY');
-            `,
-          }}
-        />
         <meta name="theme-color" content="#000000" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
       <body className={`${inter.variable} ${montserrat.variable} font-sans`}>
+        {/* Google Consent Mode */}
+        <GoogleConsent measurementId="G-90GNK6C2PY" />
+
+        {/* Google Analytics */}
+        <GoogleAnalytics measurementId="G-90GNK6C2PY" />
+
         {/* Skip to content link for accessibility */}
         <a href="#main-content" className="skip-to-content">
           Skip to content
@@ -106,7 +107,10 @@ export default function RootLayout({
 
         <AuthProvider>
           <LanguageProvider>
-            <div className="flex min-h-screen flex-col bg-[#0A0E17] text-white">{children}</div>
+            <div className="flex min-h-screen flex-col bg-[#0A0E17] text-white">
+              {children}
+              <CookieConsent />
+            </div>
           </LanguageProvider>
         </AuthProvider>
 

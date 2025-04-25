@@ -61,60 +61,119 @@ export default function DashboardPage() {
 
         if (!session) {
           // If no session, redirect to login
-          router.push("/login")
+          router.push("/login?returnTo=/")
           return
         }
 
         setUser(session.user)
 
-        // Use the API endpoint instead of direct Supabase query
-        try {
-          const response = await fetch("/api/orders", {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "include", // Important for including cookies
-          })
-
-          // Check if the response is ok before trying to parse JSON
-          if (!response.ok) {
-            // Try to parse error as JSON, but handle text responses too
-            let errorMessage = "Failed to fetch orders"
+        // Function to fetch orders with retry logic
+        const fetchOrdersWithRetry = async (retryCount = 3, delay = 1500) => {
+          for (let attempt = 1; attempt <= retryCount; attempt++) {
             try {
-              const errorData = await response.json()
-              errorMessage = errorData.error || errorMessage
-            } catch (jsonError) {
-              // If JSON parsing fails, try to get text
-              try {
-                errorMessage = await response.text()
-              } catch (textError) {
-                // If even text fails, use status text
-                errorMessage = response.statusText || errorMessage
+              console.log(`Attempt ${attempt} to fetch orders...`)
+
+              // Add timeout to the fetch request
+              const controller = new AbortController()
+              const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+
+              const response = await fetch("/api/orders", {
+                method: "GET",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                credentials: "include", // Important for including cookies
+                signal: controller.signal,
+              })
+
+              clearTimeout(timeoutId)
+
+              // Check if the response is ok before trying to parse JSON
+              if (!response.ok) {
+                // Try to parse error as JSON, but handle text responses too
+                let errorMessage = `Server responded with status: ${response.status}`
+                try {
+                  const errorData = await response.json()
+                  errorMessage = errorData.error || errorMessage
+                } catch (jsonError) {
+                  // If JSON parsing fails, try to get text
+                  try {
+                    errorMessage = await response.text()
+                  } catch (textError) {
+                    // If even text fails, use status text
+                    errorMessage = response.statusText || errorMessage
+                  }
+                }
+
+                if (attempt < retryCount) {
+                  console.log(`Fetch failed with error: ${errorMessage}. Retrying in ${delay}ms...`)
+                  await new Promise((resolve) => setTimeout(resolve, delay))
+                  continue // Try again
+                }
+
+                throw new Error(errorMessage)
+              }
+
+              // Parse the JSON response
+              const data = await response.json()
+
+              // Check if the response has the expected structure
+              if (!data || typeof data !== "object") {
+                throw new Error("Invalid response format")
+              }
+
+              console.log(`Successfully fetched ${data.orders?.length || 0} orders`)
+              setOrders(data.orders || [])
+              return // Success, exit the retry loop
+            } catch (fetchError) {
+              if (attempt < retryCount) {
+                console.log(`Fetch attempt ${attempt} failed. Retrying in ${delay}ms...`)
+                await new Promise((resolve) => setTimeout(resolve, delay))
+              } else {
+                throw fetchError // Re-throw the error after all retries failed
               }
             }
-            throw new Error(errorMessage)
           }
-
-          // Parse the JSON response
-          const data = await response.json()
-
-          // Check if the response has the expected structure
-          if (!data || typeof data !== "object") {
-            throw new Error("Invalid response format")
-          }
-
-          setOrders(data.orders || [])
-        } catch (fetchError: any) {
-          console.error("Error fetching orders from API:", fetchError)
-          setError(`Error fetching orders: ${fetchError.message}`)
-
-          // Fallback to empty orders array rather than failing completely
-          setOrders([])
         }
-      } catch (error: any) {
+
+        try {
+          await fetchOrdersWithRetry()
+        } catch (fetchError) {
+          console.error("Error fetching orders from API after retries:", fetchError)
+
+          // More descriptive error message
+          const errorMessage =
+            fetchError instanceof Error ? fetchError.message : "Unknown error occurred while fetching orders"
+
+          setError(`Error fetching orders: ${errorMessage}`)
+
+          // Fallback to direct Supabase query if API fails
+          try {
+            console.log("Attempting fallback to direct Supabase query...")
+            const { data: ordersData, error: ordersError } = await supabase
+              .from("orders")
+              .select("*")
+              .eq("user_id", session.user.id)
+              .order("created_at", { ascending: false })
+
+            if (ordersError) {
+              throw ordersError
+            }
+
+            console.log("Fallback successful, got orders:", ordersData?.length || 0)
+            setOrders(ordersData || [])
+            // Clear the error since we got data through fallback
+            setError(null)
+          } catch (fallbackError) {
+            console.error("Fallback query also failed:", fallbackError)
+            // Keep the original error message
+          }
+        }
+      } catch (error) {
         console.error("Error in dashboard:", error)
-        setError(error.message)
+        setError(error instanceof Error ? error.message : "An unknown error occurred")
+        // Set empty orders array to prevent null reference errors
+        setOrders([])
       } finally {
         setIsLoading(false)
       }
@@ -218,8 +277,8 @@ export default function DashboardPage() {
               </h1>
               <p className="mt-2 text-primary-100">{isRTL ? "ברוך הבא ללוח הבקרה שלך" : "Welcome to your dashboard"}</p>
             </div>
-            <Button className="bg-white text-primary-600 hover:bg-primary-50" asChild>
-              <Link href="/order">
+            <Button className="bg-white text-primary-600 hover:bg-primary-50 flex items-center" asChild>
+              <Link href="/order" className="flex items-center">
                 <Sparkles className="mr-2 h-4 w-4 rtl:ml-2 rtl:mr-0" />
                 {isRTL ? "הזמן נסח חדש" : "Order New Extract"}
               </Link>

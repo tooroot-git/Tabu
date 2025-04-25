@@ -10,6 +10,7 @@ import { MetaTags } from "@/components/seo/meta-tags"
 import { StructuredData } from "@/components/seo/structured-data"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
+import { DashboardCTA } from "@/components/home/dashboard-cta"
 
 export default function HomePage() {
   const { isRTL } = useLanguage()
@@ -38,6 +39,7 @@ export default function HomePage() {
           <CTA />
         </main>
         <Footer />
+        <DashboardCTA />
       </div>
     </>
   )

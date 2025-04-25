@@ -23,7 +23,7 @@ export default function LoginPage() {
   const { isRTL } = useLanguage()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const returnTo = searchParams.get("returnTo") || "/dashboard"
+  const returnTo = searchParams.get("returnTo") || "/" // Changed default from /dashboard to /
   const supabase = createClientComponentClient()
 
   // Check if user is already logged in
