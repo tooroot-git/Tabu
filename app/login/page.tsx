@@ -20,21 +20,42 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isRedirecting, setIsRedirecting] = useState(false)
+  const [redirectTimeout, setRedirectTimeout] = useState<NodeJS.Timeout | null>(null)
   const { isRTL } = useLanguage()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const returnTo = searchParams.get("returnTo") || "/dashboard"
+  const returnTo = searchParams.get("returnTo") || "/"
   const supabase = createClientComponentClient()
+
+  // Cleanup function for timeout
+  useEffect(() => {
+    return () => {
+      if (redirectTimeout) {
+        clearTimeout(redirectTimeout)
+      }
+    }
+  }, [redirectTimeout])
 
   // Check if user is already logged in
   useEffect(() => {
     const checkSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      if (session) {
-        setIsRedirecting(true)
-        router.push(returnTo)
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+
+        if (session) {
+          setIsRedirecting(true)
+          // Set a timeout to ensure we don't get stuck
+          const timeout = setTimeout(() => {
+            router.push(returnTo)
+            router.refresh() // Force refresh to update UI components
+          }, 1500)
+
+          setRedirectTimeout(timeout)
+        }
+      } catch (error) {
+        console.error("Session check error:", error)
       }
     }
 
@@ -58,7 +79,14 @@ export default function LoginPage() {
 
       if (data.session) {
         setIsRedirecting(true)
-        router.push(returnTo)
+
+        // Set a timeout to ensure we don't get stuck
+        const timeout = setTimeout(() => {
+          router.push(returnTo)
+          router.refresh() // Force refresh to update UI components
+        }, 1500)
+
+        setRedirectTimeout(timeout)
       }
     } catch (error: any) {
       console.error("Login error:", error)
@@ -74,6 +102,16 @@ export default function LoginPage() {
         <div className="text-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent mx-auto mb-4"></div>
           <p className="text-gray-400">{isRTL ? "מעביר אותך..." : "Redirecting..."}</p>
+          <Button
+            variant="link"
+            className="mt-4 text-primary-400"
+            onClick={() => {
+              router.push(returnTo)
+              router.refresh()
+            }}
+          >
+            {isRTL ? "לחץ כאן אם אינך מועבר אוטומטית" : "Click here if you're not redirected automatically"}
+          </Button>
         </div>
       </div>
     )

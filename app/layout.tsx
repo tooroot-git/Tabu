@@ -106,9 +106,77 @@ export default function RootLayout({
 
         <AuthProvider>
           <LanguageProvider>
-            <div className="flex min-h-screen flex-col bg-[#0A0E17] text-white">{children}</div>
+            <div className="flex min-h-screen flex-col bg-[#0A0E17] text-white">
+              {/* Main content with page transition animation */}
+              <main id="main-content" className="main-content">
+                {children}
+              </main>
+            </div>
           </LanguageProvider>
         </AuthProvider>
+
+        {/* Page transition script */}
+        <Script
+          id="page-transitions"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              document.addEventListener('DOMContentLoaded', () => {
+                const mainContent = document.querySelector('.main-content');
+                if (mainContent) {
+                  // Add loaded class after a short delay for animation
+                  setTimeout(() => {
+                    mainContent.classList.add('loaded');
+                  }, 10);
+                }
+                
+                // Add smooth transition for internal links
+                document.addEventListener('click', (e) => {
+                  const link = e.target.closest('a');
+                  if (link && link.href && link.href.startsWith(window.location.origin) && !link.hasAttribute('target') && !e.ctrlKey && !e.metaKey) {
+                    const mainContent = document.querySelector('.main-content');
+                    if (mainContent && link.href !== window.location.href) {
+                      e.preventDefault();
+                      mainContent.style.opacity = '0';
+                      mainContent.style.transform = 'translateY(-10px)';
+                      
+                      setTimeout(() => {
+                        window.location.href = link.href;
+                      }, 200);
+                    }
+                  }
+                });
+              });
+            `,
+          }}
+        />
+
+        {/* Mobile menu animation improvements */}
+        <Script
+          id="mobile-menu-animations"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              document.addEventListener('DOMContentLoaded', () => {
+                // Improve mobile menu animations
+                const mobileMenuButtons = document.querySelectorAll('button[aria-controls="mobile-menu"]');
+                const mobileMenu = document.getElementById('mobile-menu');
+                
+                mobileMenuButtons.forEach(button => {
+                  button.addEventListener('click', () => {
+                    if (button.getAttribute('aria-expanded') === 'true' && mobileMenu) {
+                      // Improve close animation
+                      mobileMenu.classList.add('closing');
+                      setTimeout(() => {
+                        mobileMenu.classList.remove('closing');
+                      }, 300);
+                    }
+                  });
+                });
+              });
+            `,
+          }}
+        />
 
         {/* Structured data for SEO */}
         <Script
