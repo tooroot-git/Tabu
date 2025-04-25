@@ -103,3 +103,28 @@ export interface Database {
     }
   }
 }
+
+export interface Order {
+  id: string
+  user_id: string
+  block: string
+  parcel: string
+  subparcel?: string
+  service_type: string
+  status: string
+  price: number
+  payment_id?: string
+  document_url?: string
+  email: string
+  created_at: string
+  updated_at?: string
+}
+
+export interface Profile {
+  id: string
+  user_id: string
+  name?: string
+  role?: string
+  created_at: string
+  updated_at?: string
+}

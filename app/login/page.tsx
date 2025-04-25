@@ -4,175 +4,155 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import Link from "next/link"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { useLanguage } from "@/context/language-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Mail, Lock, EyeOff, Eye } from "lucide-react"
-import Link from "next/link"
-import { useLanguage } from "@/context/language-context"
-import { createClient } from "@/lib/supabase"
-import { MetaTags } from "@/components/seo/meta-tags"
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
+import { AlertCircle } from "lucide-react"
 
 export default function LoginPage() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const { isRTL } = useLanguage()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [mounted, setMounted] = useState(false)
-
+  const [isRedirecting, setIsRedirecting] = useState(false)
+  const { isRTL } = useLanguage()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const returnTo = searchParams.get("returnTo") || "/dashboard"
+  const supabase = createClientComponentClient()
 
-  // Prevent hydration mismatch
+  // Check if user is already logged in
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    const checkSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (session) {
+        setIsRedirecting(true)
+        router.push(returnTo)
+      }
+    }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+    checkSession()
+  }, [supabase, router, returnTo])
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
     setError(null)
+    setIsLoading(true)
 
     try {
-      const supabase = createClient()
-
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (error) {
         throw error
-      } else {
+      }
+
+      if (data.session) {
+        setIsRedirecting(true)
         router.push(returnTo)
-        router.refresh()
       }
     } catch (error: any) {
-      setError(error.message || (isRTL ? "שגיאת התחברות" : "Authentication error"))
+      console.error("Login error:", error)
+      setError(error.message || "Failed to sign in")
     } finally {
       setIsLoading(false)
     }
   }
 
-  if (!mounted) {
-    return null
+  if (isRedirecting) {
+    return (
+      <div className="flex h-[70vh] items-center justify-center">
+        <div className="text-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent mx-auto mb-4"></div>
+          <p className="text-gray-400">{isRTL ? "מעביר אותך..." : "Redirecting..."}</p>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <>
-      <MetaTags
-        title={isRTL ? "התחברות | טאבוי ישראל" : "Login | TabuIsrael"}
-        description={
-          isRTL
-            ? "התחבר לחשבונך והזמן נסחי טאבו מהר ובקלות"
-            : "Login to your account and order Tabu extracts quickly and easily"
-        }
-      />
-
-      <Header />
-
-      <main className="flex min-h-screen items-center justify-center py-16">
-        <div className="container px-4">
-          <Card className="mx-auto w-full max-w-md border-gray-800 bg-gray-900/90 backdrop-blur-sm shadow-lg">
-            <CardHeader className="space-y-1 text-center">
-              <CardTitle className="text-2xl font-bold text-white">{isRTL ? "התחברות" : "Login"}</CardTitle>
-              <CardDescription className="text-gray-400">
-                {isRTL ? "הזן את פרטי ההתחברות שלך כדי לגשת לחשבונך" : "Enter your credentials to access your account"}
-              </CardDescription>
-            </CardHeader>
-
-            <form onSubmit={handleSubmit}>
-              <CardContent className="space-y-4">
-                {error && (
-                  <Alert variant="destructive">
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
-
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-gray-300">
-                    {isRTL ? "אימייל" : "Email"}
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder={isRTL ? "הזן את האימייל שלך" : "Enter your email"}
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    dir="ltr"
-                    leftIcon={<Mail className="h-4 w-4" />}
-                    className="border-gray-700 bg-gray-800/80 text-white placeholder:text-gray-500"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password" className="text-gray-300">
-                      {isRTL ? "סיסמה" : "Password"}
-                    </Label>
-                    <Link
-                      href="/forgot-password"
-                      className="text-sm text-primary-400 hover:text-primary-300 hover:underline"
-                    >
-                      {isRTL ? "שכחת סיסמה?" : "Forgot password?"}
-                    </Link>
-                  </div>
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder={isRTL ? "הזן את הסיסמה שלך" : "Enter your password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    dir="ltr"
-                    leftIcon={<Lock className="h-4 w-4" />}
-                    rightIcon={
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        tabIndex={-1}
-                        aria-label={showPassword ? "Hide password" : "Show password"}
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    }
-                    className="border-gray-700 bg-gray-800/80 text-white placeholder:text-gray-500"
-                  />
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white"
-                  disabled={isLoading}
-                  isLoading={isLoading}
-                  loadingText={isRTL ? "מתחבר..." : "Logging in..."}
-                >
-                  {isRTL ? "התחבר" : "Login"}
-                </Button>
-              </CardContent>
-            </form>
-
-            <CardFooter className="flex justify-center border-t border-gray-800 pt-4">
-              <div className="text-sm text-center text-gray-400">
-                {isRTL ? "אין לך חשבון?" : "Don't have an account?"}{" "}
-                <Link href="/signup" className="font-medium text-primary-400 hover:text-primary-300 hover:underline">
-                  {isRTL ? "הירשם" : "Sign up"}
-                </Link>
+    <div className={`container mx-auto px-4 py-12 ${isRTL ? "font-sans-hebrew" : "font-sans"}`}>
+      <div className="flex justify-center">
+        <Card className="w-full max-w-md border-gray-800 bg-gray-900/80 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-white text-center">{isRTL ? "התחברות" : "Sign In"}</CardTitle>
+            <CardDescription className="text-center text-gray-400">
+              {isRTL
+                ? "התחבר לחשבון שלך כדי לצפות בהזמנות ולהזמין נסחים"
+                : "Sign in to your account to view orders and request extracts"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {error && (
+              <Alert variant="destructive" className="mb-4 bg-red-900/20 border-red-800">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-white">
+                  {isRTL ? "אימייל" : "Email"}
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder={isRTL ? "הזן את האימייל שלך" : "Enter your email"}
+                  required
+                  className="bg-gray-800 border-gray-700"
+                  dir={isRTL ? "rtl" : "ltr"}
+                />
               </div>
-            </CardFooter>
-          </Card>
-        </div>
-      </main>
-
-      <Footer />
-    </>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-white">
+                    {isRTL ? "סיסמה" : "Password"}
+                  </Label>
+                  <Link href="/forgot-password" className="text-sm text-primary-400 hover:text-primary-300">
+                    {isRTL ? "שכחת סיסמה?" : "Forgot password?"}
+                  </Link>
+                </div>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={isRTL ? "הזן את הסיסמה שלך" : "Enter your password"}
+                  required
+                  className="bg-gray-800 border-gray-700"
+                  dir={isRTL ? "rtl" : "ltr"}
+                />
+              </div>
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-primary-500 to-primary-600"
+                disabled={isLoading}
+              >
+                {isLoading ? (isRTL ? "מתחבר..." : "Signing in...") : isRTL ? "התחבר" : "Sign In"}
+              </Button>
+            </form>
+          </CardContent>
+          <CardFooter className="flex justify-center">
+            <p className="text-sm text-gray-400">
+              {isRTL ? "אין לך חשבון?" : "Don't have an account?"}{" "}
+              <Link href="/signup" className="text-primary-400 hover:text-primary-300">
+                {isRTL ? "הירשם" : "Sign up"}
+              </Link>
+            </p>
+          </CardFooter>
+        </Card>
+      </div>
+    </div>
   )
 }
