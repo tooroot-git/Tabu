@@ -1,20 +1,8 @@
-import { createServerClient } from "@supabase/ssr"
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
 
-export async function getSession() {
-  const cookieStore = cookies()
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    },
-  )
+export async function getServerSession() {
+  const supabase = createServerComponentClient({ cookies })
 
   const {
     data: { session },
@@ -22,7 +10,7 @@ export async function getSession() {
   return session
 }
 
-export async function getUserFromSession() {
-  const session = await getSession()
+export async function getUser() {
+  const session = await getServerSession()
   return session?.user || null
 }

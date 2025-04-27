@@ -13,7 +13,8 @@ const nextConfig = {
     unoptimized: true,
   },
   experimental: {
-    optimizeCss: true,
+    // Remove optimizeCss to avoid the critters dependency
+    // optimizeCss: true,
     scrollRestoration: true,
   },
   compiler: {

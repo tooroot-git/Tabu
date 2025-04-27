@@ -5,29 +5,22 @@ import { cookies } from "next/headers"
 
 export async function middleware(request: NextRequest) {
   const res = NextResponse.next()
+
+  // Create a Supabase client for the middleware
   const supabase = createMiddlewareClient({ cookies })
 
   // Refresh session if expired
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
+  await supabase.auth.getSession()
 
-  // Check if user is authenticated for protected routes
-  if (!session) {
-    // If trying to access protected routes, redirect to login
-    if (
-      request.nextUrl.pathname.startsWith("/dashboard") ||
-      request.nextUrl.pathname.startsWith("/my-orders") ||
-      request.nextUrl.pathname.startsWith("/profile")
-    ) {
-      return NextResponse.redirect(new URL("/login", request.url))
-    }
-  }
+  // Protected routes logic can be added here if needed
 
   return res
 }
 
-// See "Matching Paths" below to learn more
+// Configure which paths should be handled by this middleware
 export const config = {
-  matcher: ["/dashboard/:path*", "/my-orders/:path*", "/profile/:path*"],
+  matcher: [
+    // Apply to all routes except those starting with:
+    "/((?!_next/static|_next/image|favicon.ico|images|public).*)",
+  ],
 }
