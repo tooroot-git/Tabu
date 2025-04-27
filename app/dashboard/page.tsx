@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { useLanguage } from "@/context/language-context"
+import { useAuth } from "@/context/auth-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
@@ -38,87 +39,55 @@ interface Order {
 }
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<any>(null)
   const [orders, setOrders] = useState<Order[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { isRTL } = useLanguage()
+  const { user, isLoading: authLoading } = useAuth()
   const router = useRouter()
   const supabase = createClientComponentClient()
 
   useEffect(() => {
-    async function getUser() {
+    async function fetchOrders() {
+      if (authLoading) return
+
+      if (!user) {
+        console.log("No user found, redirecting to login")
+        router.push("/login?returnTo=/dashboard")
+        return
+      }
+
       setIsLoading(true)
       try {
-        const {
-          data: { session },
-          error: sessionError,
-        } = await supabase.auth.getSession()
+        console.log("Fetching orders for user:", user.id)
 
-        if (sessionError) {
-          throw sessionError
+        // Fetch orders from Supabase
+        const { data: ordersData, error: ordersError } = await supabase
+          .from("orders")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+
+        if (ordersError) {
+          console.error("Error fetching orders from Supabase:", ordersError)
+          throw ordersError
         }
 
-        if (!session) {
-          // אם אין סשן, ננתב ללוגין
-          console.log("No session found, redirecting to login")
-          router.push("/login?returnTo=/dashboard")
-          return
-        }
-
-        console.log("Session found, user:", session.user.email)
-        setUser(session.user)
-
-        // נפשט את הלוגיקה של שליפת ההזמנות
-        try {
-          console.log("Fetching orders...")
-
-          // ננסה קודם לשלוף ישירות מסופאבייס
-          const { data: ordersData, error: ordersError } = await supabase
-            .from("orders")
-            .select("*")
-            .eq("user_id", session.user.id)
-            .order("created_at", { ascending: false })
-
-          if (ordersError) {
-            console.error("Error fetching orders from Supabase:", ordersError)
-            // אם נכשל, ננסה דרך ה-API
-            const response = await fetch("/api/orders", {
-              method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              credentials: "include",
-            })
-
-            if (!response.ok) {
-              throw new Error(`Server responded with status: ${response.status}`)
-            }
-
-            const data = await response.json()
-            setOrders(data.orders || [])
-          } else {
-            console.log("Successfully fetched orders from Supabase:", ordersData?.length || 0)
-            setOrders(ordersData || [])
-          }
-        } catch (fetchError) {
-          console.error("Error fetching orders:", fetchError)
-          setError(fetchError instanceof Error ? fetchError.message : "An unknown error occurred")
-          setOrders([]) // נגדיר מערך ריק כדי למנוע שגיאות
-        }
-      } catch (error) {
-        console.error("Error in dashboard:", error)
-        setError(error instanceof Error ? error.message : "An unknown error occurred")
+        console.log("Successfully fetched orders:", ordersData?.length || 0)
+        setOrders(ordersData || [])
+      } catch (fetchError) {
+        console.error("Error fetching orders:", fetchError)
+        setError(fetchError instanceof Error ? fetchError.message : "An unknown error occurred")
         setOrders([])
       } finally {
         setIsLoading(false)
       }
     }
 
-    getUser()
-  }, [supabase, router])
+    fetchOrders()
+  }, [supabase, router, user, authLoading])
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <div className="flex h-[70vh] items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"></div>
@@ -198,7 +167,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className={`container mx-auto px-4 py-12 ${isRTL ? "font-sans-hebrew" : "font-sans"}`}>
+    <div className={`container mx-auto px-4 py-12 mt-16 ${isRTL ? "font-sans-hebrew" : "font-sans"}`}>
       {/* Welcome Banner */}
       <div className="relative mb-8 overflow-hidden rounded-xl bg-gradient-to-r from-primary-600 to-primary-800 p-8">
         <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,#ffffff10,#ffffff80)]"></div>
@@ -208,8 +177,8 @@ export default function DashboardPage() {
             <div>
               <h1 className="text-3xl font-bold text-white">
                 {isRTL
-                  ? `שלום, ${user.user_metadata?.name || user.email.split("@")[0]}`
-                  : `Hello, ${user.user_metadata?.name || user.email.split("@")[0]}`}
+                  ? `שלום, ${user.user_metadata?.name || user.email?.split("@")[0]}`
+                  : `Hello, ${user.user_metadata?.name || user.email?.split("@")[0]}`}
               </h1>
               <p className="mt-2 text-primary-100">{isRTL ? "ברוך הבא ללוח הבקרה שלך" : "Welcome to your dashboard"}</p>
             </div>

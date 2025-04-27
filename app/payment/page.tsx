@@ -1,4 +1,3 @@
-// בדיקה אם יש ייבוא של @/lib/auth0 ותיקון אם צריך
 "use client"
 
 import { useState, useEffect } from "react"
@@ -161,7 +160,7 @@ export default function PaymentPage() {
 
   if (!orderDetails) {
     return (
-      <div className="flex min-h-screen flex-col">
+      <div className="flex min-h-screen flex-col bg-[#0A0E17] text-white">
         <Header />
         <main className="flex-1 py-24">
           <div className="container mx-auto px-4">
@@ -183,7 +182,7 @@ export default function PaymentPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-[#0A0E17] text-white">
       <Header />
       <main className="flex-1 py-24">
         <div className="container mx-auto px-4">

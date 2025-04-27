@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Logo } from "@/components/ui/logo"
 import { Menu, X } from "lucide-react"
 
+// The component was defined but not properly exported
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
@@ -128,3 +129,6 @@ export function Header() {
     </header>
   )
 }
+
+// Add a default export as well to ensure compatibility with both import styles
+export default Header

@@ -1,8 +1,7 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
@@ -23,8 +22,23 @@ export default function LoginPage() {
   const { isRTL } = useLanguage()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const returnTo = searchParams.get("returnTo") || "/"
+  const returnTo = searchParams.get("returnTo") || "/dashboard"
   const supabase = createClientComponentClient()
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (session) {
+        console.log("User already logged in, redirecting to:", returnTo)
+        router.push(returnTo)
+      }
+    }
+
+    checkSession()
+  }, [supabase, router, returnTo])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -32,24 +46,34 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
+      console.log("Attempting login with:", email)
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (error) {
+        console.error("Login error:", error.message)
         throw error
       }
 
       if (data.session) {
+        console.log("Login successful, session established")
         setIsRedirecting(true)
-        router.push(returnTo)
-        router.refresh()
+
+        // Force a refresh to ensure the session is properly set
+        await supabase.auth.refreshSession()
+
+        // Add a small delay to ensure session is properly set
+        setTimeout(() => {
+          console.log("Redirecting to:", returnTo)
+          router.push(returnTo)
+          router.refresh()
+        }, 500)
       }
     } catch (error: any) {
       console.error("Login error:", error)
       setError(error.message || "Failed to sign in")
-    } finally {
       setIsLoading(false)
     }
   }
