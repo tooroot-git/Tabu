@@ -9,26 +9,57 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Autocomplete } from "@/components/ui/autocomplete"
-import { useLocationSearch } from "@/hooks/use-location-search"
 import { ArrowLeft, ArrowRight, Info, FileText, Check, ChevronDown } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 
+// Mock data for cities and streets
+const CITIES = [
+  "Tel Aviv",
+  "Jerusalem",
+  "Haifa",
+  "Rishon Lezion",
+  "Petah Tikva",
+  "Ashdod",
+  "Netanya",
+  "Beer Sheva",
+  "Holon",
+  "Bnei Brak",
+]
+
+const STREETS = {
+  "Tel Aviv": ["Allenby", "Dizengoff", "Rothschild", "Ben Yehuda", "King George", "Bograshov", "Shenkin"],
+  Jerusalem: ["Jaffa", "Ben Yehuda", "King George", "Emek Refaim", "Derech Hebron", "Agrippas", "Bezalel"],
+  Haifa: ["Herzl", "Hativat Givati", "Sderot Ben Gurion", "Moriah", "Carmel Center", "Hagefen", "Masada"],
+  "Rishon Lezion": ["Jabotinsky", "Herzl", "Rothschild", "Sokolov", "Weizmann", "Moshe Dayan", "Golda Meir"],
+  "Petah Tikva": ["Haim Ozer", "Herzl", "Jabotinsky", "Weizmann", "Hahistadrut", "Pinsker", "Ahad Ha'am"],
+  Ashdod: ["Herzl", "Rogozin", "Habanim", "Moshe Dayan", "Menachem Begin", "Yitzhak Rabin", "Golda Meir"],
+  Netanya: ["Herzl", "Weizmann", "Sderot Ben Gurion", "Shmuel Hanatziv", "Harav Kook", "Bialik", "Sokolov"],
+  "Beer Sheva": ["Rager", "Herzl", "Yitzhak Rager", "Derech Metsada", "Ringelblum", "Yad Vashem", "Wingate"],
+  Holon: ["Sokolov", "Weizmann", "Herzl", "Eilat", "Hahistadrut", "Shenkar", "Kugel"],
+  "Bnei Brak": ["Rabbi Akiva", "Jabotinsky", "Hazon Ish", "Rashi", "Ezra", "Hashomer", "Kahaneman"],
+}
+
 export default function OrderPage() {
   const router = useRouter()
   const { isRTL } = useLanguage()
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight
 
-  const [activeTab, setActiveTab] = useState<"property" | "address">("property")
+  const [activeTab, setActiveTab] = useState<"property" | "address">("address") // Changed default to address
   const [serviceType, setServiceType] = useState<"regular" | "historical" | "concentrated">("regular")
   const [isLoading, setIsLoading] = useState(false)
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null)
 
-  const { cities, streets, loadingCities, loadingStreets, searchCities, searchStreets, selectedCity, setSelectedCity } =
-    useLocationSearch()
+  // State for autocomplete
+  const [cityInput, setCityInput] = useState("")
+  const [streetInput, setStreetInput] = useState("")
+  const [filteredCities, setFilteredCities] = useState<string[]>([])
+  const [filteredStreets, setFilteredStreets] = useState<string[]>([])
+  const [showCitySuggestions, setShowCitySuggestions] = useState(false)
+  const [showStreetSuggestions, setShowStreetSuggestions] = useState(false)
+  const [selectedCity, setSelectedCity] = useState("")
 
   const [formData, setFormData] = useState({
     block: "",
@@ -43,12 +74,41 @@ export default function OrderPage() {
 
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  // Update the selectedCity when formData.city changes
+  // Filter cities based on input
   useEffect(() => {
-    if (formData.city) {
-      setSelectedCity(formData.city)
+    if (cityInput.length >= 2) {
+      const filtered = CITIES.filter((city) => city.toLowerCase().includes(cityInput.toLowerCase()))
+      setFilteredCities(filtered)
+    } else {
+      setFilteredCities([])
     }
-  }, [formData.city, setSelectedCity])
+  }, [cityInput])
+
+  // Filter streets based on selected city and input
+  useEffect(() => {
+    if (selectedCity && streetInput.length >= 2) {
+      const cityStreets = STREETS[selectedCity as keyof typeof STREETS] || []
+      const filtered = cityStreets.filter((street) => street.toLowerCase().includes(streetInput.toLowerCase()))
+      setFilteredStreets(filtered)
+    } else {
+      setFilteredStreets([])
+    }
+  }, [streetInput, selectedCity])
+
+  // Update form data when city or street is selected
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      city: selectedCity,
+    }))
+  }, [selectedCity])
+
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      street: streetInput,
+    }))
+  }, [streetInput])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -64,6 +124,55 @@ export default function OrderPage() {
     }
   }
 
+  const handleCityInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setCityInput(value)
+    setShowCitySuggestions(value.length >= 2)
+
+    // Clear street when city changes
+    if (value !== selectedCity) {
+      setStreetInput("")
+      setFilteredStreets([])
+      setSelectedCity("")
+    }
+
+    // Clear error when user types
+    if (errors.city) {
+      setErrors((prev) => {
+        const newErrors = { ...prev }
+        delete newErrors.city
+        return newErrors
+      })
+    }
+  }
+
+  const handleStreetInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setStreetInput(value)
+    setShowStreetSuggestions(value.length >= 2 && selectedCity !== "")
+
+    // Clear error when user types
+    if (errors.street) {
+      setErrors((prev) => {
+        const newErrors = { ...prev }
+        delete newErrors.street
+        return newErrors
+      })
+    }
+  }
+
+  const handleCitySelect = (city: string) => {
+    setCityInput(city)
+    setSelectedCity(city)
+    setShowCitySuggestions(false)
+  }
+
+  const handleStreetSelect = (street: string) => {
+    setStreetInput(street)
+    setFormData((prev) => ({ ...prev, street }))
+    setShowStreetSuggestions(false)
+  }
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
 
@@ -75,11 +184,11 @@ export default function OrderPage() {
         newErrors.parcel = isRTL ? "נא להזין מספר חלקה" : "Please enter parcel number"
       }
     } else if (activeTab === "address") {
-      if (!formData.street) {
-        newErrors.street = isRTL ? "נא להזין רחוב" : "Please enter street"
-      }
-      if (!formData.city) {
+      if (!selectedCity) {
         newErrors.city = isRTL ? "נא להזין עיר" : "Please enter city"
+      }
+      if (!streetInput) {
+        newErrors.street = isRTL ? "נא להזין רחוב" : "Please enter street"
       }
       if (!formData.houseNumber) {
         newErrors.houseNumber = isRTL ? "נא להזין מספר בית" : "Please enter house number"
@@ -105,8 +214,8 @@ export default function OrderPage() {
         block: formData.block,
         parcel: formData.parcel,
         subparcel: formData.subParcel,
-        street: formData.street,
-        city: formData.city,
+        street: streetInput,
+        city: selectedCity,
         houseNumber: formData.houseNumber,
         inputType: activeTab === "property" ? "block_parcel" : "address",
       }
@@ -315,21 +424,116 @@ export default function OrderPage() {
                   </div>
                 </div>
 
-                <Tabs defaultValue="property" className="w-full" onValueChange={(value) => setActiveTab(value as any)}>
+                <Tabs defaultValue="address" className="w-full" onValueChange={(value) => setActiveTab(value as any)}>
                   <TabsList className="grid w-full grid-cols-2 mb-4 bg-gray-700">
-                    <TabsTrigger
-                      value="property"
-                      className="transition-all duration-200 data-[state=active]:bg-primary-500"
-                    >
-                      {isRTL ? "גוש וחלקה" : "Block & Parcel"}
-                    </TabsTrigger>
                     <TabsTrigger
                       value="address"
                       className="transition-all duration-200 data-[state=active]:bg-primary-500"
                     >
                       {isRTL ? "לפי כתובת" : "By Address"}
                     </TabsTrigger>
+                    <TabsTrigger
+                      value="property"
+                      className="transition-all duration-200 data-[state=active]:bg-primary-500"
+                    >
+                      {isRTL ? "גוש וחלקה" : "Block & Parcel"}
+                    </TabsTrigger>
                   </TabsList>
+
+                  <TabsContent value="address" className="space-y-4 mt-0">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-white text-sm font-medium">
+                        {isRTL ? "חיפוש לפי כתובת" : "Search by Address"}
+                      </h3>
+                    </div>
+
+                    {/* City Autocomplete */}
+                    <div className="relative">
+                      <label className="mb-2 block text-sm font-medium text-gray-300">{isRTL ? "עיר" : "City"}</label>
+                      <input
+                        type="text"
+                        value={cityInput}
+                        onChange={handleCityInputChange}
+                        placeholder={isRTL ? "הקלד לפחות 2 תווים לחיפוש" : "Type at least 2 characters to search"}
+                        className={`w-full h-10 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
+                          errors.city ? "border-red-500" : ""
+                        }`}
+                        dir={isRTL ? "rtl" : "ltr"}
+                      />
+                      {errors.city && <p className="mt-1 text-sm text-red-500">{errors.city}</p>}
+
+                      {/* City Suggestions */}
+                      {showCitySuggestions && filteredCities.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg max-h-60 overflow-auto">
+                          {filteredCities.map((city) => (
+                            <div
+                              key={city}
+                              className="px-4 py-2 cursor-pointer hover:bg-gray-700 text-white"
+                              onClick={() => handleCitySelect(city)}
+                            >
+                              {city}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Street Autocomplete */}
+                    <div className="relative">
+                      <label className="mb-2 block text-sm font-medium text-gray-300">
+                        {isRTL ? "רחוב" : "Street"}
+                      </label>
+                      <input
+                        type="text"
+                        value={streetInput}
+                        onChange={handleStreetInputChange}
+                        placeholder={
+                          !selectedCity
+                            ? isRTL
+                              ? "יש לבחור עיר תחילה"
+                              : "Please select a city first"
+                            : isRTL
+                              ? "הקלד לפחות 2 תווים לחיפוש"
+                              : "Type at least 2 characters to search"
+                        }
+                        className={`w-full h-10 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
+                          errors.street ? "border-red-500" : ""
+                        }`}
+                        disabled={!selectedCity}
+                        dir={isRTL ? "rtl" : "ltr"}
+                      />
+                      {errors.street && <p className="mt-1 text-sm text-red-500">{errors.street}</p>}
+
+                      {/* Street Suggestions */}
+                      {showStreetSuggestions && filteredStreets.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg max-h-60 overflow-auto">
+                          {filteredStreets.map((street) => (
+                            <div
+                              key={street}
+                              className="px-4 py-2 cursor-pointer hover:bg-gray-700 text-white"
+                              onClick={() => handleStreetSelect(street)}
+                            >
+                              {street}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <Input
+                        id="houseNumber"
+                        name="houseNumber"
+                        value={formData.houseNumber}
+                        onChange={handleInputChange}
+                        placeholder={isRTL ? "לדוגמה: 123" : "e.g., 123"}
+                        label={isRTL ? "מספר בית" : "House #"}
+                        error={errors.houseNumber}
+                        className={`bg-gray-700 text-white ${isRTL ? "text-right" : "text-left"}`}
+                        dir={isRTL ? "rtl" : "ltr"}
+                      />
+                    </div>
+                  </TabsContent>
 
                   <TabsContent value="property" className="space-y-4 mt-0">
                     <div className="flex justify-between items-center">
@@ -341,7 +545,7 @@ export default function OrderPage() {
                           onClick={() => setActiveTab("address")}
                           className="text-primary-400 hover:underline flex items-center transition-colors duration-200"
                         >
-                          <span>{isRTL ? "אין לך את פרטי הגוש והחלקה?" : "Don't have block and parcel details?"}</span>
+                          <span>{isRTL ? "מעדיף לחפש לפי כתובת?" : "Prefer to search by address?"}</span>
                         </button>
                       </div>
                     </div>
@@ -380,83 +584,6 @@ export default function OrderPage() {
                         placeholder={isRTL ? "לדוגמה: 2" : "e.g., 2"}
                         label={isRTL ? "תת-חלקה" : "Sub-Parcel"}
                         helperText={isRTL ? "(אופציונלי)" : "(optional)"}
-                        className={`bg-gray-700 text-white ${isRTL ? "text-right" : "text-left"}`}
-                        dir={isRTL ? "rtl" : "ltr"}
-                      />
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="address" className="space-y-4 mt-0">
-                    <div className="flex justify-between items-center">
-                      <h3 className="text-white text-sm font-medium">
-                        {isRTL ? "חיפוש לפי כתובת" : "Search by Address"}
-                      </h3>
-                    </div>
-                    <div>
-                      <Autocomplete
-                        options={cities}
-                        value={formData.city}
-                        onChange={(value) => {
-                          setFormData((prev) => ({ ...prev, city: value }))
-                          if (errors.city) {
-                            setErrors((prev) => {
-                              const newErrors = { ...prev }
-                              delete newErrors.city
-                              return newErrors
-                            })
-                          }
-                        }}
-                        onSearch={searchCities}
-                        placeholder={isRTL ? "בחר עיר" : "Select city"}
-                        emptyMessage={isRTL ? "לא נמצאו תוצאות" : "No results found"}
-                        label={isRTL ? "עיר" : "City"}
-                        error={errors.city}
-                        isLoading={loadingCities}
-                        dir={isRTL ? "rtl" : "ltr"}
-                        className="bg-gray-700 text-white"
-                      />
-                    </div>
-                    <div>
-                      <Autocomplete
-                        options={streets}
-                        value={formData.street}
-                        onChange={(value) => {
-                          setFormData((prev) => ({ ...prev, street: value }))
-                          if (errors.street) {
-                            setErrors((prev) => {
-                              const newErrors = { ...prev }
-                              delete newErrors.street
-                              return newErrors
-                            })
-                          }
-                        }}
-                        onSearch={searchStreets}
-                        placeholder={isRTL ? "בחר רחוב" : "Select street"}
-                        emptyMessage={
-                          !formData.city
-                            ? isRTL
-                              ? "יש לבחור עיר תחילה"
-                              : "Please select a city first"
-                            : isRTL
-                              ? "לא נמצאו תוצאות"
-                              : "No results found"
-                        }
-                        label={isRTL ? "רחוב" : "Street"}
-                        error={errors.street}
-                        isLoading={loadingStreets}
-                        dir={isRTL ? "rtl" : "ltr"}
-                        className="bg-gray-700 text-white"
-                      />
-                    </div>
-                    <div>
-                      <Input
-                        id="houseNumber"
-                        name="houseNumber"
-                        value={formData.houseNumber}
-                        onChange={handleInputChange}
-                        placeholder={isRTL ? "לדוגמה: 123" : "e.g., 123"}
-                        label={isRTL ? "מספר בית" : "House #"}
-                        error={errors.houseNumber}
                         className={`bg-gray-700 text-white ${isRTL ? "text-right" : "text-left"}`}
                         dir={isRTL ? "rtl" : "ltr"}
                       />
