@@ -1,10 +1,14 @@
-import { getSession, withPageAuthRequired as withPageAuthRequiredOriginal } from "@auth0/nextjs-auth0"
 import type { NextApiRequest, NextApiResponse } from "next"
+import { createClient } from "@/utils/supabase/server"
 
 // Helper to get session in API routes
 export async function getSessionFromRequest(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const session = await getSession(req, res)
+    // Use Supabase for authentication
+    const supabase = createClient()
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
     return session
   } catch (error) {
     console.error("Error getting session:", error)
@@ -18,10 +22,15 @@ export async function getCurrentUser(req: NextApiRequest, res: NextApiResponse) 
   return session?.user || null
 }
 
-// Re-export withPageAuthRequired for convenience
-export const withPageAuthRequired = withPageAuthRequiredOriginal
-
 export async function getAuthSession() {
-  const session = await getSession()
-  return session
+  try {
+    const supabase = createClient()
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    return session
+  } catch (error) {
+    console.error("Error getting auth session:", error)
+    return null
+  }
 }
