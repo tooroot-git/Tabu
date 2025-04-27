@@ -68,8 +68,7 @@
     "micro": "latest",
     "@supabase/ssr": "latest",
     "@stripe/stripe-js": "latest",
-    "framer-motion": "latest",
-    "playwright": "latest"
+    "framer-motion": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

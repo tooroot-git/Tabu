@@ -1,36 +1,16 @@
-import type { NextApiRequest, NextApiResponse } from "next"
-import { createClient } from "@/utils/supabase/server"
+import { getSession as getAuth0Session } from "@auth0/nextjs-auth0"
+import type { NextRequest, NextResponse } from "next/server"
 
-// Helper to get session in API routes
-export async function getSessionFromRequest(req: NextApiRequest, res: NextApiResponse) {
+export async function getSession(req: NextRequest, res: NextResponse) {
   try {
-    // Use Supabase for authentication
-    const supabase = createClient()
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-    return session
+    return await getAuth0Session(req, res)
   } catch (error) {
     console.error("Error getting session:", error)
     return null
   }
 }
 
-// Helper for server components to get the current user
-export async function getCurrentUser(req: NextApiRequest, res: NextApiResponse) {
-  const session = await getSessionFromRequest(req, res)
+export async function getUserFromSession(req: NextRequest, res: NextResponse) {
+  const session = await getSession(req, res)
   return session?.user || null
-}
-
-export async function getAuthSession() {
-  try {
-    const supabase = createClient()
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-    return session
-  } catch (error) {
-    console.error("Error getting auth session:", error)
-    return null
-  }
 }
