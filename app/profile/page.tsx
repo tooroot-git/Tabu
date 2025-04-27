@@ -1,6 +1,6 @@
 import { Suspense } from "react"
-import ProfileClient from "./client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import ProfileClient from "./client"
 
 export default function ProfilePage() {
   return (
@@ -11,17 +11,19 @@ export default function ProfilePage() {
           <CardDescription>Update your profile information</CardDescription>
         </CardHeader>
         <CardContent>
-          <Suspense
-            fallback={
-              <div className="flex justify-center py-8">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"></div>
-              </div>
-            }
-          >
+          <Suspense fallback={<ProfileLoading />}>
             <ProfileClient />
           </Suspense>
         </CardContent>
       </Card>
+    </div>
+  )
+}
+
+function ProfileLoading() {
+  return (
+    <div className="flex justify-center py-8">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"></div>
     </div>
   )
 }
