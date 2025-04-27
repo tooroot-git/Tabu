@@ -12,6 +12,8 @@ interface MetaTagsProps {
   ogType?: string
   noindex?: boolean
   keywords?: string
+  author?: string
+  publisher?: string
 }
 
 export function MetaTags({
@@ -21,25 +23,96 @@ export function MetaTags({
   ogType = "website",
   noindex = false,
   keywords,
+  author = "TabuIsrael Team",
+  publisher = "TabuIsrael.co.il",
 }: MetaTagsProps) {
   const pathname = usePathname()
   const { language, isRTL } = useLanguage()
 
-  const defaultTitle = isRTL
-    ? "טאבוי ישראל – נסח טאבו רשמי תוך דקות"
-    : "TabuIsrael - Official Land Registry Documents in Minutes"
+  // SEO-optimized titles for different pages
+  const getTitleByPath = () => {
+    if (pathname === "/") {
+      return isRTL ? "נסח טאבו רשמי תוך דקות | טאבו ישראל" : "Official Land Registry Extract in Minutes | TabuIsrael"
+    }
+    if (pathname?.includes("/order")) {
+      return isRTL ? "הזמנת נסח טאבו אונליין | טאבו ישראל" : "Order Land Registry Extract Online | TabuIsrael"
+    }
+    if (pathname?.includes("/document-selection")) {
+      return isRTL ? "בחירת סוג נסח טאבו | טאבו ישראל" : "Select Document Type | TabuIsrael"
+    }
+    if (pathname?.includes("/payment")) {
+      return isRTL ? "תשלום מאובטח לנסח טאבו | טאבו ישראל" : "Secure Payment for Land Registry Extract | TabuIsrael"
+    }
+    if (pathname?.includes("/confirmation")) {
+      return isRTL ? "הזמנת נסח טאבו הושלמה | טאבו ישראל" : "Order Completed | TabuIsrael"
+    }
+    if (pathname?.includes("/dashboard")) {
+      return isRTL ? "לוח הבקרה שלי | טאבו ישראל" : "My Dashboard | TabuIsrael"
+    }
+    if (pathname?.includes("/my-orders")) {
+      return isRTL ? "ההזמנות שלי | טאבו ישראל" : "My Orders | TabuIsrael"
+    }
+    if (pathname?.includes("/login")) {
+      return isRTL ? "התחברות | טאבו ישראל" : "Login | TabuIsrael"
+    }
+    if (pathname?.includes("/signup")) {
+      return isRTL ? "הרשמה | טאבו ישראל" : "Sign Up | TabuIsrael"
+    }
+    if (pathname?.includes("/about")) {
+      return isRTL ? "אודות שירות נסח טאבו אונליין | טאבו ישראל" : "About Our Land Registry Service | TabuIsrael"
+    }
+    if (pathname?.includes("/faq")) {
+      return isRTL ? "שאלות נפוצות על נסח טאבו | טאבו ישראל" : "FAQ About Land Registry Extracts | TabuIsrael"
+    }
+    if (pathname?.includes("/contact")) {
+      return isRTL ? "צור קשר | טאבו ישראל" : "Contact Us | TabuIsrael"
+    }
 
-  const defaultDescription = isRTL
-    ? "הזמנת נסח טאבו רשמי ומעודכן לפי גוש, חלקה וכתובת – 100% דיגיטלי ומאובטח. קבל נסח תוך דקות למייל."
-    : "Order official Israeli Land Registry documents by block, parcel, or address - 100% digital and secure. Get your document in minutes."
+    // Default title if no specific path matches
+    return isRTL ? "טאבו ישראל – נסח טאבו רשמי תוך דקות" : "TabuIsrael - Official Land Registry Documents in Minutes"
+  }
 
-  const defaultKeywords = isRTL
-    ? "נסח טאבו, רשם המקרקעין, טאבו, מקרקעין, נסח היסטורי, נסח מרוכז, רישום מקרקעין, בית משותף, גוש, חלקה"
-    : "land registry, tabu extract, tabu, israel property, historical extract, concentrated extract, land registration, block, parcel"
+  // SEO-optimized descriptions for different pages
+  const getDescriptionByPath = () => {
+    if (pathname === "/") {
+      return isRTL
+        ? "נסח טאבו חתום דיגיטלית אונליין תוך דקות. הזמנת נסח לפי גוש חלקה או כתובת. טאבו ישראל - שירות מהיר, מאובטח ומקצועי."
+        : "Get official digital land registry extracts in minutes. Order by block, parcel or address. TabuIsrael - fast, secure and professional service."
+    }
+    if (pathname?.includes("/order")) {
+      return isRTL
+        ? "הזמן נסח טאבו אונליין לפי גוש וחלקה, כתובת או תעודת זהות. שירות מהיר ומאובטח עם קבלת הנסח תוך דקות."
+        : "Order land registry extract online by block and parcel, address or ID. Fast and secure service with document delivery in minutes."
+    }
 
-  const siteTitle = title ? `${title} | TabuIsrael.co.il` : defaultTitle
-  const siteDescription = description || defaultDescription
-  const siteKeywords = keywords || defaultKeywords
+    // Default description if no specific path matches
+    return isRTL
+      ? "הזמנת נסח טאבו רשמי ומעודכן לפי גוש, חלקה וכתובת – 100% דיגיטלי ומאובטח. קבל נסח תוך דקות למייל."
+      : "Order official Israeli Land Registry documents by block, parcel, or address - 100% digital and secure. Get your document in minutes."
+  }
+
+  // SEO-optimized keywords for different pages
+  const getKeywordsByPath = () => {
+    if (pathname === "/") {
+      return isRTL
+        ? "נסח טאבו, טאבו אונליין, הזמנת נסח טאבו, נסח קרקע, טאבו, נסח חלקה, נסח טאבו מהיר, נסח טאבו דיגיטלי"
+        : "land registry extract, tabu online, order land registry, property extract, tabu, parcel extract, fast land registry, digital land registry"
+    }
+    if (pathname?.includes("/order")) {
+      return isRTL
+        ? "הזמנת נסח טאבו, גוש חלקה, נסח לפי כתובת, נסח טאבו אונליין, נסח טאבו מהיר, טאבו דיגיטלי"
+        : "order land registry, block parcel, extract by address, online land registry, fast land registry, digital tabu"
+    }
+
+    // Default keywords if no specific path matches
+    return isRTL
+      ? "נסח טאבו, רשם המקרקעין, טאבו, מקרקעין, נסח היסטורי, נסח מרוכז, רישום מקרקעין, בית משותף, גוש, חלקה"
+      : "land registry, tabu extract, tabu, israel property, historical extract, concentrated extract, land registration, block, parcel"
+  }
+
+  const defaultTitle = title || getTitleByPath()
+  const defaultDescription = description || getDescriptionByPath()
+  const defaultKeywords = keywords || getKeywordsByPath()
 
   // Clean up the pathname to use for canonical URLs
   const canonicalUrl = `https://tabuisrael.co.il${pathname}`
@@ -49,15 +122,17 @@ export function MetaTags({
   // Update document title and meta tags when title or description changes
   useEffect(() => {
     if (typeof document !== "undefined") {
-      document.title = siteTitle
+      document.title = defaultTitle
     }
-  }, [siteTitle])
+  }, [defaultTitle])
 
   return (
     <Head>
-      <title>{siteTitle}</title>
-      <meta name="description" content={siteDescription} />
-      <meta name="keywords" content={siteKeywords} />
+      <title>{defaultTitle}</title>
+      <meta name="description" content={defaultDescription} />
+      <meta name="keywords" content={defaultKeywords} />
+      <meta name="author" content={author} />
+      <meta name="publisher" content={publisher} />
 
       {/* Robots */}
       {noindex ? <meta name="robots" content="noindex, nofollow" /> : <meta name="robots" content="index, follow" />}
@@ -71,8 +146,8 @@ export function MetaTags({
       <link rel="alternate" hreflang="x-default" href={canonicalUrl} />
 
       {/* Open Graph */}
-      <meta property="og:title" content={siteTitle} />
-      <meta property="og:description" content={siteDescription} />
+      <meta property="og:title" content={defaultTitle} />
+      <meta property="og:description" content={defaultDescription} />
       <meta property="og:url" content={canonicalUrl} />
       <meta property="og:type" content={ogType} />
       <meta property="og:image" content={ogImage} />
@@ -81,8 +156,8 @@ export function MetaTags({
 
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content={siteTitle} />
-      <meta name="twitter:description" content={siteDescription} />
+      <meta name="twitter:title" content={defaultTitle} />
+      <meta name="twitter:description" content={defaultDescription} />
       <meta name="twitter:image" content={ogImage} />
 
       {/* Viewport for mobile */}

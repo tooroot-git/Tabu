@@ -1,42 +1,33 @@
 "use client"
 
-import { useLanguage } from "@/context/language-context"
 import Link from "next/link"
+import { useLanguage } from "@/context/language-context"
 
 interface LogoProps {
-  className?: string
   size?: "sm" | "md" | "lg"
 }
 
-export function Logo({ className = "", size = "md" }: LogoProps) {
+export function Logo({ size = "md" }: LogoProps) {
   const { isRTL } = useLanguage()
 
   const sizeClasses = {
-    sm: "text-xl",
-    md: "text-2xl",
-    lg: "text-3xl",
+    sm: "text-2xl",
+    md: "text-3xl",
+    lg: "text-4xl",
   }
 
   return (
-    <Link href="/" className={`flex items-center ${className}`}>
-      <div className="relative">
-        {isRTL ? (
-          <div className="flex flex-col items-center font-bold">
-            <span className="text-primary-500 font-heading tracking-tight flex flex-col items-center">
-              <span className={`${sizeClasses[size]} font-extrabold`}>טאבו</span>
-              <span className={`${sizeClasses[size]} font-light`}>ישראל</span>
+    <Link href="/" className="flex items-center">
+      <div className={`relative ${sizeClasses[size]}`}>
+        <div className="flex items-center">
+          <div className="relative">
+            <span className="font-bold">
+              <span className="text-primary-500">טאבו</span>
+              <span className="text-white">ישראל</span>
             </span>
-            <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-primary-600 to-primary-400 rounded-full"></div>
+            <div className="absolute -bottom-1 left-0 right-0 h-1 bg-gradient-to-r from-primary-600 via-primary-500 to-primary-400 rounded-full"></div>
           </div>
-        ) : (
-          <div className="flex flex-col items-center font-bold">
-            <span className="text-primary-500 font-heading tracking-tight flex flex-col items-center">
-              <span className={`${sizeClasses[size]} font-extrabold`}>Tabu</span>
-              <span className={`${sizeClasses[size]} font-light`}>Israel</span>
-            </span>
-            <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-primary-600 to-primary-400 rounded-full"></div>
-          </div>
-        )}
+        </div>
       </div>
     </Link>
   )

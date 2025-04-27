@@ -1,0 +1,46 @@
+{
+  "name": "טאבו ישראל - נסח טאבו רשמי תוך דקות",
+  "short_name": "טאבו ישראל",
+  "description": "הזמנת נסח טאבו רשמי ומעודכן לפי גוש, חלקה וכתובת – 100% דיגיטלי ומאובטח.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0E17",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/logo192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/logo512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "lang": "he-IL",
+  "dir": "rtl",
+  "orientation": "portrait",
+  "categories": ["business", "productivity", "utilities"],
+  "shortcuts": [
+    {
+      "name": "הזמן נסח טאבו",
+      "short_name": "הזמן נסח",
+      "description": "הזמן נסח טאבו חדש",
+      "url": "/order",
+      "icons": [{ "src": "/order-icon.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "ההזמנות שלי",
+      "short_name": "הזמנות",
+      "description": "צפה בהזמנות הקודמות שלך",
+      "url": "/my-orders",
+      "icons": [{ "src": "/orders-icon.png", "sizes": "192x192" }]
+    }
+  ]
+}

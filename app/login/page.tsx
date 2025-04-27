@@ -41,6 +41,9 @@ export default function LoginPage() {
     checkSession()
   }, [supabase, router, returnTo])
 
+  // בעמוד ההתחברות, נשנה את הלוגיקה של הניתוב כדי לוודא שהוא עובד כראוי
+
+  // שינוי 1: נשפר את הלוגיקה של הניתוב אחרי התחברות מוצלחת
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -57,13 +60,16 @@ export default function LoginPage() {
       }
 
       if (data.session) {
-        setIsRedirecting(true)
-        router.push(returnTo)
+        // נוסיף השהייה קצרה לפני הניתוב כדי לוודא שהסשן נשמר כראוי
+        setTimeout(() => {
+          setIsRedirecting(true)
+          // נשתמש בניתוב מוחלט במקום יחסי
+          window.location.href = returnTo.startsWith("/") ? returnTo : "/" + returnTo
+        }, 500)
       }
     } catch (error: any) {
       console.error("Login error:", error)
       setError(error.message || "Failed to sign in")
-    } finally {
       setIsLoading(false)
     }
   }

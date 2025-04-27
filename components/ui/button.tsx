@@ -68,7 +68,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             {leftIcon && (
               <span className={`transition-transform duration-300 ${isRTL ? "ml-2" : "mr-2"}`}>{leftIcon}</span>
             )}
-            <span className="relative z-10">{children}</span>
+            <span className="relative z-10 inline-flex items-center whitespace-nowrap">{children}</span>
             {rightIcon && (
               <span className={`transition-transform duration-300 ${isRTL ? "mr-2" : "ml-2"}`}>{rightIcon}</span>
             )}

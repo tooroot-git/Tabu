@@ -29,8 +29,9 @@ const montserrat = Montserrat({
 })
 
 export const metadata: Metadata = {
-  title: "TabuIsrael - Israeli Land Registry Documents",
-  description: "Order official Israeli Land Registry documents (Tabu Extracts) quickly and securely.",
+  title: "נסח טאבו רשמי תוך דקות | טאבו ישראל",
+  description:
+    "נסח טאבו חתום דיגיטלית אונליין תוך דקות. הזמנת נסח לפי גוש חלקה או כתובת. טאבו ישראל - שירות מהיר, מאובטח ומקצועי.",
   metadataBase: new URL("https://tabuisrael.co.il"),
   alternates: {
     canonical: "/",
@@ -39,6 +40,9 @@ export const metadata: Metadata = {
       he: "/he",
     },
   },
+  keywords: "נסח טאבו, טאבו אונליין, הזמנת נסח טאבו, נסח קרקע, טאבו, נסח חלקה, נסח טאבו מהיר, נסח טאבו דיגיטלי",
+  authors: [{ name: "TabuIsrael Team" }],
+  publisher: "TabuIsrael.co.il",
   robots: {
     index: true,
     follow: true,
@@ -46,22 +50,23 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: "https://tabuisrael.co.il",
-    title: "TabuIsrael - Israeli Land Registry Documents",
-    description: "Order official Israeli Land Registry documents (Tabu Extracts) quickly and securely.",
-    siteName: "TabuIsrael",
+    title: "נסח טאבו תוך דקות - טאבו ישראל",
+    description: "הזמן נסח טאבו דיגיטלי באינטרנט בקלות ובמהירות דרך טאבו ישראל. שירות מהיר, מקצועי ומאובטח.",
+    siteName: "טאבו ישראל",
     images: [
       {
         url: "https://tabuisrael.co.il/og-image.png",
         width: 1200,
         height: 630,
-        alt: "TabuIsrael",
+        alt: "טאבו ישראל - נסח טאבו רשמי",
       },
     ],
+    locale: "he_IL",
   },
   twitter: {
     card: "summary_large_image",
-    title: "TabuIsrael - Israeli Land Registry Documents",
-    description: "Order official Israeli Land Registry documents (Tabu Extracts) quickly and securely.",
+    title: "נסח טאבו תוך דקות - טאבו ישראל",
+    description: "הזמן נסח טאבו דיגיטלי באינטרנט בקלות ובמהירות דרך טאבו ישראל. שירות מהיר, מקצועי ומאובטח.",
     images: ["https://tabuisrael.co.il/og-image.png"],
   },
   verification: {
@@ -116,27 +121,47 @@ export default function RootLayout({
 
         {/* Structured data for SEO */}
         <Script
-          id="structured-data"
+          id="structured-data-organization"
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "Organization",
-              name: "TabuIsrael",
+              name: "טאבו ישראל",
               url: "https://tabuisrael.co.il",
               logo: "https://tabuisrael.co.il/logo.png",
               contactPoint: {
                 "@type": "ContactPoint",
-                telephone: "",
-                contactType: "customer service",
-                email: "support@tabuisrael.co.il",
-                availableLanguage: ["English", "Hebrew"],
+                telephone: "+972-1-700-700-830",
+                contactType: "Customer Service",
+                areaServed: "IL",
+                availableLanguage: ["Hebrew", "English"],
               },
               sameAs: [
                 "https://www.facebook.com/tabuisrael",
                 "https://twitter.com/tabuisrael",
                 "https://www.linkedin.com/company/tabuisrael",
               ],
+            }),
+          }}
+        />
+
+        <Script
+          id="structured-data-website"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              url: "https://tabuisrael.co.il",
+              name: "טאבו ישראל - נסח טאבו רשמי תוך דקות",
+              description: "הזמנת נסח טאבו רשמי ומעודכן לפי גוש, חלקה וכתובת – 100% דיגיטלי ומאובטח.",
+              potentialAction: {
+                "@type": "SearchAction",
+                target: "https://tabuisrael.co.il/search?q={search_term_string}",
+                "query-input": "required name=search_term_string",
+              },
+              inLanguage: "he-IL",
             }),
           }}
         />

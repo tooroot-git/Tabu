@@ -27,7 +27,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const getInitialSession = async () => {
       try {
         setIsLoading(true)
-        const { data } = await supabase.auth.getSession()
+        const { data, error } = await supabase.auth.getSession()
+
+        if (error) {
+          console.error("Error getting initial session:", error)
+          return
+        }
+
+        console.log("Initial session check:", data.session ? "Session found" : "No session")
         setSession(data.session)
         setUser(data.session?.user || null)
       } catch (error) {
@@ -41,6 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Set up auth state change listener
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event, session ? "Session exists" : "No session")
       setSession(session)
       setUser(session?.user || null)
       setIsLoading(false)
@@ -54,8 +62,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-      return { error }
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
+      if (error) {
+        console.error("Sign in error:", error)
+        return { error }
+      }
+
+      console.log("Sign in successful:", data.user?.email)
+      return { error: null }
     } catch (error) {
       console.error("Error signing in:", error)
       return { error }

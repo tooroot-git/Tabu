@@ -7,6 +7,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "",
     "/order",
     "/document-selection",
+    "/payment",
+    "/confirmation",
     "/faq",
     "/about",
     "/contact",
@@ -15,12 +17,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/terms",
     "/privacy",
     "/accessibility",
+    "/services",
   ]
 
   return routes.map((route) => ({
     url: `${baseUrl}${route}`,
     lastModified: new Date(),
     changeFrequency: route === "" ? "weekly" : "monthly",
-    priority: route === "" ? 1.0 : 0.8,
+    priority: route === "" ? 1.0 : route === "/order" ? 0.9 : 0.8,
   }))
 }

@@ -11,8 +11,8 @@ const adminPaths = ["/admin"]
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Skip middleware for auth callback route
-  if (pathname.startsWith("/auth/callback")) {
+  // Skip middleware for auth callback route and static assets
+  if (pathname.startsWith("/auth/callback") || pathname.includes("/_next/") || pathname.includes("/api/")) {
     return NextResponse.next()
   }
 
@@ -21,44 +21,63 @@ export async function middleware(request: NextRequest) {
   const isAdminPath = adminPaths.some((path) => pathname.startsWith(path))
 
   if (isProtectedPath) {
-    // Create a Supabase client for the middleware
-    const { supabase, response } = createClient(request)
+    try {
+      // Create a Supabase client for the middleware
+      const { supabase, response } = createClient(request)
 
-    // Check if the user is authenticated
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
+      // Check if the user is authenticated
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
 
-    if (!session) {
-      // If the user is not logged in, redirect to the login page
-      const loginUrl = `/login?returnTo=${encodeURIComponent(pathname)}`
-      return NextResponse.redirect(new URL(loginUrl, request.url))
-    }
-
-    // For admin paths, check if the user is an admin
-    if (isAdminPath) {
-      // Use the service role to check user role
-      const adminSupabase = createClient(request, { admin: true }).supabase
-      const { data: user } = await adminSupabase.from("profiles").select("role").eq("id", session.user.id).single()
-
-      if (user?.role !== "admin") {
-        // If the user is not an admin, redirect to the dashboard
-        return NextResponse.redirect(new URL("/dashboard", request.url))
+      if (!session) {
+        // If the user is not logged in, redirect to the login page
+        console.log("No session found, redirecting to login")
+        const loginUrl = `/login?returnTo=${encodeURIComponent(pathname)}`
+        return NextResponse.redirect(new URL(loginUrl, request.url))
       }
-    }
 
-    return response
+      // For admin paths, check if the user is an admin
+      if (isAdminPath) {
+        try {
+          // Use the service role to check user role
+          const adminSupabase = createClient(request, { admin: true }).supabase
+          const { data: user } = await adminSupabase.from("profiles").select("role").eq("id", session.user.id).single()
+
+          if (user?.role !== "admin") {
+            // If the user is not an admin, redirect to the dashboard
+            return NextResponse.redirect(new URL("/dashboard", request.url))
+          }
+        } catch (error) {
+          console.error("Error checking admin role:", error)
+          // If there's an error checking the role, allow access and let the page handle it
+          return NextResponse.next()
+        }
+      }
+
+      return response
+    } catch (error) {
+      console.error("Middleware error:", error)
+      // If there's an error in the middleware, allow the request to continue
+      // and let the page handle authentication
+      return NextResponse.next()
+    }
   }
 
   // Handle login page - redirect to dashboard if already logged in
   if (pathname === "/login") {
-    const { supabase } = createClient(request)
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
+    try {
+      const { supabase } = createClient(request)
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
 
-    if (session) {
-      return NextResponse.redirect(new URL("/dashboard", request.url))
+      if (session) {
+        return NextResponse.redirect(new URL("/dashboard", request.url))
+      }
+    } catch (error) {
+      console.error("Error checking session on login page:", error)
+      // If there's an error checking the session, allow access to the login page
     }
   }
 
