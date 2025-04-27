@@ -167,17 +167,6 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const isRTL = language === "he"
   const isHebrew = language === "he"
 
-  // Detect language from URL on initial load
-  useEffect(() => {
-    // Check if we're on the English path
-    if (pathname?.startsWith("/en")) {
-      setLanguageState("en")
-    } else {
-      // Default to Hebrew for all other paths
-      setLanguageState("he")
-    }
-  }, [pathname])
-
   // Update HTML lang and dir attributes when language changes
   useEffect(() => {
     if (typeof document !== "undefined") {
@@ -198,17 +187,13 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     (lang: Language) => {
       setLanguageState(lang)
 
-      // Update URL to reflect language change
-      if (lang === "en" && !pathname?.startsWith("/en")) {
-        router.push(`/en${pathname}`)
-      } else if (lang === "he" && pathname?.startsWith("/en")) {
-        router.push(pathname.replace(/^\/en/, ""))
-      }
+      // Don't change URL - language switching will be handled via UI only
+      // This prevents unwanted redirects
 
       // Force refresh to apply RTL/LTR changes properly
       router.refresh()
     },
-    [router, pathname],
+    [router],
   )
 
   // Translation function

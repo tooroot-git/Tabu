@@ -1,9 +1,13 @@
 # Enable URL rewriting
 RewriteEngine On
 
-# Remove www prefix
+# Remove www prefix and redirect to non-www version (canonical)
 RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC]
 RewriteRule ^(.*)$ https://%1/$1 [R=301,L]
+
+# Redirect /en to root (Hebrew version)
+RewriteRule ^en/?$ / [R=301,L]
+RewriteRule ^en/(.*)$ /$1 [R=301,L]
 
 # Handle 404 errors
 ErrorDocument 404 /404.html
