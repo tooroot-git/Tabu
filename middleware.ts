@@ -1,27 +1,23 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { getSession } from "@auth0/nextjs-auth0"
+import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs"
 
-// This function can be marked `async` if using `await` inside
-export async function middleware(request: NextRequest) {
-  const session = await getSession(request, NextResponse)
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next()
 
-  // Check if user is authenticated
-  if (!session?.user) {
-    // If trying to access protected routes, redirect to login
-    if (
-      request.nextUrl.pathname.startsWith("/dashboard") ||
-      request.nextUrl.pathname.startsWith("/my-orders") ||
-      request.nextUrl.pathname.startsWith("/profile")
-    ) {
-      return NextResponse.redirect(new URL("/login", request.url))
-    }
-  }
+  // Create a Supabase client for handling auth
+  const supabase = createMiddlewareClient({ req, res })
 
-  return NextResponse.next()
+  // Refresh session if expired
+  await supabase.auth.getSession()
+
+  return res
 }
 
-// See "Matching Paths" below to learn more
+// Configure which paths should be handled by this middleware
 export const config = {
-  matcher: ["/dashboard/:path*", "/my-orders/:path*", "/profile/:path*"],
+  matcher: [
+    // Apply to all routes except those starting with:
+    "/((?!api/auth|_next/static|_next/image|favicon.ico|images|public).*)",
+  ],
 }

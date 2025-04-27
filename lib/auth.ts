@@ -1,9 +1,9 @@
-import { getSession as getAuth0Session } from "@auth0/nextjs-auth0"
+import { getSession as auth0GetSession } from "@auth0/nextjs-auth0"
 import type { NextRequest, NextResponse } from "next/server"
 
 export async function getSession(req: NextRequest, res: NextResponse) {
   try {
-    return await getAuth0Session(req, res)
+    return await auth0GetSession(req, res)
   } catch (error) {
     console.error("Error getting session:", error)
     return null
