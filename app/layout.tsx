@@ -9,6 +9,8 @@ import { logEnvWarnings } from "@/utils/validate-env"
 import { GoogleAnalytics } from "@/components/analytics/google-analytics"
 import { GoogleConsent } from "@/components/analytics/google-consent"
 import { CookieConsent } from "@/components/cookie-consent"
+import { Header } from "@/components/layout/header"
+import { Footer } from "@/components/layout/footer"
 
 // Log any environment variable warnings during initialization
 if (typeof window === "undefined") {
@@ -16,13 +18,13 @@ if (typeof window === "undefined") {
 }
 
 const inter = Inter({
-  subsets: ["latin"],
+  subsets: ["latin", "hebrew"],
   variable: "--font-inter",
   display: "swap", // Improves performance by allowing the font to be displayed before it's fully loaded
 })
 
 const montserrat = Montserrat({
-  subsets: ["latin"],
+  subsets: ["latin", "hebrew"],
   variable: "--font-montserrat",
   weight: ["300", "400", "500", "600", "700", "800", "900"],
   display: "swap", // Improves performance
@@ -37,7 +39,7 @@ export const metadata: Metadata = {
     canonical: "/",
     languages: {
       en: "/en",
-      he: "/he",
+      he: "/",
     },
   },
   keywords: "נסח טאבו, טאבו אונליין, הזמנת נסח טאבו, נסח קרקע, טאבו, נסח חלקה, נסח טאבו מהיר, נסח טאבו דיגיטלי",
@@ -113,7 +115,11 @@ export default function RootLayout({
         <AuthProvider>
           <LanguageProvider>
             <div className="flex min-h-screen flex-col bg-[#0A0E17] text-white">
-              {children}
+              <Header />
+              <main id="main-content" className="flex-grow">
+                {children}
+              </main>
+              <Footer />
               <CookieConsent />
             </div>
           </LanguageProvider>

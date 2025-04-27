@@ -4,7 +4,7 @@ const nextConfig = {
   swcMinify: true,
   i18n: {
     locales: ["he", "en"],
-    defaultLocale: "he",
+    defaultLocale: "he", // Changed default to Hebrew
     localeDetection: true,
   },
   images: {
@@ -13,8 +13,6 @@ const nextConfig = {
     unoptimized: true,
   },
   experimental: {
-    // Remove optimizeCss to avoid the critters dependency
-    // optimizeCss: true,
     scrollRestoration: true,
   },
   compiler: {

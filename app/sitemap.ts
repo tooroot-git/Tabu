@@ -20,10 +20,41 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/services",
   ]
 
-  return routes.map((route) => ({
-    url: `${baseUrl}${route}`,
-    lastModified: new Date(),
-    changeFrequency: route === "" ? "weekly" : "monthly",
-    priority: route === "" ? 1.0 : route === "/order" ? 0.9 : 0.8,
-  }))
+  const sitemapEntries = []
+
+  // Add Hebrew routes (default)
+  for (const route of routes) {
+    sitemapEntries.push({
+      url: `${baseUrl}${route}`,
+      lastModified: new Date(),
+      changeFrequency: route === "" ? "weekly" : "monthly",
+      priority: route === "" ? 1.0 : route === "/order" ? 0.9 : 0.8,
+      // Add language alternates
+      alternates: {
+        languages: {
+          he: `${baseUrl}${route}`,
+          en: `${baseUrl}/en${route}`,
+        },
+      },
+    })
+  }
+
+  // Add English routes
+  for (const route of routes) {
+    sitemapEntries.push({
+      url: `${baseUrl}/en${route}`,
+      lastModified: new Date(),
+      changeFrequency: route === "" ? "weekly" : "monthly",
+      priority: route === "" ? 0.9 : route === "/order" ? 0.8 : 0.7,
+      // Add language alternates
+      alternates: {
+        languages: {
+          en: `${baseUrl}/en${route}`,
+          he: `${baseUrl}${route}`,
+        },
+      },
+    })
+  }
+
+  return sitemapEntries
 }
