@@ -1,6 +1,7 @@
 import type React from "react"
 import "./globals.css"
 import type { Metadata } from "next"
+import { Inter, Montserrat } from "next/font/google"
 import { LanguageProvider } from "@/context/language-context"
 import { AuthProvider } from "@/context/auth-context"
 import Script from "next/script"
@@ -8,14 +9,24 @@ import { logEnvWarnings } from "@/utils/validate-env"
 import { GoogleAnalytics } from "@/components/analytics/google-analytics"
 import { GoogleConsent } from "@/components/analytics/google-consent"
 import { CookieConsent } from "@/components/cookie-consent"
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
-import { inter, montserrat, heebo } from "@/lib/fonts"
 
 // Log any environment variable warnings during initialization
 if (typeof window === "undefined") {
   logEnvWarnings()
 }
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap", // Improves performance by allowing the font to be displayed before it's fully loaded
+})
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  variable: "--font-montserrat",
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  display: "swap", // Improves performance
+})
 
 export const metadata: Metadata = {
   title: "נסח טאבו רשמי תוך דקות | טאבו ישראל",
@@ -26,7 +37,7 @@ export const metadata: Metadata = {
     canonical: "/",
     languages: {
       en: "/en",
-      he: "/",
+      he: "/he",
     },
   },
   keywords: "נסח טאבו, טאבו אונליין, הזמנת נסח טאבו, נסח קרקע, טאבו, נסח חלקה, נסח טאבו מהיר, נסח טאבו דיגיטלי",
@@ -87,7 +98,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
-      <body className={`${inter.variable} ${montserrat.variable} ${heebo.variable} font-sans`}>
+      <body className={`${inter.variable} ${montserrat.variable} font-sans`}>
         {/* Google Consent Mode */}
         <GoogleConsent measurementId="G-90GNK6C2PY" />
 
@@ -102,11 +113,7 @@ export default function RootLayout({
         <AuthProvider>
           <LanguageProvider>
             <div className="flex min-h-screen flex-col bg-[#0A0E17] text-white">
-              <Header />
-              <main id="main-content" className="flex-grow">
-                {children}
-              </main>
-              <Footer />
+              {children}
               <CookieConsent />
             </div>
           </LanguageProvider>

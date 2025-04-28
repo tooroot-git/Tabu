@@ -7,34 +7,6 @@ export async function middleware(request: NextRequest) {
   const res = NextResponse.next()
 
   try {
-    // Get the hostname and pathname
-    const hostname = request.headers.get("host") || ""
-    const pathname = request.nextUrl.pathname
-
-    // Handle www to non-www redirect (canonical domain)
-    if (hostname.startsWith("www.")) {
-      // Create the URL for the non-www version
-      const newUrl = new URL(pathname, `https://${hostname.replace(/^www\./, "")}`)
-
-      // Preserve search params
-      newUrl.search = request.nextUrl.search
-
-      // Return a redirect response
-      return NextResponse.redirect(newUrl, 301)
-    }
-
-    // Handle incorrect /en redirects
-    if (pathname === "/en" || pathname.startsWith("/en/")) {
-      // If someone tries to access /en directly, redirect to Hebrew version
-      const newUrl = new URL(pathname.replace(/^\/en\/?/, "/"), `https://${hostname}`)
-
-      // Preserve search params
-      newUrl.search = request.nextUrl.search
-
-      // Return a redirect response
-      return NextResponse.redirect(newUrl, 301)
-    }
-
     // Create a Supabase client for the middleware
     const supabase = createMiddlewareClient({ req: request, res })
 
@@ -43,22 +15,27 @@ export async function middleware(request: NextRequest) {
       data: { session },
     } = await supabase.auth.getSession()
 
+    // Debug log
+    console.log(
+      `Middleware: Path ${request.nextUrl.pathname}, Auth: ${session ? "Authenticated" : "Not authenticated"}`,
+    )
+
     // Check if user is authenticated for protected routes
     const isProtectedRoute =
-      pathname.startsWith("/dashboard") ||
-      pathname.startsWith("/my-orders") ||
-      pathname.startsWith("/profile") ||
-      pathname.startsWith("/settings")
+      request.nextUrl.pathname.startsWith("/dashboard") ||
+      request.nextUrl.pathname.startsWith("/my-orders") ||
+      request.nextUrl.pathname.startsWith("/profile") ||
+      request.nextUrl.pathname.startsWith("/settings")
 
     if (!session && isProtectedRoute) {
       // Redirect to login with return URL
       const redirectUrl = new URL("/login", request.url)
-      redirectUrl.searchParams.set("returnTo", pathname)
+      redirectUrl.searchParams.set("returnTo", request.nextUrl.pathname)
       return NextResponse.redirect(redirectUrl)
     }
 
     // If user is authenticated and trying to access login/signup, redirect to dashboard
-    if (session && (pathname === "/login" || pathname === "/signup")) {
+    if (session && (request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/signup")) {
       return NextResponse.redirect(new URL("/dashboard", request.url))
     }
 
@@ -72,5 +49,5 @@ export async function middleware(request: NextRequest) {
 
 // Configure which paths should be handled by this middleware
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)"],
+  matcher: ["/dashboard/:path*", "/my-orders/:path*", "/profile/:path*", "/settings/:path*", "/login", "/signup"],
 }

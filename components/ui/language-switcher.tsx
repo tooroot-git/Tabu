@@ -1,33 +1,21 @@
 "use client"
 
-import { useLanguage } from "@/context/language-context"
-import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { useLanguage } from "@/context/language-context"
 
-export function LanguageSwitcher() {
+export function LanguageSwitcher({ currentLanguage }: { currentLanguage?: string }) {
   const { language, setLanguage } = useLanguage()
-  const pathname = usePathname()
-  const router = useRouter()
 
   const toggleLanguage = () => {
-    const newLanguage = language === "he" ? "en" : "he"
-    setLanguage(newLanguage)
-
-    // Update URL based on language
-    if (newLanguage === "en" && !pathname?.startsWith("/en")) {
-      router.push(`/en${pathname}`)
-    } else if (newLanguage === "he" && pathname?.startsWith("/en")) {
-      router.push(pathname.replace(/^\/en/, ""))
-    }
+    setLanguage(language === "he" ? "en" : "he")
   }
 
   return (
     <Button
-      variant="ghost"
+      variant="outline"
       size="sm"
       onClick={toggleLanguage}
-      className="flex items-center gap-1 px-2 py-1 text-sm"
-      aria-label={language === "he" ? "Switch to English" : "עבור לעברית"}
+      className="text-gray-300 border-gray-700 hover:bg-gray-800 hover:text-white"
     >
       {language === "he" ? "English" : "עברית"}
     </Button>

@@ -4,22 +4,8 @@ const nextConfig = {
   swcMinify: true,
   i18n: {
     locales: ["he", "en"],
-    defaultLocale: "he", // Ensure Hebrew is the default
-    localeDetection: false, // Disable automatic locale detection
-    domains: [
-      {
-        domain: "tabuisrael.co.il",
-        defaultLocale: "he",
-      },
-      {
-        domain: "www.tabuisrael.co.il",
-        defaultLocale: "he",
-      },
-      {
-        domain: "en.tabuisrael.co.il", // Optional: Use subdomain for English
-        defaultLocale: "en",
-      },
-    ],
+    defaultLocale: "he",
+    localeDetection: true,
   },
   images: {
     domains: ["tabuisrael.co.il"],
@@ -27,6 +13,8 @@ const nextConfig = {
     unoptimized: true,
   },
   experimental: {
+    // Remove optimizeCss to avoid the critters dependency
+    // optimizeCss: true,
     scrollRestoration: true,
   },
   compiler: {

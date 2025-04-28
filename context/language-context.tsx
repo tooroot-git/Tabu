@@ -123,14 +123,6 @@ const translations: TranslationObject = {
     en: "Close Menu",
     he: "סגור תפריט",
   },
-  pageNotFound: {
-    en: "Page Not Found",
-    he: "דף לא נמצא",
-  },
-  returnHome: {
-    en: "Return to Home",
-    he: "חזרה לדף הבית",
-  },
 }
 
 interface LanguageContextType {
@@ -186,9 +178,6 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const setLanguage = useCallback(
     (lang: Language) => {
       setLanguageState(lang)
-
-      // Don't change URL - language switching will be handled via UI only
-      // This prevents unwanted redirects
 
       // Force refresh to apply RTL/LTR changes properly
       router.refresh()
