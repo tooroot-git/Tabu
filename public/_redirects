@@ -1,0 +1,9 @@
+# Redirect www to non-www
+https://www.tabuisrael.co.il/* https://tabuisrael.co.il/:splat 301!
+
+# Redirect /en paths to Hebrew version
+/en / 301!
+/en/* /:splat 301!
+
+# Handle 404s
+/* /index.html 200

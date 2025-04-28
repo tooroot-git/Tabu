@@ -60,15 +60,15 @@
     "zod": "^3.24.1",
     "@supabase/supabase-js": "latest",
     "@emotion/is-prop-valid": "latest",
-    "stripe": "latest",
     "@auth0/nextjs-auth0": "latest",
     "resend": "latest",
-    "uuid": "latest",
     "@supabase/auth-helpers-nextjs": "latest",
+    "stripe": "latest",
     "micro": "latest",
     "@supabase/ssr": "latest",
     "@stripe/stripe-js": "latest",
-    "framer-motion": "latest"
+    "framer-motion": "latest",
+    "uuid": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

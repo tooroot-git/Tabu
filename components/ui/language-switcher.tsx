@@ -1,10 +1,10 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/context/language-context"
+import { Button } from "@/components/ui/button"
 
-export function LanguageSwitcher({ currentLanguage }: { currentLanguage?: string }) {
-  const { language, setLanguage } = useLanguage()
+export function LanguageSwitcher() {
+  const { language, setLanguage, isRTL } = useLanguage()
 
   const toggleLanguage = () => {
     setLanguage(language === "he" ? "en" : "he")
@@ -12,10 +12,9 @@ export function LanguageSwitcher({ currentLanguage }: { currentLanguage?: string
 
   return (
     <Button
-      variant="outline"
-      size="sm"
       onClick={toggleLanguage}
-      className="text-gray-300 border-gray-700 hover:bg-gray-800 hover:text-white"
+      variant="outline"
+      className="bg-transparent border border-gray-600 hover:bg-gray-800 text-white"
     >
       {language === "he" ? "English" : "עברית"}
     </Button>

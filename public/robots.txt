@@ -1,15 +1,27 @@
+# robots.txt for tabuisrael.co.il
 User-agent: *
 Allow: /
 
-# Disallow private and admin routes
-Disallow: /api/
+# Disallow admin and private areas
 Disallow: /admin/
+Disallow: /api/
 Disallow: /dashboard/
 Disallow: /my-orders/
-Disallow: /settings/
 Disallow: /profile/
-Disallow: /reset-password/
-Disallow: /forgot-password/
+Disallow: /settings/
+
+# Allow important public pages
+Allow: /order
+Allow: /document-selection
+Allow: /payment
+Allow: /confirmation
+Allow: /about
+Allow: /contact
+Allow: /faq
+Allow: /services
+Allow: /terms
+Allow: /privacy
+Allow: /accessibility
 
 # Sitemap location
 Sitemap: https://tabuisrael.co.il/sitemap.xml

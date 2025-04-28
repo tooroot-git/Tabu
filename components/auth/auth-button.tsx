@@ -1,42 +1,40 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { useAuth } from "@/components/auth/auth-provider"
+import { useAuth } from "@/context/auth-context"
+import { useLanguage } from "@/context/language-context"
+import Link from "next/link"
 
-interface AuthButtonProps {
-  variant?: "default" | "outline" | "secondary" | "ghost" | "link" | "destructive"
-  size?: "default" | "sm" | "lg" | "icon"
-  className?: string
-}
+export function AuthButton() {
+  const { user, signOut, isLoading } = useAuth()
+  const { isRTL } = useLanguage()
 
-export function AuthButton({ variant = "default", size = "default", className = "" }: AuthButtonProps) {
-  const { user, signOut } = useAuth()
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
+  if (isLoading) {
+    return (
+      <Button variant="ghost" size="sm" disabled>
+        <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+      </Button>
+    )
+  }
 
-  const handleAuth = async () => {
-    if (user) {
-      setIsLoading(true)
-      try {
-        await signOut()
-        router.push("/")
-      } catch (error) {
-        console.error("Error signing out:", error)
-      } finally {
-        setIsLoading(false)
-      }
-    } else {
-      router.push("/login")
-    }
+  if (user) {
+    return (
+      <Button
+        onClick={() => signOut()}
+        variant="ghost"
+        size="sm"
+        className="text-gray-200 hover:text-white hover:bg-primary-700"
+      >
+        {isRTL ? "התנתק" : "Sign Out"}
+      </Button>
+    )
   }
 
   return (
-    <Button variant={variant} size={size} className={className} onClick={handleAuth} disabled={isLoading}>
-      {isLoading ? "טוען..." : user ? "התנתק" : "התחבר"}
-    </Button>
+    <Link href="/login">
+      <Button variant="ghost" size="sm" className="text-gray-200 hover:text-white hover:bg-primary-700">
+        {isRTL ? "התחבר" : "Sign In"}
+      </Button>
+    </Link>
   )
 }
-
-export default AuthButton

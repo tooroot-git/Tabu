@@ -1,32 +1,44 @@
 /**
- * Utility to validate Supabase environment variables
- * This helps identify missing or invalid environment variables early
+ * Validates that required environment variables are present
+ * @returns Object with validation results
  */
+export function validateEnvironmentVariables() {
+  const missingVars = []
 
-export function validateSupabaseEnv(): { valid: boolean; missing: string[] } {
-  const requiredVars = ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"]
+  // Supabase variables
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    missingVars.push("NEXT_PUBLIC_SUPABASE_URL")
+  }
 
-  const missing = requiredVars.filter((varName) => {
-    const value = process.env[varName]
-    return !value || value.trim() === ""
-  })
+  if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    missingVars.push("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+  }
+
+  // Stripe variables (if used)
+  if (!process.env.STRIPE_SECRET_KEY) {
+    missingVars.push("STRIPE_SECRET_KEY")
+  }
+
+  if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
+    missingVars.push("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY")
+  }
 
   return {
-    valid: missing.length === 0,
-    missing,
+    isValid: missingVars.length === 0,
+    missingVars,
+    hasSupabase: process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    hasStripe: process.env.STRIPE_SECRET_KEY && process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
   }
 }
 
-// This function can be called during initialization to log warnings
+/**
+ * Logs missing environment variables to the console
+ */
 export function logEnvWarnings() {
-  if (process.env.NODE_ENV === "development") {
-    const { valid, missing } = validateSupabaseEnv()
+  const { isValid, missingVars } = validateEnvironmentVariables()
 
-    if (!valid) {
-      console.warn(
-        `⚠️ Missing Supabase environment variables: ${missing.join(", ")}. ` +
-          `This may cause the "Add Supabase integration" message to appear.`,
-      )
-    }
+  if (!isValid) {
+    console.warn("⚠️ Missing environment variables:", missingVars.join(", "))
+    console.warn("Some functionality may be limited.")
   }
 }

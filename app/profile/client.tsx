@@ -3,109 +3,50 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
+import { useAuth } from "@/context/auth-context"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useLanguage } from "@/context/language-context"
-import { useAuth } from "@/context/auth-context"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
-
-interface UserProfile {
-  id: string
-  first_name?: string
-  last_name?: string
-  phone?: string
-  address?: string
-  created_at?: string
-}
 
 export default function ProfileClient() {
+  const { user, isLoading } = useAuth()
+  const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [message, setMessage] = useState("")
   const { isRTL } = useLanguage()
-  const { user } = useAuth()
-  const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [firstName, setFirstName] = useState("")
-  const [lastName, setLastName] = useState("")
-  const [phone, setPhone] = useState("")
-  const [address, setAddress] = useState("")
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const supabase = createClientComponentClient()
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      if (!user) {
-        setIsLoading(false)
-        return
-      }
-
-      const supabase = createClientComponentClient()
-
-      try {
-        const { data, error } = await supabase.from("profiles").select("*").eq("id", user.id).single()
-
-        if (error) throw error
-
-        if (data) {
-          setProfile(data)
-          setFirstName(data.first_name || "")
-          setLastName(data.last_name || "")
-          setPhone(data.phone || "")
-          setAddress(data.address || "")
-        }
-      } catch (err: any) {
-        console.error("Error fetching profile:", err)
-        setError(err.message)
-      } finally {
-        setIsLoading(false)
-      }
+    if (user) {
+      setEmail(user.email || "")
+      setName(user.user_metadata?.full_name || "")
     }
-
-    fetchProfile()
   }, [user])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const updateProfile = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user) return
 
-    setIsSaving(true)
-    setError(null)
-    setSuccessMessage(null)
-
-    const supabase = createClientComponentClient()
+    setIsUpdating(true)
+    setMessage("")
 
     try {
-      const updates = {
-        id: user.id,
-        first_name: firstName,
-        last_name: lastName,
-        phone,
-        address,
-        updated_at: new Date().toISOString(),
-      }
-
-      const { error } = await supabase.from("profiles").upsert(updates).eq("id", user.id)
+      const { error } = await supabase.auth.updateUser({
+        data: { full_name: name },
+      })
 
       if (error) throw error
 
-      setSuccessMessage(isRTL ? "הפרופיל עודכן בהצלחה" : "Profile updated successfully")
-    } catch (err: any) {
-      setError(err.message)
+      setMessage(isRTL ? "הפרופיל עודכן בהצלחה" : "Profile updated successfully")
+    } catch (error: any) {
+      console.error("Error updating profile:", error)
+      setMessage(error.message || (isRTL ? "אירעה שגיאה בעדכון הפרופיל" : "Error updating profile"))
     } finally {
-      setIsSaving(false)
+      setIsUpdating(false)
     }
-  }
-
-  if (!user) {
-    return (
-      <div className="text-center py-8">
-        <p>{isRTL ? "אנא התחבר כדי לצפות בפרופיל שלך" : "Please log in to view your profile"}</p>
-        <Button className="mt-4" onClick={() => (window.location.href = "/login")}>
-          {isRTL ? "התחברות" : "Log In"}
-        </Button>
-      </div>
-    )
   }
 
   if (isLoading) {
@@ -116,82 +57,44 @@ export default function ProfileClient() {
     )
   }
 
+  if (!user) {
+    return (
+      <div className="text-center py-8">
+        <p>{isRTL ? "אנא התחבר כדי לצפות בפרופיל שלך" : "Please log in to view your profile"}</p>
+      </div>
+    )
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-      {successMessage && (
-        <Alert>
-          <AlertDescription>{successMessage}</AlertDescription>
-        </Alert>
-      )}
-
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="firstName">{isRTL ? "שם פרטי" : "First Name"}</Label>
-            <Input
-              id="firstName"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              placeholder={isRTL ? "הזן שם פרטי" : "Enter first name"}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="lastName">{isRTL ? "שם משפחה" : "Last Name"}</Label>
-            <Input
-              id="lastName"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              placeholder={isRTL ? "הזן שם משפחה" : "Enter last name"}
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="email">{isRTL ? "אימייל" : "Email"}</Label>
-          <Input id="email" value={user?.email || ""} disabled dir="ltr" />
-          <p className="text-sm text-gray-500">
-            {isRTL ? "לא ניתן לשנות את כתובת האימייל" : "Email address cannot be changed"}
-          </p>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="phone">{isRTL ? "טלפון" : "Phone"}</Label>
-          <Input
-            id="phone"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder={isRTL ? "הזן מספר טלפון" : "Enter phone number"}
-            dir="ltr"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="address">{isRTL ? "כתובת" : "Address"}</Label>
-          <Input
-            id="address"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            placeholder={isRTL ? "הזן כתובת" : "Enter address"}
-          />
-        </div>
+    <form onSubmit={updateProfile} className="space-y-6">
+      <div className="space-y-2">
+        <Label htmlFor="email">{isRTL ? "אימייל" : "Email"}</Label>
+        <Input id="email" type="email" value={email} disabled />
+        <p className="text-sm text-gray-500">
+          {isRTL ? "לא ניתן לשנות את כתובת האימייל" : "Email address cannot be changed"}
+        </p>
       </div>
 
-      <Button type="submit" className="bg-gradient-to-r from-primary-500 to-primary-600 text-white" disabled={isSaving}>
-        {isSaving ? (
-          <span className="flex items-center">
-            <span className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
-            {isRTL ? "שומר..." : "Saving..."}
-          </span>
-        ) : isRTL ? (
-          "שמור שינויים"
-        ) : (
-          "Save Changes"
-        )}
+      <div className="space-y-2">
+        <Label htmlFor="name">{isRTL ? "שם מלא" : "Full Name"}</Label>
+        <Input
+          id="name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder={isRTL ? "הזן את שמך המלא" : "Enter your full name"}
+        />
+      </div>
+
+      {message && (
+        <div
+          className={`p-3 rounded-md ${message.includes("Error") ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}
+        >
+          {message}
+        </div>
+      )}
+
+      <Button type="submit" disabled={isUpdating}>
+        {isUpdating ? (isRTL ? "מעדכן..." : "Updating...") : isRTL ? "עדכן פרופיל" : "Update Profile"}
       </Button>
     </form>
   )

@@ -1,7 +1,6 @@
 import type React from "react"
 import "./globals.css"
 import type { Metadata } from "next"
-import { Inter, Montserrat } from "next/font/google"
 import { LanguageProvider } from "@/context/language-context"
 import { AuthProvider } from "@/context/auth-context"
 import Script from "next/script"
@@ -9,35 +8,28 @@ import { logEnvWarnings } from "@/utils/validate-env"
 import { GoogleAnalytics } from "@/components/analytics/google-analytics"
 import { GoogleConsent } from "@/components/analytics/google-consent"
 import { CookieConsent } from "@/components/cookie-consent"
+import { Header } from "@/components/layout/header"
+import { Footer } from "@/components/layout/footer"
+import { inter, montserrat, heebo } from "@/lib/fonts"
 
 // Log any environment variable warnings during initialization
 if (typeof window === "undefined") {
   logEnvWarnings()
 }
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap", // Improves performance by allowing the font to be displayed before it's fully loaded
-})
-
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  variable: "--font-montserrat",
-  weight: ["300", "400", "500", "600", "700", "800", "900"],
-  display: "swap", // Improves performance
-})
+// Define a valid base URL for metadata
+const SITE_URL = "https://tabuisrael.co.il"
 
 export const metadata: Metadata = {
   title: "נסח טאבו רשמי תוך דקות | טאבו ישראל",
   description:
     "נסח טאבו חתום דיגיטלית אונליין תוך דקות. הזמנת נסח לפי גוש חלקה או כתובת. טאבו ישראל - שירות מהיר, מאובטח ומקצועי.",
-  metadataBase: new URL("https://tabuisrael.co.il"),
+  metadataBase: new URL(SITE_URL),
   alternates: {
     canonical: "/",
     languages: {
       en: "/en",
-      he: "/he",
+      he: "/",
     },
   },
   keywords: "נסח טאבו, טאבו אונליין, הזמנת נסח טאבו, נסח קרקע, טאבו, נסח חלקה, נסח טאבו מהיר, נסח טאבו דיגיטלי",
@@ -49,13 +41,13 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    url: "https://tabuisrael.co.il",
+    url: SITE_URL,
     title: "נסח טאבו תוך דקות - טאבו ישראל",
     description: "הזמן נסח טאבו דיגיטלי באינטרנט בקלות ובמהירות דרך טאבו ישראל. שירות מהיר, מקצועי ומאובטח.",
     siteName: "טאבו ישראל",
     images: [
       {
-        url: "https://tabuisrael.co.il/og-image.png",
+        url: `${SITE_URL}/og-image.png`,
         width: 1200,
         height: 630,
         alt: "טאבו ישראל - נסח טאבו רשמי",
@@ -67,7 +59,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "נסח טאבו תוך דקות - טאבו ישראל",
     description: "הזמן נסח טאבו דיגיטלי באינטרנט בקלות ובמהירות דרך טאבו ישראל. שירות מהיר, מקצועי ומאובטח.",
-    images: ["https://tabuisrael.co.il/og-image.png"],
+    images: [`${SITE_URL}/og-image.png`],
   },
   verification: {
     google: "YOUR_GOOGLE_VERIFICATION_CODE",
@@ -98,7 +90,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
-      <body className={`${inter.variable} ${montserrat.variable} font-sans`}>
+      <body className={`${inter.variable} ${montserrat.variable} ${heebo.variable} font-sans`}>
         {/* Google Consent Mode */}
         <GoogleConsent measurementId="G-90GNK6C2PY" />
 
@@ -113,7 +105,11 @@ export default function RootLayout({
         <AuthProvider>
           <LanguageProvider>
             <div className="flex min-h-screen flex-col bg-[#0A0E17] text-white">
-              {children}
+              <Header />
+              <main id="main-content" className="flex-grow">
+                {children}
+              </main>
+              <Footer />
               <CookieConsent />
             </div>
           </LanguageProvider>
@@ -128,8 +124,8 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "Organization",
               name: "טאבו ישראל",
-              url: "https://tabuisrael.co.il",
-              logo: "https://tabuisrael.co.il/logo.png",
+              url: SITE_URL,
+              logo: `${SITE_URL}/logo.png`,
               contactPoint: {
                 "@type": "ContactPoint",
                 telephone: "+972-1-700-700-830",
@@ -153,12 +149,12 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebSite",
-              url: "https://tabuisrael.co.il",
+              url: SITE_URL,
               name: "טאבו ישראל - נסח טאבו רשמי תוך דקות",
               description: "הזמנת נסח טאבו רשמי ומעודכן לפי גוש, חלקה וכתובת – 100% דיגיטלי ומאובטח.",
               potentialAction: {
                 "@type": "SearchAction",
-                target: "https://tabuisrael.co.il/search?q={search_term_string}",
+                target: `${SITE_URL}/search?q={search_term_string}`,
                 "query-input": "required name=search_term_string",
               },
               inLanguage: "he-IL",

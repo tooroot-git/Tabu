@@ -64,17 +64,16 @@ export default function LoginPage() {
         // Force a refresh to ensure the session is properly set
         await supabase.auth.refreshSession()
 
-        // Add a small delay to ensure session is properly set
-        setTimeout(() => {
-          console.log("Redirecting to:", returnTo)
-          router.push(returnTo)
-          router.refresh()
-        }, 500)
+        // Redirect immediately without setTimeout
+        console.log("Redirecting to:", returnTo)
+        router.push(returnTo)
+        router.refresh()
       }
     } catch (error: any) {
       console.error("Login error:", error)
       setError(error.message || "Failed to sign in")
       setIsLoading(false)
+      setIsRedirecting(false)
     }
   }
 
@@ -84,6 +83,13 @@ export default function LoginPage() {
         <div className="text-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent mx-auto mb-4"></div>
           <p className="text-gray-400">{isRTL ? "מעביר אותך..." : "Redirecting..."}</p>
+          {/* Add a backup link in case redirect fails */}
+          <button
+            onClick={() => router.push(returnTo)}
+            className="mt-4 text-primary-400 hover:text-primary-300 underline text-sm"
+          >
+            {isRTL ? "לחץ כאן אם אינך מועבר אוטומטית" : "Click here if not redirected automatically"}
+          </button>
         </div>
       </div>
     )

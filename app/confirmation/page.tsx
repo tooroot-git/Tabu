@@ -1,278 +1,268 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useSearchParams } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { CheckCircle, AlertCircle } from "lucide-react"
-import Link from "next/link"
 import { useLanguage } from "@/context/language-context"
-import { Header } from "@/components/layout/header"
-import { Footer } from "@/components/layout/footer"
-import { getOrderById, getServiceName } from "@/lib/orders"
-import { updateOrderStatus } from "@/lib/orders"
-import { Stepper } from "@/components/ui/stepper"
-import { MetaTags } from "@/components/seo/meta-tags"
-import { StructuredData } from "@/components/seo/structured-data"
+import { CheckCircle, AlertCircle } from "lucide-react"
+
+// Maximum number of retry attempts
+const MAX_RETRIES = 3
+// Delay between retries in milliseconds (starts at 1s, then 2s, then 4s with exponential backoff)
+const RETRY_DELAY = 1000
 
 export default function ConfirmationPage() {
-  const searchParams = useSearchParams()
   const { isRTL } = useLanguage()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
   const [isLoading, setIsLoading] = useState(true)
   const [orderDetails, setOrderDetails] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
+  const [botProcessing, setBotProcessing] = useState(false)
+  const [botProcessed, setBotProcessed] = useState(false)
+  const [botError, setBotError] = useState<string | null>(null)
+  const [retryCount, setRetryCount] = useState(0)
 
-  const orderId = searchParams.get("order_id")
+  // Get session ID from URL params
+  const sessionId = searchParams.get("session_id")
 
+  // Fetch order details
   useEffect(() => {
-    async function fetchOrderDetails() {
-      if (!orderId) {
+    const fetchOrderDetails = async () => {
+      if (!sessionId) {
         setIsLoading(false)
         return
       }
 
       try {
-        // Fetch order details
-        const order = await getOrderById(orderId)
-        setOrderDetails(order)
+        const response = await fetch(`/api/orders/session?session_id=${sessionId}`)
+        const data = await response.json()
 
-        // Update order status to paid if it's still pending
-        if (order.status === "pending") {
-          await updateOrderStatus(orderId, "paid", searchParams.get("payment_intent") || undefined)
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to fetch order details")
         }
-      } catch (err) {
+
+        setOrderDetails(data.order)
+        console.log("Order details fetched successfully:", data.order)
+      } catch (err: any) {
         console.error("Error fetching order details:", err)
-        setError(isRTL ? "אירעה שגיאה בטעינת פרטי ההזמנה" : "An error occurred loading order details")
+        setError(err.message || "An error occurred while fetching order details")
       } finally {
         setIsLoading(false)
       }
     }
 
     fetchOrderDetails()
-  }, [orderId, isRTL, searchParams])
+  }, [sessionId])
 
-  const steps = [
-    {
-      title: isRTL ? "פרטי נכס" : "Property Details",
-      status: "completed" as const,
-    },
-    {
-      title: isRTL ? "בחירת מסמך" : "Document Selection",
-      status: "completed" as const,
-    },
-    {
-      title: isRTL ? "תשלום" : "Payment",
-      status: "completed" as const,
-    },
-    {
-      title: isRTL ? "אישור" : "Confirmation",
-      status: "current" as const,
-    },
-  ]
+  // Send order to bot service after successful payment with retry mechanism
+  useEffect(() => {
+    const sendOrderToBot = async () => {
+      if (!orderDetails || botProcessing || botProcessed || retryCount >= MAX_RETRIES) return
 
-  const title = isRTL
-    ? "ההזמנה התקבלה – טאבו דיגיטלי נשלח למייל"
-    : "Order Received - Digital Land Registry Sent to Email"
+      setBotProcessing(true)
 
-  const description = isRTL
-    ? "תודה על ההזמנה! המסמך שלך ישלח למייל תוך מספר דקות."
-    : "Thank you for your order! Your document will be sent to your email within minutes."
+      try {
+        // Determine search type based on available fields
+        const searchType = orderDetails.street && orderDetails.city ? "address" : "block"
 
-  if (isLoading) {
-    return (
-      <>
-        <MetaTags title={title} description={description} />
+        // Prepare payload based on the search type
+        const payload = {
+          user_id: orderDetails.user_id || "",
+          email: orderDetails.email || "",
+          search_type: searchType,
+          city: searchType === "address" ? orderDetails.city || "" : "",
+          street: searchType === "address" ? orderDetails.street || "" : "",
+          house_number: searchType === "address" ? orderDetails.house_number || "" : "",
+          block: searchType === "block" ? orderDetails.block || "" : "",
+          parcel: searchType === "block" ? orderDetails.parcel || "" : "",
+          subparcel: searchType === "block" ? orderDetails.subparcel || "" : "",
+          service_type: orderDetails.service_type || "regular",
+        }
 
-        <div className="flex min-h-screen flex-col bg-[#0A0E17] text-white">
-          <Header />
-          <main className="flex-1 py-24">
-            <div className="container mx-auto px-4">
-              <div className="flex flex-col items-center justify-center min-h-[400px]">
-                <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"></div>
-                <p className="mt-4 text-gray-400">{isRTL ? "טוען פרטי הזמנה..." : "Loading order details..."}</p>
-              </div>
-            </div>
-          </main>
-          <Footer />
-        </div>
-      </>
-    )
-  }
+        console.log(`Sending order to bot service (attempt ${retryCount + 1}/${MAX_RETRIES}):`, payload)
 
-  if (!orderId || error) {
-    return (
-      <>
-        <MetaTags
-          title={isRTL ? "שגיאה בעיבוד ההזמנה | טאבוי ישראל" : "Order Processing Error | TabuIsrael"}
-          description={
-            isRTL
-              ? "אירעה שגיאה בעיבוד ההזמנה. אנא צור קשר עם התמיכה."
-              : "An error occurred while processing your order. Please contact support."
-          }
-          noindex={true}
-        />
+        const botServiceUrl = "https://order.tabuisrael.co.il/run-order"
+        const response = await fetch(botServiceUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        })
 
-        <div className="flex min-h-screen flex-col bg-[#0A0E17] text-white">
-          <Header />
-          <main className="flex-1 py-24">
-            <div className="container mx-auto px-4">
-              <div className="max-w-2xl mx-auto">
-                <Card className="border-red-800 bg-gray-900 shadow-lg">
-                  <CardHeader className="text-center pb-4">
-                    <div className="flex justify-center mb-4">
-                      <AlertCircle className="h-16 w-16 text-red-500" />
-                    </div>
-                    <CardTitle className="text-2xl text-red-400">
-                      {isRTL ? "שגיאה בעיבוד ההזמנה" : "Order Processing Error"}
-                    </CardTitle>
-                    <CardDescription className="text-red-300/80 mt-2">
-                      {error ||
-                        (isRTL
-                          ? "לא ניתן למצוא את פרטי ההזמנה. אנא צור קשר עם התמיכה."
-                          : "Order details could not be found. Please contact support.")}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardFooter className="flex justify-center pt-4 pb-6">
-                    <Link href="/">
-                      <Button size="lg">{isRTL ? "חזרה לדף הבית" : "Return to Home"}</Button>
-                    </Link>
-                  </CardFooter>
-                </Card>
-              </div>
-            </div>
-          </main>
-          <Footer />
-        </div>
-      </>
-    )
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.message || `Failed with status: ${response.status}`)
+        }
+
+        console.log("Order successfully sent to bot service")
+        setBotProcessed(true)
+        setBotError(null)
+      } catch (err: any) {
+        console.error(`Error sending order to bot service (attempt ${retryCount + 1}/${MAX_RETRIES}):`, err)
+        setBotError(err.message || "Failed to send order to bot service")
+
+        // If we haven't reached max retries, schedule another attempt with exponential backoff
+        if (retryCount < MAX_RETRIES - 1) {
+          const nextRetryDelay = RETRY_DELAY * Math.pow(2, retryCount)
+          console.log(`Scheduling retry in ${nextRetryDelay}ms...`)
+
+          setTimeout(() => {
+            setRetryCount(retryCount + 1)
+            setBotProcessing(false)
+          }, nextRetryDelay)
+        } else {
+          console.error("Max retry attempts reached. Order will need to be processed manually.")
+          // We'll still mark it as processed to prevent further retries
+          setBotProcessed(true)
+        }
+      }
+    }
+
+    if (orderDetails && !botProcessing && !botProcessed) {
+      sendOrderToBot()
+    }
+  }, [orderDetails, botProcessing, botProcessed, retryCount])
+
+  // Function to manually retry sending to bot
+  const handleManualRetry = () => {
+    if (botProcessed) {
+      setBotProcessed(false)
+      setBotProcessing(false)
+      setRetryCount(0)
+      setBotError(null)
+    }
   }
 
   return (
-    <>
-      <MetaTags title={title} description={description} />
-      <StructuredData type="Order" data={{ orderId }} />
-
-      <div className="flex min-h-screen flex-col bg-[#0A0E17] text-white">
-        <Header />
-        <main className="flex-1 py-24">
-          <div className="container mx-auto px-4">
-            <div className="mx-auto max-w-3xl">
-              <Stepper steps={steps} currentStep={3} className="mb-8" />
-
-              <Card className="max-w-2xl mx-auto shadow-lg border-green-800 bg-gray-900">
-                <CardHeader className="text-center pb-4">
-                  <div className="flex justify-center mb-4">
-                    <div className="h-20 w-20 rounded-full bg-green-900/30 flex items-center justify-center">
-                      <CheckCircle className="h-12 w-12 text-green-500" />
-                    </div>
-                  </div>
-                  <CardTitle className="text-2xl text-green-400">
-                    {isRTL ? "ההזמנה התקבלה בהצלחה!" : "Order Successfully Received!"}
-                  </CardTitle>
-                  <CardDescription className="mt-2 text-base text-gray-300">
-                    {isRTL
-                      ? "תודה על הזמנתך. המסמך יישלח לכתובת האימייל שסיפקת."
-                      : "Thank you for your order. The document will be sent to the email address you provided."}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="px-6 py-6">
-                  <div className="space-y-6">
-                    <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
-                      <h3 className="font-medium text-white text-lg mb-4">{isRTL ? "פרטי הזמנה" : "Order Details"}</h3>
-                      <div className="grid grid-cols-2 gap-y-4 text-sm">
-                        <div className="text-gray-400 font-medium">{isRTL ? "מספר הזמנה" : "Order ID"}</div>
-                        <div className="font-mono text-white">{orderDetails.id}</div>
-                        <div className="text-gray-400 font-medium">{isRTL ? "סוג מסמך" : "Document Type"}</div>
-                        <div className="text-white">{getServiceName(orderDetails.service_type, isRTL)}</div>
-                        {orderDetails.block && (
-                          <>
-                            <div className="text-gray-400 font-medium">{isRTL ? "גוש" : "Block"}</div>
-                            <div className="text-white">{orderDetails.block}</div>
-                          </>
-                        )}
-                        {orderDetails.parcel && (
-                          <>
-                            <div className="text-gray-400 font-medium">{isRTL ? "חלקה" : "Parcel"}</div>
-                            <div className="text-white">{orderDetails.parcel}</div>
-                          </>
-                        )}
-                        {orderDetails.subparcel && (
-                          <>
-                            <div className="text-gray-400 font-medium">{isRTL ? "תת-חלקה" : "Sub-Parcel"}</div>
-                            <div className="text-white">{orderDetails.subparcel}</div>
-                          </>
-                        )}
-                        {orderDetails.street && (
-                          <>
-                            <div className="text-gray-400 font-medium">{isRTL ? "רחוב" : "Street"}</div>
-                            <div className="text-white">{orderDetails.street}</div>
-                          </>
-                        )}
-                        {orderDetails.house_number && (
-                          <>
-                            <div className="text-gray-400 font-medium">{isRTL ? "מספר בית" : "House Number"}</div>
-                            <div className="text-white">{orderDetails.house_number}</div>
-                          </>
-                        )}
-                        {orderDetails.city && (
-                          <>
-                            <div className="text-gray-400 font-medium">{isRTL ? "עיר" : "City"}</div>
-                            <div className="text-white">{orderDetails.city}</div>
-                          </>
-                        )}
-                        {orderDetails.email && (
-                          <>
-                            <div className="text-gray-400 font-medium">{isRTL ? "אימייל" : "Email"}</div>
-                            <div className="break-all text-white">{orderDetails.email}</div>
-                          </>
-                        )}
-                        <div className="text-gray-400 font-medium">{isRTL ? "סטטוס" : "Status"}</div>
-                        <div className="font-medium">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/30 text-green-400">
-                            {isRTL ? "שולם" : "Paid"}
-                          </span>
-                        </div>
-                        <div className="text-gray-400 font-medium">{isRTL ? "מחיר" : "Price"}</div>
-                        <div className="font-medium text-white">₪{orderDetails.price}</div>
-                      </div>
-                    </div>
-
-                    <div className="bg-blue-900/20 p-6 rounded-lg border border-blue-800/30">
-                      <h3 className="font-medium text-blue-300 text-lg mb-3">{isRTL ? "מה הלאה?" : "What's Next?"}</h3>
-                      <ul className="mt-2 text-sm text-blue-200 space-y-3 list-disc list-inside">
-                        <li>
-                          {isRTL
-                            ? "המסמך שהזמנת יעובד ויישלח לאימייל שלך בהקדם האפשרי."
-                            : "Your ordered document will be processed and sent to your email as soon as possible."}
-                        </li>
-                        <li>
-                          {isRTL
-                            ? "תוכל לעקוב אחר סטטוס ההזמנה שלך באזור האישי."
-                            : "You can track your order status in your personal area."}
-                        </li>
-                        <li>
-                          {isRTL
-                            ? "אם יש לך שאלות, אנא צור קשר עם התמיכה שלנו."
-                            : "If you have any questions, please contact our support."}
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="flex flex-col sm:flex-row gap-4 justify-center pt-4 pb-6 border-t border-gray-700">
-                  <Button variant="outline" size="lg" asChild>
-                    <Link href="/">{isRTL ? "חזרה לדף הבית" : "Return to Home"}</Link>
-                  </Button>
-                  <Button size="lg" asChild>
-                    <Link href="/my-orders">{isRTL ? "צפה בהזמנות שלי" : "View My Orders"}</Link>
-                  </Button>
-                </CardFooter>
-              </Card>
-            </div>
+    <div className="container py-12">
+      <Card className="mx-auto max-w-2xl">
+        <CardHeader className="text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/20">
+            <CheckCircle className="h-10 w-10 text-green-600 dark:text-green-400" />
           </div>
-        </main>
-        <Footer />
-      </div>
-    </>
+          <CardTitle className="text-2xl">{isRTL ? "תודה על הזמנתך!" : "Thank you for your order!"}</CardTitle>
+          <CardDescription>
+            {isRTL
+              ? "הזמנתך התקבלה בהצלחה והמסמך שלך יישלח אליך למייל ברגע שהוא יופק"
+              : "Your order has been successfully processed and your document will be sent to your email as soon as it's generated"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent"></div>
+            </div>
+          ) : error ? (
+            <div className="rounded-md bg-red-50 p-4 text-red-700 dark:bg-red-900/20 dark:text-red-300">
+              <p>{error}</p>
+            </div>
+          ) : orderDetails ? (
+            <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-900">
+              <h3 className="font-medium">{isRTL ? "פרטי הזמנה" : "Order Details"}</h3>
+              <div className="mt-2 space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span>{isRTL ? "מספר הזמנה" : "Order ID"}</span>
+                  <span className="font-medium">{orderDetails.id}</span>
+                </div>
+                {orderDetails.block && (
+                  <div className="flex justify-between">
+                    <span>{isRTL ? "גוש" : "Block"}</span>
+                    <span className="font-medium">{orderDetails.block}</span>
+                  </div>
+                )}
+                {orderDetails.parcel && (
+                  <div className="flex justify-between">
+                    <span>{isRTL ? "חלקה" : "Parcel"}</span>
+                    <span className="font-medium">{orderDetails.parcel}</span>
+                  </div>
+                )}
+                {orderDetails.subparcel && (
+                  <div className="flex justify-between">
+                    <span>{isRTL ? "תת-חלקה" : "Subparcel"}</span>
+                    <span className="font-medium">{orderDetails.subparcel}</span>
+                  </div>
+                )}
+                {orderDetails.city && (
+                  <div className="flex justify-between">
+                    <span>{isRTL ? "עיר" : "City"}</span>
+                    <span className="font-medium">{orderDetails.city}</span>
+                  </div>
+                )}
+                {orderDetails.street && (
+                  <div className="flex justify-between">
+                    <span>{isRTL ? "רחוב" : "Street"}</span>
+                    <span className="font-medium">{orderDetails.street}</span>
+                  </div>
+                )}
+                {orderDetails.house_number && (
+                  <div className="flex justify-between">
+                    <span>{isRTL ? "מספר בית" : "House Number"}</span>
+                    <span className="font-medium">{orderDetails.house_number}</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span>{isRTL ? "סוג מסמך" : "Document Type"}</span>
+                  <span className="font-medium">{orderDetails.service_type}</span>
+                </div>
+                <div className="flex justify-between border-t border-gray-200 pt-2 dark:border-gray-700">
+                  <span className="font-medium">{isRTL ? "סה״כ ששולם" : "Total Paid"}</span>
+                  <span className="font-bold">₪{orderDetails.price}</span>
+                </div>
+              </div>
+
+              {/* Bot processing status */}
+              {botProcessing && (
+                <div className="mt-4 flex items-center justify-center space-x-2 rounded-md bg-blue-50 p-3 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
+                  <span>{isRTL ? "מעבד את הזמנתך..." : "Processing your order..."}</span>
+                </div>
+              )}
+
+              {botError && botProcessed && (
+                <div className="mt-4 rounded-md bg-yellow-50 p-3 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300">
+                  <div className="flex items-center">
+                    <AlertCircle className="mr-2 h-4 w-4" />
+                    <span>{isRTL ? "הזמנתך תטופל ידנית" : "Your order will be processed manually"}</span>
+                  </div>
+                  <Button onClick={handleManualRetry} variant="outline" size="sm" className="mt-2 w-full">
+                    {isRTL ? "נסה שוב" : "Retry"}
+                  </Button>
+                </div>
+              )}
+
+              {botProcessed && !botError && (
+                <div className="mt-4 rounded-md bg-green-50 p-3 text-green-700 dark:bg-green-900/20 dark:text-green-300">
+                  <div className="flex items-center">
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    <span>
+                      {isRTL
+                        ? "הזמנתך נשלחה לעיבוד. המסמך יישלח למייל שלך בהקדם."
+                        : "Your order has been sent for processing. The document will be emailed to you shortly."}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-4">{isRTL ? "לא נמצאו פרטי הזמנה" : "No order details found"}</div>
+          )}
+        </CardContent>
+        <CardFooter className="flex flex-col space-y-2">
+          <Button
+            onClick={() => router.push("/my-orders")}
+            className="w-full bg-gradient-to-r from-primary-500 to-primary-600 text-white"
+          >
+            {isRTL ? "צפה בהזמנות שלי" : "View My Orders"}
+          </Button>
+          <Button onClick={() => router.push("/")} variant="outline" className="w-full">
+            {isRTL ? "חזרה לדף הבית" : "Return to Home"}
+          </Button>
+        </CardFooter>
+      </Card>
+    </div>
   )
 }

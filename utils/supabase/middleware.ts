@@ -9,13 +9,31 @@ export function createClient(request: NextRequest, options: { admin?: boolean } 
     },
   })
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  const supabaseKey = options.admin
-    ? process.env.SUPABASE_SERVICE_ROLE_KEY!
-    : process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  // Check if Supabase environment variables are available
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  // Validate URL format
+  const isValidUrl =
+    supabaseUrl &&
+    (supabaseUrl.startsWith("http://") || supabaseUrl.startsWith("https://")) &&
+    !supabaseUrl.includes("your-supabase-url")
+
+  // Validate keys format
+  const isValidAnonKey = supabaseAnonKey && !supabaseAnonKey.includes("your-supabase")
+  const isValidServiceKey = supabaseServiceRoleKey && !supabaseServiceRoleKey.includes("your-supabase")
+
+  if (!isValidUrl || (!isValidAnonKey && !options.admin) || (options.admin && !isValidServiceKey)) {
+    console.warn("Missing or invalid Supabase environment variables in middleware")
+    console.warn(`URL valid: ${isValidUrl}, Anon key valid: ${isValidAnonKey}, Service key valid: ${isValidServiceKey}`)
+    return { supabase: null, response }
+  }
+
+  const supabaseKey = options.admin ? supabaseServiceRoleKey! : supabaseAnonKey!
 
   // Create a Supabase client
-  const supabase = createServerClient(supabaseUrl, supabaseKey, {
+  const supabase = createServerClient(supabaseUrl!, supabaseKey, {
     cookies: {
       get(name: string) {
         return request.cookies.get(name)?.value

@@ -7,36 +7,48 @@ export async function middleware(request: NextRequest) {
   const res = NextResponse.next()
 
   try {
+    // Get the hostname and pathname
+    const hostname = request.headers.get("host") || ""
+    const { pathname, search } = request.nextUrl
+
+    // Handle www to non-www redirect (canonical domain)
+    if (hostname.startsWith("www.")) {
+      const nonWwwHostname = hostname.replace(/^www\./, "")
+      return NextResponse.redirect(`https://${nonWwwHostname}${pathname}${search}`, 301)
+    }
+
+    // Handle incorrect /en redirects
+    if (pathname === "/en" || pathname.startsWith("/en/")) {
+      const newPathname = pathname.replace(/^\/en\/?/, "/")
+      return NextResponse.redirect(`https://${hostname}${newPathname}${search}`, 301)
+    }
+
+    // Skip Supabase client creation if disabled
+    if (process.env.NEXT_PUBLIC_DISABLE_SUPABASE_CHECK === "true") {
+      return res
+    }
+
     // Create a Supabase client for the middleware
     const supabase = createMiddlewareClient({ req: request, res })
 
     // Refresh session if expired
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    // Debug log
-    console.log(
-      `Middleware: Path ${request.nextUrl.pathname}, Auth: ${session ? "Authenticated" : "Not authenticated"}`,
-    )
+    const { data } = await supabase.auth.getSession()
+    const session = data.session
 
     // Check if user is authenticated for protected routes
     const isProtectedRoute =
-      request.nextUrl.pathname.startsWith("/dashboard") ||
-      request.nextUrl.pathname.startsWith("/my-orders") ||
-      request.nextUrl.pathname.startsWith("/profile") ||
-      request.nextUrl.pathname.startsWith("/settings")
+      pathname.startsWith("/dashboard") ||
+      pathname.startsWith("/my-orders") ||
+      pathname.startsWith("/profile") ||
+      pathname.startsWith("/settings")
 
     if (!session && isProtectedRoute) {
-      // Redirect to login with return URL
-      const redirectUrl = new URL("/login", request.url)
-      redirectUrl.searchParams.set("returnTo", request.nextUrl.pathname)
-      return NextResponse.redirect(redirectUrl)
+      return NextResponse.redirect(`https://${hostname}/login?returnTo=${encodeURIComponent(pathname)}`)
     }
 
     // If user is authenticated and trying to access login/signup, redirect to dashboard
-    if (session && (request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/signup")) {
-      return NextResponse.redirect(new URL("/dashboard", request.url))
+    if (session && (pathname === "/login" || pathname === "/signup")) {
+      return NextResponse.redirect(`https://${hostname}/dashboard`)
     }
 
     return res
@@ -49,5 +61,5 @@ export async function middleware(request: NextRequest) {
 
 // Configure which paths should be handled by this middleware
 export const config = {
-  matcher: ["/dashboard/:path*", "/my-orders/:path*", "/profile/:path*", "/settings/:path*", "/login", "/signup"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)"],
 }
