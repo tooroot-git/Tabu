@@ -17,10 +17,18 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(`https://${nonWwwHostname}${pathname}${search}`, 301)
     }
 
-    // Handle incorrect /en redirects
-    if (pathname === "/en" || pathname.startsWith("/en/")) {
-      const newPathname = pathname.replace(/^\/en\/?/, "/")
-      return NextResponse.redirect(`https://${hostname}${newPathname}${search}`, 301)
+    // Handle language routing
+    // If hostname is en.tabuisrael.co.il, ensure path starts with /en
+    if (hostname.startsWith("en.")) {
+      if (!pathname.startsWith("/en")) {
+        return NextResponse.redirect(`https://${hostname}/en${pathname}${search}`, 301)
+      }
+    } else {
+      // For main domain, handle incorrect /en redirects
+      if (pathname === "/en" || pathname.startsWith("/en/")) {
+        const newPathname = pathname.replace(/^\/en\/?/, "/")
+        return NextResponse.redirect(`https://${hostname}${newPathname}${search}`, 301)
+      }
     }
 
     // Skip Supabase client creation if disabled

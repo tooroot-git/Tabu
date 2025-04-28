@@ -6,20 +6,7 @@ const nextConfig = {
     locales: ["he", "en"],
     defaultLocale: "he", // Ensure Hebrew is the default
     localeDetection: false, // Disable automatic locale detection
-    domains: [
-      {
-        domain: "tabuisrael.co.il",
-        defaultLocale: "he",
-      },
-      {
-        domain: "www.tabuisrael.co.il",
-        defaultLocale: "he",
-      },
-      {
-        domain: "en.tabuisrael.co.il", // Optional: Use subdomain for English
-        defaultLocale: "en",
-      },
-    ],
+    // Remove the domains configuration as it's causing issues
   },
   images: {
     domains: ["tabuisrael.co.il"],
