@@ -7,7 +7,7 @@ import { useLanguage } from "@/context/language-context"
 import { useAuth } from "@/context/auth-context"
 import { Logo } from "@/components/ui/logo"
 import { LanguageSwitcher } from "@/components/ui/language-switcher"
-import { Menu, X, User, ChevronDown } from "lucide-react"
+import { Menu, X, User, ChevronDown, LogIn } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export function Header() {
@@ -39,7 +39,6 @@ export function Header() {
   const navLinks = [
     { href: "/", label: isRTL ? "דף הבית" : "Home" },
     { href: "/services", label: isRTL ? "שירותים" : "Services" },
-    { href: "/order", label: isRTL ? "הזמנת נסח" : "Order Extract" },
     { href: "/about", label: isRTL ? "אודות" : "About" },
     { href: "/contact", label: isRTL ? "צור קשר" : "Contact" },
     { href: "/faq", label: isRTL ? "שאלות נפוצות" : "FAQ" },
@@ -55,14 +54,14 @@ export function Header() {
   return (
     <header
       className={`fixed top-0 z-50 w-full transition-all duration-300 ${
-        isScrolled ? "bg-[#0A0E17]/90 backdrop-blur-md shadow-md" : "bg-transparent"
+        isScrolled ? "bg-[#0A0E17]/95 backdrop-blur-md shadow-md" : "bg-[#0A0E17]/80 backdrop-blur-sm"
       }`}
     >
-      <div className="container mx-auto px-4 py-4">
+      <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <Logo className="h-10 w-auto" />
+            <Logo linkWrapper={false} />
           </Link>
 
           {/* Desktop Navigation */}
@@ -73,8 +72,8 @@ export function Header() {
                 href={link.href}
                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   pathname === link.href
-                    ? "text-white bg-blue-600/20"
-                    : "text-gray-300 hover:text-white hover:bg-blue-600/10"
+                    ? "text-white bg-[#1A1F2E] border border-[#2A3042]"
+                    : "text-gray-300 hover:text-white hover:bg-[#1A1F2E] hover:border hover:border-[#2A3042]"
                 }`}
               >
                 {link.label}
@@ -94,29 +93,31 @@ export function Header() {
                   <div className="relative">
                     <button
                       onClick={toggleUserMenu}
-                      className="flex items-center space-x-1 rtl:space-x-reverse rounded-full bg-blue-600/20 px-3 py-2 text-sm font-medium text-white hover:bg-blue-600/30 transition-colors"
+                      className="flex items-center space-x-1 rtl:space-x-reverse rounded-md bg-[#1A1F2E] border border-[#2A3042] px-3 py-2 text-sm font-medium text-white hover:bg-[#232A3F] transition-colors"
+                      aria-expanded={isUserMenuOpen}
+                      aria-haspopup="true"
                     >
-                      <User className="h-4 w-4" />
+                      <User className="h-4 w-4 mr-1.5 rtl:mr-0 rtl:ml-1.5" />
                       <span className="hidden sm:inline">{user.email?.split("@")[0]}</span>
                       <ChevronDown className={`h-4 w-4 transition-transform ${isUserMenuOpen ? "rotate-180" : ""}`} />
                     </button>
 
                     {/* User Dropdown Menu */}
                     {isUserMenuOpen && (
-                      <div className="absolute right-0 rtl:left-0 rtl:right-auto mt-2 w-48 rounded-md bg-[#1A1F2E] shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                      <div className="absolute right-0 rtl:left-0 rtl:right-auto mt-2 w-48 rounded-md bg-[#1A1F2E] shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none border border-[#2A3042]">
                         <div className="py-1">
                           {userNavLinks.map((link) => (
                             <Link
                               key={link.href}
                               href={link.href}
-                              className="block px-4 py-2 text-sm text-gray-200 hover:bg-blue-600/20"
+                              className="block px-4 py-2 text-sm text-gray-200 hover:bg-[#232A3F]"
                             >
                               {link.label}
                             </Link>
                           ))}
                           <button
                             onClick={() => signOut()}
-                            className="block w-full text-start px-4 py-2 text-sm text-gray-200 hover:bg-blue-600/20"
+                            className="block w-full text-start px-4 py-2 text-sm text-gray-200 hover:bg-[#232A3F]"
                           >
                             {isRTL ? "התנתקות" : "Sign Out"}
                           </button>
@@ -125,12 +126,12 @@ export function Header() {
                     )}
                   </div>
                 ) : (
-                  <div className="hidden sm:flex items-center space-x-2 rtl:space-x-reverse">
-                    <Button asChild className="bg-[#F05A28] hover:bg-[#E04A18] text-white border-none">
+                  <div className="hidden sm:block">
+                    <Button
+                      asChild
+                      className="bg-gradient-to-r from-[#F05A28] to-[#E04A18] hover:from-[#E04A18] hover:to-[#D03A08] text-white border-none shadow-lg rounded-md px-4 py-2 font-medium"
+                    >
                       <Link href="/login">{isRTL ? "התחברות / הרשמה" : "Login / Register"}</Link>
-                    </Button>
-                    <Button asChild className="bg-[#F05A28] hover:bg-[#E04A18] text-white border-none">
-                      <Link href="/order">{isRTL ? "התחל הזמנה" : "Start Order"}</Link>
                     </Button>
                   </div>
                 )}
@@ -140,7 +141,8 @@ export function Header() {
             {/* Mobile Menu Button */}
             <button
               onClick={toggleMenu}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white md:hidden"
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-[#1A1F2E] border border-transparent hover:border-[#2A3042] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white md:hidden"
+              aria-expanded={isMenuOpen}
             >
               <span className="sr-only">{isMenuOpen ? "Close menu" : "Open menu"}</span>
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -150,7 +152,7 @@ export function Header() {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <nav className="md:hidden mt-4 pt-4 border-t border-gray-700">
+          <nav className="md:hidden mt-4 pt-4 border-t border-[#2A3042]">
             <div className="flex flex-col space-y-2">
               {navLinks.map((link) => (
                 <Link
@@ -158,26 +160,21 @@ export function Header() {
                   href={link.href}
                   className={`px-3 py-2 rounded-md text-base font-medium ${
                     pathname === link.href
-                      ? "text-white bg-blue-600/20"
-                      : "text-gray-300 hover:text-white hover:bg-blue-600/10"
+                      ? "text-white bg-[#1A1F2E] border border-[#2A3042]"
+                      : "text-gray-300 hover:text-white hover:bg-[#1A1F2E] hover:border hover:border-[#2A3042]"
                   }`}
                 >
                   {link.label}
                 </Link>
               ))}
               {!user && (
-                <div className="flex flex-col space-y-2 pt-2 border-t border-gray-700 mt-2">
+                <div className="flex flex-col space-y-2 pt-2 border-t border-[#2A3042] mt-2">
                   <Link
                     href="/login"
-                    className="rounded-md bg-[#F05A28] px-3 py-2 text-base font-medium text-white hover:bg-[#E04A18] transition-colors text-center"
+                    className="rounded-md bg-gradient-to-r from-[#F05A28] to-[#E04A18] px-3 py-2 text-base font-medium text-white hover:from-[#E04A18] hover:to-[#D03A08] transition-colors text-center flex items-center justify-center gap-1.5 shadow-md"
                   >
+                    <LogIn className="h-4 w-4" />
                     {isRTL ? "התחברות / הרשמה" : "Login / Register"}
-                  </Link>
-                  <Link
-                    href="/order"
-                    className="rounded-md bg-[#F05A28] px-3 py-2 text-base font-medium text-white hover:bg-[#E04A18] transition-colors text-center"
-                  >
-                    {isRTL ? "התחל הזמנה" : "Start Order"}
                   </Link>
                 </div>
               )}
