@@ -2,12 +2,15 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useLanguage } from "@/context/language-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Shield, Lock, Search } from "lucide-react"
+import { useLocationSearch } from "@/hooks/use-location-search"
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete"
+import type { AutocompleteOption } from "@/components/ui/address-autocomplete"
 
 export function QuickOrder() {
   const router = useRouter()
@@ -16,16 +19,38 @@ export function QuickOrder() {
   const [blockNumber, setBlockNumber] = useState("")
   const [parcelNumber, setParcelNumber] = useState("")
   const [subParcelNumber, setSubParcelNumber] = useState("")
-  const [address, setAddress] = useState("")
+  const [street, setStreet] = useState("")
+  const [houseNumber, setHouseNumber] = useState("")
   const [city, setCity] = useState("")
+
+  const { cities, streets, loadingCities, loadingStreets, searchCities, searchStreets, selectedCity, setSelectedCity } =
+    useLocationSearch()
+
+  // Reset street when city changes
+  useEffect(() => {
+    setStreet("")
+  }, [selectedCity])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (activeTab === "block") {
       router.push(`/order?block=${blockNumber}&parcel=${parcelNumber}&subParcel=${subParcelNumber}`)
     } else {
-      router.push(`/order?address=${encodeURIComponent(address)}&city=${encodeURIComponent(city)}`)
+      router.push(
+        `/order?city=${encodeURIComponent(city)}&street=${encodeURIComponent(street)}&houseNumber=${encodeURIComponent(houseNumber)}`,
+      )
     }
+  }
+
+  const handleCitySelect = (option: AutocompleteOption) => {
+    setCity(option.label)
+    setSelectedCity(option.label)
+    // Clear street when city changes
+    setStreet("")
+  }
+
+  const handleStreetSelect = (option: AutocompleteOption) => {
+    setStreet(option.label)
   }
 
   return (
@@ -116,32 +141,46 @@ export function QuickOrder() {
           </form>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label htmlFor="city" className="block text-sm font-medium text-gray-300 mb-1">
-                  {isRTL ? "עיר*" : "City*"}
-                </label>
-                <input
-                  type="text"
+                <AddressAutocomplete
                   id="city"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  className="w-full px-3 py-2 bg-[#0A0E17] border border-[#2A3042] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-[#F05A28] focus:border-transparent"
-                  placeholder={isRTL ? "הזן שם עיר" : "Enter city name"}
+                  options={cities}
+                  onSearch={searchCities}
+                  onSelect={handleCitySelect}
+                  loading={loadingCities}
+                  label={isRTL ? "עיר" : "City"}
                   required
+                  placeholder={isRTL ? "הזן שם עיר" : "Enter city name"}
+                  value={city}
                 />
               </div>
               <div>
-                <label htmlFor="address" className="block text-sm font-medium text-gray-300 mb-1">
-                  {isRTL ? "כתובת*" : "Address*"}
+                <AddressAutocomplete
+                  id="street"
+                  options={streets}
+                  onSearch={searchStreets}
+                  onSelect={handleStreetSelect}
+                  loading={loadingStreets}
+                  label={isRTL ? "רחוב" : "Street"}
+                  required
+                  placeholder={isRTL ? "הזן שם רחוב" : "Enter street name"}
+                  value={street}
+                  disabled={!selectedCity}
+                  onFocus={() => selectedCity && searchStreets("")}
+                />
+              </div>
+              <div>
+                <label htmlFor="houseNumber" className="block text-sm font-medium text-gray-300 mb-1">
+                  {isRTL ? "מספר בית*" : "House Number*"}
                 </label>
                 <input
                   type="text"
-                  id="address"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
+                  id="houseNumber"
+                  value={houseNumber}
+                  onChange={(e) => setHouseNumber(e.target.value)}
                   className="w-full px-3 py-2 bg-[#0A0E17] border border-[#2A3042] rounded-md text-white focus:outline-none focus:ring-2 focus:ring-[#F05A28] focus:border-transparent"
-                  placeholder={isRTL ? "רחוב ומספר בית" : "Street and house number"}
+                  placeholder={isRTL ? "הזן מספר בית" : "Enter house number"}
                   required
                 />
               </div>

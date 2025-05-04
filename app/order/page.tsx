@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useLanguage } from "@/context/language-context"
 import { useSearchParams } from "next/navigation"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -10,6 +10,9 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Search, Lock } from "lucide-react"
 import Image from "next/image"
+import { useLocationSearch } from "@/hooks/use-location-search"
+import { AddressAutocomplete } from "@/components/ui/address-autocomplete"
+import type { AutocompleteOption } from "@/components/ui/address-autocomplete"
 
 export default function OrderPage() {
   const { isRTL } = useLanguage()
@@ -19,14 +22,35 @@ export default function OrderPage() {
   const initialBlock = searchParams.get("block") || ""
   const initialParcel = searchParams.get("parcel") || ""
   const initialSubParcel = searchParams.get("subParcel") || ""
-  const initialAddress = searchParams.get("address") || ""
+  const initialCity = searchParams.get("city") || ""
+  const initialStreet = searchParams.get("street") || ""
+  const initialHouseNumber = searchParams.get("houseNumber") || ""
 
   // Form state
   const [block, setBlock] = useState(initialBlock)
   const [parcel, setParcel] = useState(initialParcel)
   const [subParcel, setSubParcel] = useState(initialSubParcel)
-  const [address, setAddress] = useState(initialAddress)
-  const [activeTab, setActiveTab] = useState(initialAddress ? "address" : "block")
+  const [city, setCity] = useState(initialCity)
+  const [street, setStreet] = useState(initialStreet)
+  const [houseNumber, setHouseNumber] = useState(initialHouseNumber)
+  const [activeTab, setActiveTab] = useState(initialCity ? "address" : "block")
+
+  const { cities, streets, loadingCities, loadingStreets, searchCities, searchStreets, selectedCity, setSelectedCity } =
+    useLocationSearch()
+
+  // Set selected city when component mounts
+  useEffect(() => {
+    if (initialCity) {
+      setSelectedCity(initialCity)
+    }
+  }, [initialCity, setSelectedCity])
+
+  // Reset street when city changes
+  useEffect(() => {
+    if (!initialStreet) {
+      setStreet("")
+    }
+  }, [selectedCity, initialStreet])
 
   const handleBlockParcelSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,7 +61,18 @@ export default function OrderPage() {
   const handleAddressSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     // Handle form submission
-    console.log("Address form submitted:", { address })
+    console.log("Address form submitted:", { city, street, houseNumber })
+  }
+
+  const handleCitySelect = (option: AutocompleteOption) => {
+    setCity(option.label)
+    setSelectedCity(option.label)
+    // Clear street when city changes
+    setStreet("")
+  }
+
+  const handleStreetSelect = (option: AutocompleteOption) => {
+    setStreet(option.label)
   }
 
   return (
@@ -195,21 +230,49 @@ export default function OrderPage() {
 
               <TabsContent value="address" className="p-6">
                 <form onSubmit={handleAddressSubmit} className="space-y-4">
-                  <div>
-                    <label htmlFor="address" className="block text-sm font-medium text-gray-300 mb-1">
-                      {isRTL ? "כתובת מלאה" : "Full Address"}*
-                    </label>
-                    <Input
-                      id="address"
-                      type="text"
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      placeholder={
-                        isRTL ? "הזן כתובת מלאה (עיר, רחוב, מספר)" : "Enter full address (city, street, number)"
-                      }
-                      className="bg-[#1A1F2E] border-gray-700 text-white placeholder:text-gray-500"
-                      required
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <AddressAutocomplete
+                        id="city"
+                        options={cities}
+                        onSearch={searchCities}
+                        onSelect={handleCitySelect}
+                        loading={loadingCities}
+                        label={isRTL ? "עיר" : "City"}
+                        required
+                        placeholder={isRTL ? "הזן שם עיר" : "Enter city name"}
+                        value={city}
+                      />
+                    </div>
+                    <div>
+                      <AddressAutocomplete
+                        id="street"
+                        options={streets}
+                        onSearch={searchStreets}
+                        onSelect={handleStreetSelect}
+                        loading={loadingStreets}
+                        label={isRTL ? "רחוב" : "Street"}
+                        required
+                        placeholder={isRTL ? "הזן שם רחוב" : "Enter street name"}
+                        value={street}
+                        disabled={!selectedCity}
+                        onFocus={() => selectedCity && searchStreets("")}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="houseNumber" className="block text-sm font-medium text-gray-300 mb-1">
+                        {isRTL ? "מספר בית*" : "House Number*"}
+                      </label>
+                      <Input
+                        id="houseNumber"
+                        type="text"
+                        value={houseNumber}
+                        onChange={(e) => setHouseNumber(e.target.value)}
+                        placeholder={isRTL ? "הזן מספר בית" : "Enter house number"}
+                        className="bg-[#1A1F2E] border-gray-700 text-white placeholder:text-gray-500"
+                        required
+                      />
+                    </div>
                   </div>
 
                   <div className="mt-8">
